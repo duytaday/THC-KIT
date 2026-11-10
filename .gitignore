@@ -1,0 +1,10 @@
+input/
+output/
+references/*.mp4
+references/*.mov
+.venv/
+node_modules/
+__pycache__/
+*.pyc
+.env
+.env.*

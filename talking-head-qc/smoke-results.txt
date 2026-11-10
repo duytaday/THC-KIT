@@ -1,0 +1,5 @@
+v001 REVISE: detected quiet audio and out-of-range captions.
+v002 NEEDS_REVIEW: audio and captions passed their technical checks.
+Fixture-only simulated evidence exercises the READY path.
+Removing the required proof beat triggered REVISE.
+Changing the brief invalidated the previous review.
