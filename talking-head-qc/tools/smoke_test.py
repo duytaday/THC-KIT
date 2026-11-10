@@ -8,7 +8,8 @@ import tempfile
 from pathlib import Path
 
 def call(*args):
-    return subprocess.run(list(map(str, args)), check=True, capture_output=True, text=True)
+    return subprocess.run(list(map(str, args)), check=True, capture_output=True, text=True,
+                          encoding="utf-8", timeout=1800)
 
 def main():
     p = argparse.ArgumentParser(description=__doc__)
@@ -38,9 +39,9 @@ def main():
 
         def check(folder, expected):
             r = subprocess.run([sys.executable,str(gate),str(folder),"--skill-root",str(skill.parent)],
-                               capture_output=True,text=True)
+                               capture_output=True,text=True,encoding="utf-8",timeout=1800)
             j = json.loads(r.stdout)
-            if j["status"] != expected:
+            if j["status"] != expected or r.returncode != {"READY":0,"REVISE":1,"NEEDS_REVIEW":2,"BLOCKED":3}[expected]:
                 raise RuntimeError(f"Expected {expected}, got {j}")
             return j
 
@@ -58,9 +59,10 @@ def main():
         print("v002 NEEDS_REVIEW: audio and captions passed their technical checks.")
         # Fixture-only review records exercise the decision logic. No real editorial review is claimed.
         form = json.loads((v2 / "review-form.json").read_text(encoding="utf-8"))
+        form["approved_by"] = "SIMULATED HUMAN FOR TEST ONLY"
         for entry in form["checks"].values():
             entry.update(status="PASS", evidence="00:02 SIMULATED REVIEW FOR AUTOMATED TEST ONLY")
-        form["warning_dispositions"] = {k:"SIMULATED DISPOSITION" for k in form["warning_dispositions"]}
+        form["warning_dispositions"] = {k:"00:02 SIMULATED DISPOSITION" for k in form["warning_dispositions"]}
         (v2 / "review.json").write_text(json.dumps(form), encoding="utf-8")
         check(v2, "READY")
         print("Fixture-only simulated evidence exercises the READY path.")

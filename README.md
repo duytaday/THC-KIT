@@ -1,23 +1,43 @@
 # Talking head video editing skills
 
-Edit presenter videos in English or Vietnamese from a brief, preserve source media and versioned cuts, and inspect the actual master before release.
+A local Codex workflow for English or Vietnamese presenter videos. Use a separate checkout for each client's work. Keep original media, briefs and revision folders on that client's machine.
 
-Open this repository in Codex and invoke the project skill.
+## Start
 
-```text
-$talking-head-edit Edit my footage from briefs/demo.md. Render v001, run QC, and return the preview and evidence.
+Install Python 3.10+, FFmpeg and ffprobe on PATH. Install the tested upstream editing skill with npx --yes ffmpeg-skill@3.2.3 --codex. Use a working Python environment and install a local multilingual transcription engine when the recording needs transcription. Record the actual interpreter and installed skill directory during setup.
+
+From the repository root, replacing the skill path with your installation, run
+
+```sh
+python -m unittest discover -s talking-head-qc/tools -p "test_*.py"
+python talking-head-qc/tools/smoke_test.py --skill-root "/path/to/ffmpeg-skill"
 ```
 
-Put original footage in input/a-roll/ and input/b-roll/. Copy talking-head-qc/templates/brief.md to briefs/<job>.md. Per-video outputs go in output/<job>/v001/, v002/ and later revisions. Local footage and renders are ignored by Git.
+Copy talking-head-qc/templates/brief.md to briefs/<job>.md. Put footage in input/a-roll/ and input/b-roll/. Open the checkout in Codex and use
 
-The QC setup, schemas and acceptance tests are in talking-head-qc/README.md and SETUP-PROMPT.md. The recorded synthetic smoke results are in talking-head-qc/smoke-results.txt. Those results exercise the release decision logic using simulated review evidence.
+```text
+$talking-head-edit Edit my footage from briefs/demo.md. Render output/demo/v001/, run QC, and prepare it for final human review.
+$talking-head-edit Revise output/demo/v001/. At 00:18, show the actual result and hold until readable. Keep v001 and report before/after timestamps.
+```
 
-## Dependencies
+## Review and delivery
 
-Install Python 3.10+, FFmpeg and ffprobe. Install the tested FFmpeg skill with npx --yes ffmpeg-skill@3.2.3 --codex. Configure a local multilingual transcription engine for English or Vietnamese. The project skill currently records the working Windows Python location and user-installed skill paths. Adjust those for another machine.
+Follow talking-head-qc/SETUP-PROMPT.md for editorial acceptance tests and talking-head-qc/README.md for file formats and exit codes. The checker verifies technical properties and the association of written evidence with the revision's file hashes. A final human reviewer inspects the master, records evidence and enters their name in review.json under approved_by. The field records responsibility and does not authenticate identity.
 
-Install video-shotcraft from https://github.com/Vincentwei1021/video-shotcraft for editable Remotion inserts. The local installation was pinned to commit 3ac67b75dd0b3bc2fd807c17f6b7ce35373eef3d. Its template rendered successfully in the setup test.
+The smoke test generates synthetic footage and simulated approval records to exercise the decision logic. A passing smoke test establishes that the toolchain works. Actual dialogue, mobile readability, proof and claims require review on each final master.
 
-Recordly exports can be imported with talking-head-qc/tools/import_recordly.py. The importer preserves the exported bytes and records the source path, hash, media probe and beat ID. Recordly 1.4.0 is installed locally. Live capture and export verification remain pending because its HUD opened without usable controls. See talking-head-qc/RECORDLY-TEST.md for measured results and resume steps. Get the application from https://github.com/webadderallorg/Recordly/releases.
+## Optional capture and motion tools
 
-Keep saved Recordly projects with their linked original recordings. Use real capture footage to demonstrate command results. Inspect the assembled master for readable proof, captions, speech cuts and sync before marking it READY.
+Recordly is available from https://github.com/webadderallorg/Recordly/releases. Capture both the action and its result, keep the editable project with its original recordings, and export MP4. From the repository root run
+
+```sh
+python talking-head-qc/tools/import_recordly.py "/captures/demo.mp4" --job demo --beat proof --project "/captures/demo.recordly"
+```
+
+Omit --project if the editable project is unavailable. The importer saves a fresh take under input/b-roll/<job>/ and records the media hash, beat and original paths. Saved project paths refer to local files. Back up those files with their linked recordings.
+
+Use https://github.com/Vincentwei1021/video-shotcraft for motion inserts specified by the brief. Keep its editable composition with the job and inspect the assembled master through the same QC process. These tools are installed separately from this repository.
+
+## Client material
+
+Git ignores input/, output/, briefs/, references/ and Recordly projects. Check git status before sharing changes. Ignore rules protect newly added files. They do not remove material already tracked by Git. Per-machine paths, linked assets and output history need their own local backup.

@@ -8,3 +8,8 @@ __pycache__/
 *.pyc
 .env
 .env.*
+
+briefs/
+references/
+SESSION-CHECKLIST.md
+*.recordly
