@@ -18,6 +18,6 @@ Install Python 3.10+, FFmpeg and ffprobe. Install the tested FFmpeg skill with n
 
 Install video-shotcraft from https://github.com/Vincentwei1021/video-shotcraft for editable Remotion inserts. The local installation was pinned to commit 3ac67b75dd0b3bc2fd807c17f6b7ce35373eef3d. Its template rendered successfully in the setup test.
 
-Recordly exports can be imported with talking-head-qc/tools/import_recordly.py. The importer preserves the exported bytes and records the source path, hash, media probe and beat ID. Recordly desktop installation and live capture remain pending. Get the application from https://github.com/webadderallorg/Recordly/releases.
+Recordly exports can be imported with talking-head-qc/tools/import_recordly.py. The importer preserves the exported bytes and records the source path, hash, media probe and beat ID. Recordly 1.4.0 is installed locally. Live capture and export verification remain pending because its HUD opened without usable controls. See talking-head-qc/RECORDLY-TEST.md for measured results and resume steps. Get the application from https://github.com/webadderallorg/Recordly/releases.
 
 Keep saved Recordly projects with their linked original recordings. Use real capture footage to demonstrate command results. Inspect the assembled master for readable proof, captions, speech cuts and sync before marking it READY.

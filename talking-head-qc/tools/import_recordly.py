@@ -38,8 +38,11 @@ def main():
         info = json.loads(probe.stdout)
         if not info.get("streams") or float(info["format"]["duration"]) <= 0:
             parser.error("Export needs a video stream and positive duration")
+        hasher = hashlib.sha256()
         with media.open("rb") as handle:
-            digest = hashlib.file_digest(handle, "sha256").hexdigest()
+            for chunk in iter(lambda: handle.read(1024 * 1024), b""):
+                hasher.update(chunk)
+        digest = hasher.hexdigest()
         metadata = dict(beat=args.beat, original_export=str(source), sha256=digest,
                         recordly_project=str(project) if project else None, probe=info)
         (take / "source.json").write_text(json.dumps(metadata, indent=2), encoding="utf-8")
