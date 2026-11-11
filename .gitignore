@@ -13,3 +13,17 @@ briefs/
 references/
 SESSION-CHECKLIST.md
 *.recordly
+
+# Local customer media, captures, model checkpoints and installed runtimes.
+*.mp4
+*.mov
+*.m4v
+*.mkv
+*.webm
+*.safetensors
+*.pt
+*.ckpt
+*.sqlite3
+recordings/
+cache/
+runtime/

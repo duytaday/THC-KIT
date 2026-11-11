@@ -1,5 +1,11 @@
 # Talking-Head Editing QC
 
+Use [FINAL-QC-HOOKS.md](FINAL-QC-HOOKS.md) for the current six-gate acceptance
+profile, render/release hooks and persistent6s smoke test. The five-file legacy
+checker described below remains a compatibility entry point; without the new
+acceptance profile it cannot release a real master. Run `qc_hook.py after-render`
+to retain each QC report automatically.
+
 Unzip this folder into your video project, open the project in Codex, and ask it to execute SETUP-PROMPT.md. It extends the previous talking-head setup and uses kajisho5/ffmpeg-skill. The release checker and smoke test are ready to run. The templates give each video its own content brief and reference treatment.
 
 ## First real edit

@@ -2,6 +2,14 @@
 
 Integrate the attached Talking-Head QC kit into my existing talking-head editing workflow. Execute the setup and its smoke test. My usual content is a presenter explaining an idea or demonstrating a process in English or Vietnamese. The deliverable is a clear video that fulfills a specific brief and can be revised by timestamp.
 
+Current release contract: read `FINAL-QC-HOOKS.md` and apply gates A–F on each
+exact final export. Prepare `acceptance-profile.json` from the brief/planned
+timeline before rendering. Use `tools/qc_hook.py before-render`, then `after-render`
+(or the combined `render` wrapper) and `release` after actual human approval.
+Run `tools/final_qc_smoke.py --out <new-run-folder> --skill-root <actual-skill>`
+in addition to the legacy smoke test. Preserve its real exported fixtures and
+reports; never copy simulated fixture approval onto a real job.
+
 ## Set up
 
 1. Locate this kit, the current project instructions and the existing talking-head-edit skill. Preserve its previous capabilities. If the wrapper is missing, create the project entry at .agents/skills/talking-head-edit/SKILL.md with a name and description. Connect its edit, QC and revision instructions to this kit. Reuse the provided tools and templates. Keep inputs, reusable templates, per-video briefs and versioned outputs separate.

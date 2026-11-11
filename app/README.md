@@ -1,0 +1,63 @@
+# Cutroom local development handoff
+
+Python3.11+ and FFmpeg/ffprobe on PATH. The built-in app uses the Python standard
+library and included fonts/audio; Playwright and model libraries are test/training
+dependencies only. The final QC bridge also needs the upstream ffmpeg-skill scripts
+(tested3.2.3); set CUTROOM_QC_SKILL to their installed directory. No API key is
+needed. Do not bundle customer recordings or the training corpus into this source
+package. See THIRD_PARTY.txt and the font notices before public redistribution.
+
+From the checkout root on this machine:
+
+```powershell
+. .\talking-head-qc\tools\use_d_storage.ps1
+$py='C:\Users\Acer\.cache\codex-runtimes\codex-primary-runtime\dependencies\python\python.exe'
+.\Start Cutroom.ps1 -Python $py
+```
+
+Recordings appear in Workspace; assign each its own script. Plain text has
+estimated speech timing, SRT uses supplied phrase timing. Generate intro & demos
+creates editable, versioned scenes and visible passage IDs. Optional images/logo
+and brand accent remain local. Product proof missing? Keep the capture placeholder.
+An illustrative script without matching speech remains a storyboard/pickup.
+
+Source recordings have search, project filters and an archive. Manage preserves
+the original filename while letting you name the lesson, inspect its hash/path
+and reveal it in Explorer. Add new take keeps the original and style, creates a
+linked source with empty active script/events/cutaways, and retains the previous
+script only as a reference for realignment. Archived sources are not queued.
+Exports show the latest cut per source by default; use All versions/history to
+see v001/v002 and go back to the source. Organization does not rewrite masters.
+
+Reference roles are independent: Use for pacing, Show in video, Include in training.
+Training intake records permission, creator/series/family and reviewed moments.
+Do not infer discarded raw takes from a final MP4. Deliberate presenter holds and
+unlabeled passages are separate. Dataset preparation displays exact blockers.
+
+Style has independent motion, cue mute/gain/offset and music controls. Apply-to-
+selected changes only touched fields. Manual cues and each recording’s script
+survive reference changes. Review saved corrections retains before/after and
+optional editor reason. No raw video is sent to an agent or cloud service.
+
+The fine-tuned candidate is optional. Install a frozen model preset under the
+workspace models/candidate/preset.json only after a reviewed experiment. It must
+identify version, pinned model_revision, dataset_fingerprint, base_path,
+adapter_path, deployment_eligible and a files map of relative paths to SHA256.
+Use safetensors; hash all base/tokenizer/adapter files and the training-only
+retrieval index. Retrieval entries need split=train and source_sha256. Unseen
+episode hashes and held-out groups may not enter retrieval. CUTROOM_PLANNER_PYTHON
+can select a separate compatible torch/transformers/peft environment. Missing or
+changed checkpoints visibly fall back to built-in rules; inspect planner-receipt.
+The worker uses local files only, never downloads models during a buyer export.
+
+Render creates a new MP4 and freezes brief, delivery, editable recipe, dependencies,
+cue sheet and six-gate report. It actually rerenders the frozen recipe to test
+repeatability. Exports retain historical versions. Approval requires the exact
+hash/current project revision plus actual human viewing/listening evidence. A
+reviewer without audio leaves voice intelligibility unverified.
+
+Tests and actual results: see docs/CUTROOM-RESULTS.vi.md. Reopening a frozen recipe
+after renderer/dependency changes is intentionally rejected; create a new recipe
+through the current UI. OpenBot/MausBot capability indicators are disconnected
+until a real endpoint and invocation have been verified. Ordinary editing works
+with those agents off.

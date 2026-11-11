@@ -99,6 +99,10 @@ def present(text):
 def inspect(args):
     folder = args.version.resolve()
     names = ["edit.mp4", "captions.srt", "brief.md", "timeline.json", "delivery.json"]
+    profile_path=folder/'acceptance-profile.json'
+    if profile_path.exists():names.append('acceptance-profile.json')
+    for name in ('render-project.json','render.py'):
+        if (folder/name).is_file():names.append(name)
     bundle = {name: digest(folder / name) for name in names}
     spec = json.loads((folder / "delivery.json").read_text(encoding="utf-8-sig"))
     width, height = spec["width"], spec["height"]
@@ -111,7 +115,8 @@ def inspect(args):
         raise ValueError("Invalid dimensions or duration bounds in delivery.json")
     video = str(folder / "edit.mp4")
     failures, pending = [], []
-    probe = run(["ffprobe", "-v", "error", "-show_format", "-show_streams", "-of", "json", video])
+    decode_failures=[]
+    probe = run(["ffprobe", "-v", "error", "-count_frames", "-show_format", "-show_streams", "-of", "json", video])
     if probe.returncode:
         raise ValueError("ffprobe could not read the render: " + probe.stderr[-400:])
     info = json.loads(probe.stdout)
@@ -130,6 +135,7 @@ def inspect(args):
                   "-map", "0:v:0", "-map", "0:a:0", "-f", "null", "-"])
     if decode.returncode:
         failures.append("Full picture/audio decode failed: " + decode.stderr[-400:])
+        decode_failures.append(failures[-1])
     try:
         cue_count = srt_check(folder / "captions.srt", duration)
     except ValueError as e:
@@ -148,17 +154,40 @@ def inspect(args):
         for r in rows
     ):
         raise ValueError("Upstream delivery checker returned invalid check rows")
-    if proc.returncode or tech.get("ok") is not True or any(r["status"] == "FAIL" for r in rows):
+    profile=json.loads(profile_path.read_text(encoding='utf-8-sig')) if profile_path.exists() else None
+    exempt_loudness=bool(profile and profile.get('job_kind')=='fixture' and profile.get('speech_free_fixture') and profile.get('speech_free_reason'))
+    # The explicit acceptance profile owns dialogue loudness, not a platform's
+    # generic target. qc_gates independently measures the actual exported audio.
+    raw_failing_rows=[r for r in rows if r['status']=='FAIL']
+    failing_rows=[r for r in raw_failing_rows if not ((profile or exempt_loudness) and r['check']=='loudness')]
+    superseded_only=bool(raw_failing_rows) and not failing_rows
+    if failing_rows or ((proc.returncode or tech.get('ok') is not True) and not superseded_only):
         failures.append("Upstream delivery check failed. See upstream_checks in the report.")
     warnings = [r["check"] for r in rows if r["status"] == "WARN"]
     form = {"bundle": bundle, "approved_by": "", "checks": {k: {"status": "UNVERIFIED", "evidence": ""} for k in RULES},
             "warning_dispositions": {w: "" for w in warnings}}
+    if profile:
+        form.update(schema_version=2,reviewer={'id':'','runtime':'','can_watch':False,'can_listen':False},viewing={'speed':1,'width_px':360},listening_speed=1,watched_ranges=[],listened_ranges=[],sync_observations=[],cue_observations=[],gates={k:{'status':'UNVERIFIED','evidence':[]} for k in 'ABCDEF'})
     (folder / "review-form.json").write_text(json.dumps(form, indent=2), encoding="utf-8")
     review_path = folder / "review.json"
     if review_path.is_file():
         review = json.loads(review_path.read_text(encoding="utf-8-sig"))
     else:
         review = {}
+    if profile:
+        import qc_gates
+        report=qc_gates.assess(folder,profile,bundle,info,failures,review,decode_failures=decode_failures)
+        report['loudness_policy']='Actual decoded audio measured against acceptance-profile thresholds; raw upstream platform target retained for provenance.'
+        report.update(duration_seconds=duration,srt_cues=cue_count,upstream_checks=rows,failures=[*failures,*[f"{i['gate']}:{i['id']}: {i['actual']}" for i in report['issues']]],pending=[f'{k}: required review/measurement missing' for k in report['pending_gates']])
+        if not report['review_binding_valid'] and (profile['job_kind']=='real' or review):report['pending'].append('Review belongs to another master/profile/brief/timeline or is absent; all prior approvals rejected.')
+        if profile['job_kind']=='real' and not report['approved_by']:report['pending'].append('Final human approval is missing: approved_by')
+        for item in warnings:
+            if not report['review_binding_valid'] or not cites_render(review.get('warning_dispositions',{}).get(item),duration):report['pending'].append('Explain detector warning: '+item)
+        if report['status']=='READY' and report['pending']:report['status']='NEEDS_REVIEW'
+        if bundle!={name:digest(folder/name) for name in names}:raise ValueError('An input changed during QC. Run again on the stable revision.')
+        (folder/'qc.md').write_text(qc_gates.markdown(report),encoding='utf-8')
+        return report
+    pending.append('acceptance-profile.json missing: prepare the six-gate profile before final rendering; legacy review cannot release under the new acceptance criteria.')
     if review.get("bundle") != bundle:
         pending.append("Editorial review is absent or belongs to a different cut, brief, captions, timeline or spec.")
     else:

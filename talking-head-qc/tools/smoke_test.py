@@ -64,8 +64,8 @@ def main():
             entry.update(status="PASS", evidence="00:02 SIMULATED REVIEW FOR AUTOMATED TEST ONLY")
         form["warning_dispositions"] = {k:"00:02 SIMULATED DISPOSITION" for k in form["warning_dispositions"]}
         (v2 / "review.json").write_text(json.dumps(form), encoding="utf-8")
-        check(v2, "READY")
-        print("Fixture-only simulated evidence exercises the READY path.")
+        check(v2, "NEEDS_REVIEW")
+        print("Legacy fixture approval cannot bypass the new acceptance profile; run final_qc_smoke.py for six-gate READY coverage.")
         timeline = (v2 / "timeline.json").read_text(encoding="utf-8")
         (v2 / "timeline.json").write_text('{"beats":[]}', encoding="utf-8")
         missing = check(v2, "REVISE")

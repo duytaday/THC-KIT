@@ -1,0 +1,50 @@
+{
+  "click": {
+    "peak_sample": 173,
+    "samples": 5520,
+    "sample_rate": 48000,
+    "marker_sample": 173,
+    "marker_kind": "peak_abs",
+    "marker_status": "legacy_peak_preserved_audition_pending",
+    "source": "Supplied Cutroom synthesized regression sound",
+    "license": "Owner-supplied original asset"
+  },
+  "slide": {
+    "peak_sample": 11916,
+    "samples": 22080,
+    "sample_rate": 48000,
+    "marker_sample": 11916,
+    "marker_kind": "peak_abs",
+    "marker_status": "legacy_peak_preserved_audition_pending",
+    "source": "Supplied Cutroom synthesized regression sound",
+    "license": "Owner-supplied original asset"
+  },
+  "chime": {
+    "peak_sample": 5066,
+    "samples": 42240,
+    "sample_rate": 48000,
+    "marker_sample": 5066,
+    "marker_kind": "peak_abs",
+    "marker_status": "legacy_peak_preserved_audition_pending",
+    "source": "Supplied Cutroom synthesized regression sound",
+    "license": "Owner-supplied original asset"
+  },
+  "tap": {
+    "samples": 4320,
+    "sample_rate": 48000,
+    "marker_sample": 24,
+    "marker_kind": "peak_abs",
+    "marker_status": "measured_candidate_audition_pending",
+    "source": "Original deterministic synthesis in author_audio.py",
+    "license": "Original project asset; no external recordings or model weights"
+  },
+  "chapter": {
+    "samples": 13440,
+    "sample_rate": 48000,
+    "marker_sample": 33,
+    "marker_kind": "peak_abs",
+    "marker_status": "measured_candidate_audition_pending",
+    "source": "Original deterministic synthesis in author_audio.py",
+    "license": "Original project asset; no external recordings or model weights"
+  }
+}

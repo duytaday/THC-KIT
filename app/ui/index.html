@@ -1,0 +1,282 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Cutroom · Batch editor</title>
+    <link rel="icon" href="/icon.svg" />
+    <link rel="stylesheet" href="/style.css" />
+  </head>
+  <body>
+    <header>
+      <div class="brand"><img src="/icon.svg" alt="" />Cutroom</div>
+      <div class="nav">
+        <button data-tab="workspace" class="active">Workspace</button
+        ><button data-tab="exports">
+          Exports <span id="exportCount">0</span>
+        </button>
+      </div>
+      <div class="right">
+        <span class="local"><i></i>Local workspace</span
+        ><button
+          id="settings"
+          aria-label="Workspace settings"
+          title="Workspace settings"
+          class="iconbtn"
+        >
+          <svg
+            aria-hidden="true"
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.7"
+          >
+            <path d="M4 7h9m4 0h3M4 17h3m4 0h9" />
+            <circle cx="15" cy="7" r="2" />
+            <circle cx="9" cy="17" r="2" />
+          </svg>
+        </button>
+      </div>
+    </header>
+    <main>
+      <section id="work">
+        <div class="sectionhead">
+          <div>
+            <div class="crumb">Workspace <span>/</span> Talking head</div>
+            <h1>Batch editor</h1>
+            <p>Turn your recordings into captioned, vertical edits.</p>
+          </div>
+          <button class="soft importAction" id="topImport">
+            <b>＋</b> Import recordings
+          </button>
+        </div>
+        <div id="setupBanner" class="notice hidden"></div>
+        <div id="importState" role="status" class="notice hidden"></div>
+        <div class="layout">
+          <div class="leftcol">
+            <section class="card">
+              <div class="cardhead">
+                <div>
+                  <h2>
+                    Source recordings <span class="count" id="clipCount">0</span>
+                  </h2>
+                  <small id="selectionText">No recordings yet</small>
+                </div>
+                <button id="selectAll" class="textbtn" disabled>
+                  Select all
+                </button>
+              </div>
+              <div class="library-tools"><label class="sr-only" for="sourceSearch">Find a source recording</label><input id="sourceSearch" type="search" placeholder="Find source / filename…"><label class="sr-only" for="sourceCollection">Project</label><select id="sourceCollection"><option value="">All projects</option></select><label class="sr-only" for="sourceVisibility">Source visibility</label><select id="sourceVisibility"><option value="active">Active sources</option><option value="archived">Archived</option><option value="all">All sources</option></select></div>
+              <div
+                id="emptyDrop"
+                class="drop"
+                tabindex="0"
+                role="button"
+                aria-label="Import recordings"
+              >
+                <div class="filmicon" aria-hidden="true">
+                  <div></div>
+                  <div><span>▶</span></div>
+                </div>
+                <strong>Drop your talking-head videos</strong
+                ><span
+                  >Choose several files at once · MP4, MOV, M4V, MKV, WebM</span
+                ><button class="primary importAction">Import recordings</button>
+              </div>
+              <div id="clips"></div>
+              <div id="scriptResults" role="status" class="hidden"></div>
+              <div class="queueline">
+                <span id="queueHint">Select recordings to render together.</span
+                ><a id="selectedDownload" class="textbtn hidden" download
+                  >Download selected edits</a
+                ><button id="queue" class="primary" disabled>
+                  Render selected
+                </button>
+              </div>
+            </section>
+            <section class="card">
+              <div class="cardhead">
+                <div>
+                  <h2>
+                    Reference footage <span class="count" id="refCount">0</span>
+                  </h2>
+                  <small
+                    >Share a style guide or cutaway across your
+                    recordings.</small
+                  >
+                </div>
+                <button id="addRef" class="soft">＋ Add footage</button>
+              </div>
+              <div id="refs" class="refs"></div>
+              <button type="button" id="addGraphic" class="textbtn">＋ Add screenshot / logo</button><small id="graphicCount"></small>
+              <div class="queueline hidden" id="matchRow">
+                <small
+                  >Use a filename like “save the result.mp4” to match a spoken
+                  phrase.</small
+                ><button id="matchRefs" class="soft">Match to scripts</button>
+              </div>
+            </section>
+          </div>
+          <aside class="card" id="inspector">
+            <div class="cardhead">
+              <div>
+                <h2>Edit settings</h2>
+                <small id="target">Select a recording to edit</small>
+              </div>
+              <button id="toggleInspector" class="textbtn" type="button" aria-expanded="true" aria-controls="form">Hide settings</button>
+            </div>
+            <div id="blankInspect" class="blank">
+              <div class="sliders" aria-hidden="true">☷</div>
+              <strong>Your edit controls</strong>
+              <p>
+                Select one or more recordings to assign a script, set a style,
+                or add a cutaway.
+              </p>
+            </div>
+            <form id="form" class="hidden">
+              <div id="sourceBox" class="hidden"></div>
+              <div class="tabs">
+                <button type="button" data-panel="script" class="active">
+                  Script</button
+                ><button type="button" data-panel="look">Style</button
+                ><button type="button" data-panel="inserts">Cutaways</button>
+              </div>
+              <div data-body="script">
+                <div class="fieldhead">
+                  <label for="script">Spoken script</label
+                  ><button type="button" id="importScript" class="textbtn">
+                    Import TXT / SRT
+                  </button>
+                </div>
+                <textarea
+                  id="script"
+                  placeholder="Paste what the presenter says…"
+                  rows="8"
+                ></textarea
+                ><small id="scriptHelp"
+                  >Plain text uses estimated timing. SRT uses your cue
+                  times.</small
+                >
+                <button type="button" id="generateArtifacts" class="soft generate-artifacts">Generate intro &amp; demos</button>
+                <small>Built-in storyboard and original animation. No API key. Recorded words still need verification.</small>
+                <div id="storyboard"></div><div id="artifactCards"></div>
+              </div>
+              <div data-body="look" class="hidden">
+                <div class="style-samples" aria-label="Built-in caption presets">
+                  <button type="button" data-style="clean" class="style-sample"><span class="sample-text">Biến ý tưởng thành video</span><strong>Clean</strong><small>Built-in · phrase captions</small></button>
+                  <button type="button" data-style="focus" class="style-sample"><span class="sample-text">Biến <mark>ý tưởng</mark> thành video</span><strong>Focus</strong><small>Built-in · word emphasis</small></button>
+                </div>
+                <label for="style">Caption treatment</label
+                ><select id="style">
+                  <option value="clean">Clean · phrase captions</option>
+                  <option value="focus">
+                    Focus · highlighted words
+                  </option></select
+                ><label for="fit">Portrait framing</label
+                ><select id="fit">
+                  <option value="contain">Fit entire picture</option>
+                  <option value="cover">
+                    Fill frame · center crop
+                  </option></select
+                ><div id="framingPreview" aria-label="Portrait framing preview"></div><small id="framingHelp"></small
+                ><label for="caption_position">Caption placement</label
+                ><select id="caption_position">
+                  <option value="bottom">Lower third</option>
+                  <option value="top">Upper third</option></select
+                ><label for="style_ref">Pacing reference</label
+                ><select id="style_ref"></select
+                ><small
+                  >Cut frequency guides caption length. This footage stays off
+                  screen.</small
+                >
+                <div class="enhancement-controls">
+                  <h3>Decision planner</h3><label for="planner_mode">Preset source</label><select id="planner_mode"><option value="built_in">Built-in rules / assigned reference</option><option value="base">Base planner · local weights required</option><option value="base_rag">Base + frozen training-only retrieval</option><option value="fine_tuned">Fine-tuned candidate · experimental</option></select><small id="plannerStatus">No model weights loaded. References can guide rules immediately.</small><button type="button" class="textbtn" id="trainingReport">Training readiness</button>
+                  <h3>Motion</h3><label for="motion_profile">Motion profile</label><select id="motion_profile"><option value="baseline">Current preset · original behavior</option><option value="reference">Reference guided · built-in rules</option><option value="calm">Calm · reduced motion</option><option value="focus">Focus · restrained emphasis</option></select>
+                  <label for="motion_intensity">Motion intensity</label><input id="motion_intensity" type="range" min="0" max="1" step="0.05" value="0.5"><small>Motion strength changes visual emphasis. Individual sound cues and music remain independent.</small>
+                  <button id="previewCues" class="soft" type="button">Preview cue plan</button><button type="button" class="textbtn" id="reviewCorrections">Review saved corrections</button>
+                  <h3>Sound effects</h3><small>Each contact and result can have its own sound, offset or intentional silence.</small><div id="eventRows"></div><button id="addEvent" class="textbtn" type="button">＋ Add manual cue</button>
+                  <h3>Music</h3><label for="music_mode">Music bed</label><select id="music_mode"><option value="off">Off · voice and chosen effects only</option><option value="auto">Choose automatically · original instrumental</option><option value="my_track">My track · cleared audio</option></select>
+                  <label for="music_track">Texture</label><select id="music_track"><option value="calm">Calm explanation · sparse / quiet</option><option value="tutorial">Tutorial pulse · restrained / moderate</option></select>
+                  <label for="music_gain_db">Music level before voice ducking (dB)</label><input id="music_gain_db" type="number" min="-60" max="0" step="1" value="-20">
+                  <label for="music_asset">My imported track</label><select id="music_asset"><option value="">Choose a cleared track…</option></select><button id="addMusic" type="button" class="textbtn">Import my music</button><small>The original narration controls ducking. No paid service, model weights or reference music is used.</small>
+                </div>
+              </div>
+              <div data-body="inserts" class="hidden">
+                <div class="fieldhead">
+                  <label>On-screen cutaways</label
+                  ><button type="button" id="addInsert" class="textbtn">
+                    ＋ Add insert
+                  </button>
+                </div>
+                <small
+                  >Place footage at a spoken phrase or a time in seconds. The
+                  presenter’s voice continues.</small
+                >
+                <div id="insertRows"></div>
+                <label for="insert_sound">Cutaway sound</label
+                ><select id="insert_sound">
+                  <option value="none">Off · voice only</option>
+                  <option value="click">Soft click</option>
+                  <option value="slide">Slide</option>
+                  <option value="chime">Chime</option>
+                </select>
+              </div>
+              <div class="formfoot">
+                <span id="dirty">Saved</span
+                ><button type="submit" id="save" class="soft" disabled>
+                  Save changes
+                </button>
+              </div>
+            </form>
+          </aside>
+        </div>
+      </section>
+      <section id="out" class="hidden">
+        <div class="sectionhead">
+          <div>
+            <div class="crumb">Workspace <span>/</span> Output</div>
+            <h1>Exports</h1>
+            <p>
+              Review the final picture, captions, and voice before publishing.
+            </p>
+          </div>
+          <a
+            id="batchDownload"
+            class="primary hidden"
+            download
+            href="/downloads/latest.zip"
+            >Download all latest exports (.zip)</a
+          >
+        </div>
+        <div class="export-tools"><label for="exportSource">Recording<select id="exportSource"><option value="">All source recordings</option></select></label><label for="exportHistory">Versions<select id="exportHistory"><option value="latest">Latest cut per source</option><option value="all">All versions / history</option></select></label><small id="exportSummary"></small></div>
+        <div id="outputs" class="card"></div>
+      </section>
+    </main>
+    <dialog id="modal">
+      <div class="dialoghead">
+        <h2 id="dialogTitle"></h2>
+        <button id="close" aria-label="Close" class="iconbtn">×</button>
+      </div>
+      <div id="dialogBody"></div>
+    </dialog>
+    <div id="toast" role="status" class="hidden"></div>
+    <input
+      type="file"
+      id="hostInput"
+      accept="video/*,.mkv,.m4v,.mov"
+      multiple
+      hidden
+    /><input
+      type="file"
+      id="refInput"
+      accept="video/*,.mkv,.m4v,.mov"
+      multiple
+      hidden
+    /><input type="file" id="scriptInput" accept=".txt,.srt" multiple hidden />
+    <input type="file" id="musicInput" accept=".wav,.mp3,.m4a,.flac,.ogg" hidden>
+    <input type="file" id="graphicInput" accept=".png,.jpg,.jpeg" multiple hidden>
+    <script src="/app.js"></script>
+  </body>
+</html>

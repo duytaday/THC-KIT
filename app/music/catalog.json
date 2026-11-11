@@ -1,0 +1,34 @@
+{
+  "calm": {
+    "samples": 768000,
+    "sample_rate": 48000,
+    "marker_sample": 238596,
+    "marker_kind": "peak_abs",
+    "marker_status": "measured_candidate_audition_pending",
+    "source": "Original deterministic synthesis in author_audio.py",
+    "license": "Original project asset; no external recordings or model weights",
+    "instrumental": true,
+    "energy": "low",
+    "tempo_bpm": 60,
+    "rhythmic_density": "sparse",
+    "loop_seconds": 16,
+    "intro_fade": 0.4,
+    "outro_fade": 0.4
+  },
+  "tutorial": {
+    "samples": 768000,
+    "sample_rate": 48000,
+    "marker_sample": 256413,
+    "marker_kind": "peak_abs",
+    "marker_status": "measured_candidate_audition_pending",
+    "source": "Original deterministic synthesis in author_audio.py",
+    "license": "Original project asset; no external recordings or model weights",
+    "instrumental": true,
+    "energy": "moderate",
+    "tempo_bpm": 90,
+    "rhythmic_density": "sparse",
+    "loop_seconds": 16,
+    "intro_fade": 0.4,
+    "outro_fade": 0.4
+  }
+}

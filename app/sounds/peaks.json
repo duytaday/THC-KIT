@@ -1,0 +1,17 @@
+{
+  "click": {
+    "peak_sample": 173,
+    "samples": 5520,
+    "sample_rate": 48000
+  },
+  "slide": {
+    "peak_sample": 11916,
+    "samples": 22080,
+    "sample_rate": 48000
+  },
+  "chime": {
+    "peak_sample": 5066,
+    "samples": 42240,
+    "sample_rate": 48000
+  }
+}

@@ -55,12 +55,26 @@ class ReleaseTests(unittest.TestCase):
         self.write("review.json", review)
         return review
 
-    def test_complete_review_ready(self):
+    def test_legacy_complete_review_needs_acceptance_profile(self):
         self.approve()
-        self.assertEqual(self.inspect()["status"], "READY")
+        self.assertEqual(self.inspect()["status"], "NEEDS_REVIEW")
 
     def test_absent_review_pending(self):
         self.assertEqual(self.inspect()["status"], "NEEDS_REVIEW")
+
+    def profile_policy(self):
+        self.write('acceptance-profile.json',{'job_kind':'real'})
+        result=dict(status='NEEDS_REVIEW',issues=[],pending_gates=[],review_binding_valid=False,approved_by=None)
+        with patch('qc_gates.assess',return_value=result),patch('qc_gates.markdown',return_value='Explicit profile measurement is tested separately'):
+            return self.inspect()
+
+    def test_explicit_dialogue_profile_supersedes_only_generic_loudness_row(self):
+        self.rows=[{'check':'loudness','status':'FAIL','value':'-16.28','expected':'platform -14'}];self.ok=False
+        result=self.profile_policy();self.assertEqual(result['failures'],[]);self.assertEqual(result['upstream_checks'],self.rows)
+
+    def test_profile_does_not_suppress_other_delivery_failures(self):
+        self.rows=[{'check':'loudness','status':'FAIL'},{'check':'video_codec','status':'FAIL'}];self.ok=False
+        self.assertTrue(any('Upstream delivery' in f for f in self.profile_policy()['failures']))
 
     def test_human_approval_required(self):
         review = self.approve()

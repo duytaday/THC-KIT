@@ -1,0 +1,898 @@
+"use strict";
+const el = (id) => document.getElementById(id),
+  all = (selector) => [...document.querySelectorAll(selector)];
+const esc = (s) =>
+  String(s ?? "").replace(
+    /[&<>"']/g,
+    (c) =>
+      ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[
+        c
+      ],
+  );
+const time = (s) =>
+  Math.floor(s / 60) + ":" + String(Math.floor(s % 60)).padStart(2, "0");
+const stem = (name) =>
+  name
+    .normalize("NFC")
+    .replace(/\.[^.]+$/, "")
+    .toLowerCase();
+const selected = new Set(),
+  touched = new Set();
+let state = {},
+  inserts = [],
+  activePanel = "script",
+  timer,
+  importing = false,
+  versionKey = "",
+  waiting = false;
+let unresolvedScripts=[], inspectorOpen=true, manualEvents=[],pendingTakeParent='';
+const extraSettings=['motion_profile','motion_intensity','music_mode','music_track','music_gain_db','music_asset','planner_mode'];
+const locked = (j) => ["Rendering", "Queued"].includes(j.status);
+const notify = (s) => {
+  const error=el('dialogError');if(el('modal')?.open&&error){error.textContent=s;error.classList.remove('hidden');}
+  el("toast").textContent = s;
+  el("toast").classList.remove("hidden");
+  clearTimeout(timer);
+  timer = setTimeout(() => el("toast").classList.add("hidden"), 5000);
+};
+const selectedIds = () => [...selected].filter((id) => state.jobs[id]);
+const sourceName=id=>state.jobs[id]?.label||state.assets[id]?.name||'Recording';
+const versionsFor=id=>state.exports.filter(e=>e.job===id);
+const cutVersion=e=>'v'+String(versionsFor(e.job).findIndex(x=>x.id===e.id)+1).padStart(3,'0');
+const latestFor=id=>versionsFor(id).at(-1);
+function visibleSources(){const query=(el('sourceSearch')?.value||'').toLocaleLowerCase('vi'),collection=el('sourceCollection')?.value||'',visibility=el('sourceVisibility')?.value||'active';return Object.values(state.jobs||{}).filter(j=>(!collection||(j.collection||'')===collection)&&(visibility==='all'||Boolean(j.archived)===(visibility==='archived'))&&(!query||[sourceName(j.id),state.assets[j.id].name,j.collection||'',j.id].join(' ').toLocaleLowerCase('vi').includes(query)));}
+async function req(path, data, raw = false) {
+  const opts =
+    data === undefined
+      ? {}
+      : {
+          method: "POST",
+          headers: {
+            "X-Cutroom-Key": state.key,
+            ...(raw ? {} : { "Content-Type": "application/json" }),
+          },
+          body: raw ? data : JSON.stringify(data),
+        };
+  const r = await fetch(path, opts);
+  const body = await r.json();
+  if (!r.ok) throw Error(body.error || "The request failed");
+  return body;
+}
+const guard =
+  (fn) =>
+  async (...args) => {
+    try {
+      await fn(...args);
+    } catch (e) {
+      notify(e.message || String(e));
+    }
+  };
+function thumb(a) {
+  return a.thumb
+    ? '<img class="thumb" alt="" src="/assets/' + a.id + '/thumb">'
+    : '<span class="thumb"></span>';
+}
+function status(s) {
+  const c = ["Queued", "Rendering"].includes(s)
+    ? "live"
+    : s === "For review"
+      ? "warn"
+      : ["Failed", "Interrupted"].includes(s)
+        ? "fail"
+        : "";
+  return '<span class="pill ' + c + '">' + esc(s) + "</span>";
+}
+function dialog(title, html) {
+  el("dialogTitle").textContent = title;
+  el("dialogBody").innerHTML = '<p id="dialogError" role="alert" class="notice hidden"></p>'+html;
+  if (!el("modal").open) el("modal").showModal();
+}
+function playsource(id) {
+  const a = state.assets[id];
+  dialog(
+    a.name,
+    '<video controls src="/assets/' +
+      id +
+      '/media"></video><small>Original recording · ' +
+      time(a.duration) +
+      "</small>",
+  );
+}
+function review(id) {
+  const e = state.exports.find((x) => x.id === id);
+  dialog(
+    sourceName(e.job)+' · '+cutVersion(e)+(latestFor(e.job)?.id===e.id?' · Latest cut':' · Previous cut'),
+    '<div class="review-grid"><section class="review-picture"><video controls aria-label="Rendered export" src="/exports/' +
+      id +
+      '/mp4"></video><div class="dialogactions">' +
+      ["mp4", "srt", "qc", "project"]
+        .map(
+          (k) =>
+            '<a class="link" download href="/exports/' +
+            id +
+            "/" +
+            k +
+            '?download=1">' +
+            {
+              mp4: "Download MP4",
+              srt: "Captions (.srt)",
+              qc: "QC report",
+              project: "Edit plan",
+            }[k] +
+            "</a>",
+        )
+        .join("") +
+      "</div><small>" +
+      esc(e.timing) +
+      `.</small><details class="audio-audition"><summary>Listen to the mix · matched level</summary><label>Audio-only audition<select id="audioAudition" data-export="${id}"><option value="">Choose a mix…</option><option value="voice">Voice only</option><option value="voice_sfx">Voice + SFX</option><option value="full">Full mix</option></select></label><audio id="auditionPlayer" controls></audio><small>Audio auditions are leveled separately. Watch and approve the original master above.</small><div class="dialogactions">${['voice','sfx','music'].map(k=>`<a class="link" download href="/exports/${id}/${k}_stem?download=1">${k} WAV</a>`).join('')}<a class="link" download href="/exports/${id}/cues?download=1">Cue sheet</a></div></details></section><section class="review-inspection"><fieldset id="checklist"><legend>Final review</legend>` +
+      [
+        ["watched", "I watched the entire export at1× and phone size."],
+        [
+          "content",
+          "The speaker, claims, proof and requested CTA are correct.",
+        ],
+        ["captions", "Captions are accurate, readable and on time."],
+        [
+          "audio",
+          "I listened for clear speech, sync and unobtrusive sound effects.",
+        ],
+      ]
+        .map(
+          ([k, t]) =>
+            '<label><input type="checkbox" data-gate="' +
+            k +
+            '"> ' +
+            t +
+            "</label>",
+        )
+        .join("") +
+      '</fieldset>'+`<p class="source-lineage">Rendered cut ${cutVersion(e)} · original recording: ${esc(state.assets[e.job].name)} · source ${e.job.slice(0,8)}</p><button class="textbtn" data-reveal="export" data-local-id="${e.id}">Show MP4 in Explorer</button>`+technicalSummary(e)+reviewEvidence(e)+'<label for="reviewNote">Timecode and correction (required for revisions)</label><input id="reviewNote" maxlength="2000" placeholder="e.g. 00:12 · Cutaway covers the result."><div class="dialogactions review-actions"><button class="soft" data-verdict="REVISE" data-eid="' +
+      id +
+      '">Request revision</button><button class="primary" data-verdict="READY" data-eid="' +
+      id +
+      '">Approve export</button></div></section></div>',
+  );
+}
+function technicalSummary(e){
+  const t=e.technical, v=t?.verified, a=t?.output_audio;
+  if(!v)return '<p class="notice">Measured QC unavailable for this older export. Download its QC report.</p>';
+  return `<section class="technical"><h3>Technical checks · this master</h3><dl><div><dt>Picture</dt><dd>1080 × 1920 · 30 fps</dd></div><div><dt>Duration / frames</dt><dd>${Number(v.video_s).toFixed(2)}s · ${v.frames}</dd></div><div><dt>Voice loudness</dt><dd>${esc(a?.integrated_lufs ?? 'Not measured')} LUFS</dd></div><div><dt>True peak</dt><dd>${esc(a?.true_peak_dbtp ?? 'Not measured')} dBTP</dd></div></dl><small>Technical checks do not establish editorial approval. Review this exact export at normal speed. SHA256: <code>${esc(e.sha256)}</code></small>${Object.entries(t.kit_qc?.gates||{}).map(([k,g])=>`<p>${k} · ${esc(g.name)} <strong>${esc(g.status)}</strong></p>`).join('')}${(t.kit_qc?.issues||[]).map(i=>`<button class="textbtn" data-seek="${i.master_range[0]}">${time(i.master_range[0])} · ${esc(i.id)} · ${esc(String(i.actual))}</button>`).join('')}</section>`;
+}
+function reviewEvidence(e){
+ const d=e.duration,samples=[Math.min(3,d/4),d/2,Math.max(0,d-2)],labels={A:'Opening, payoff and CTA',B:'Visible target, action and readable result',C:'Vietnamese names, numbers and caption timing',D:'Animation purpose and SFX alignment',E:'Intact speech, natural cuts and intelligible mix',F:'Export, captions and reproducible recipe'};
+ return `<details class="evidence"><summary>Review observations · required for approval</summary><label>Your name<input id="reviewerName" autocomplete="name" placeholder="Person who watched and listened"></label>${Object.entries(labels).map(([k,label])=>`<label>${k} · ${label}<textarea data-qc-note="${k}" rows="2" placeholder="00:12 · What you saw or heard…"></textarea></label>`).join('')}<p>Check lip sync at these moments; enter the observed offset in output frames (0 if aligned).</p>${samples.map((t,i)=>`<label>${time(t)} · lip-sync offset<input type="number" step="any" data-sync-time="${t}" aria-label="Lip-sync offset ${i+1}"></label>`).join('')}${(e.technical?.kit_qc?.measurements?.cue_offsets||[]).map(c=>`<div class="cue-evidence"><strong>${esc(c.id)}</strong><audio controls src="/sounds/${esc(state.jobs[e.job]?.settings.insert_sound||'click')}.wav"></audio><label><input type="checkbox" data-cue-reviewed="${esc(c.id)}"> I checked the isolated effect and final mix at this event.</label><label>Observed offset in frames<input type="number" step="any" data-cue-offset="${esc(c.id)}"></label></div>`).join('')}</details>`;
+}
+function tab(name) {
+  el("work").classList.toggle("hidden", name !== "workspace");
+  el("out").classList.toggle("hidden", name !== "exports");
+  all("[data-tab]").forEach((b) =>
+    b.classList.toggle("active", b.dataset.tab === name),
+  );
+}
+function allowChange() {
+  return (
+    !touched.size || confirm("Discard the unsaved changes in Edit settings?")
+  );
+}
+function changeSelection(ids) {
+  if (!allowChange()) {
+    drawList();
+    return;
+  }
+  touched.clear();
+  selected.clear();
+  ids.forEach((x) => selected.add(x));
+  versionKey = "";
+  draw();
+  localStorage.setItem('cutroom-selection:'+state.data_folder,JSON.stringify([...selected]));
+}
+function refs() {
+  return Object.values(state.assets || {}).filter(
+    (x) => x.kind === "reference",
+  );
+}
+function options(id, none = true) {
+  return (
+    (none ? '<option value="">No pacing reference</option>' : "") +
+    refs()
+      .map(
+        (a) =>
+          '<option value="' +
+          a.id +
+          '" ' +
+          (a.id === id ? "selected" : "") +
+          ">" +
+          esc(a.name) +
+          "</option>",
+      )
+      .join("")
+  );
+}
+function showPanel(name) {
+  activePanel = name;
+  all("[data-panel]").forEach((b) =>
+    b.classList.toggle("active", b.dataset.panel === name),
+  );
+  all("[data-body]").forEach((p) =>
+    p.classList.toggle("hidden", p.dataset.body !== name),
+  );
+}
+function setDirty(k) {
+  touched.add(k);
+  el("dirty").textContent = "Unsaved changes";
+  el("save").disabled = false;
+  if(k==='script')el('generateArtifacts').disabled=!el('script').value.trim();
+}
+function drawList() {
+  const focusRow=document.activeElement?.closest('[data-row]')?.dataset.row;
+  const focusCheckbox=document.activeElement?.matches('input[type=checkbox]');
+  const allJobs = Object.values(state.jobs || {}),oldCollection=el('sourceCollection').value;
+  el('sourceCollection').innerHTML='<option value="">All projects</option>'+[...new Set(allJobs.map(j=>j.collection).filter(Boolean))].sort().map(c=>`<option value="${esc(c)}">${esc(c)}</option>`).join('');el('sourceCollection').value=oldCollection;
+  const jobs=visibleSources();
+  const ids = selectedIds();
+  el("clipCount").textContent = allJobs.length;
+  el('topImport').classList.toggle('hidden',!allJobs.length);
+  el('topImport').textContent='＋ Add recordings';
+  el("emptyDrop").classList.toggle("hidden", !!allJobs.length);
+  el("selectAll").disabled = !jobs.length;
+  el("selectAll").textContent =
+    ids.length === jobs.length && jobs.length
+      ? "Clear selection"
+      : "Select all";
+  el("selectionText").textContent = jobs.length
+    ? `${ids.length} selected · ${jobs.length} of ${allJobs.length} sources shown`
+    : allJobs.length?"No sources match this view":"No recordings yet";
+  el("clips").innerHTML = jobs
+    .map((j) => {
+      const a = state.assets[j.id];
+      return (
+        '<div class="clip ' +
+        (selected.has(j.id) ? "chosen" : "") +
+        '" data-row="' +
+        j.id +
+        '"><input aria-label="Select ' +
+        esc(sourceName(j.id)) +
+        '" type="checkbox" ' +
+        (selected.has(j.id) ? "checked" : "") +
+        ">" +
+        thumb(a) +
+        '<div class="details"><button class="name clip-name" title="Edit '+esc(a.name)+'">' +
+        esc(sourceName(j.id)) +
+        '</button><div class="detail">' +
+        `Original · Take ${j.take_number||1} · ${j.id.slice(0,8)} · ${versionsFor(j.id).length} cut${versionsFor(j.id).length===1?'':'s'}${j.collection?' · '+esc(j.collection):''}${j.archived?' · Archived':''}<br>`+time(a.duration) +
+        " · " +
+        (j.script_issue ? esc(j.script_issue) : j.settings.script.trim() ? "Script attached" : "Needs script") +
+        (locked(j)||j.status==='Failed' ? " · " + esc(j.stage.slice(0,100)) : "") +
+        "</div></div>" +
+        status(j.status) + (!j.settings.script.trim()&&!locked(j)?`<button class="textbtn add-script" data-add-script="${j.id}">Add script</button>`:'') +`<button type="button" class="textbtn" data-manage-source="${j.id}">Manage</button>${latestFor(j.id)?`<button type="button" class="textbtn" data-source-cuts="${j.id}">View cuts</button>`:''}`+
+        "</div>"
+      );
+    })
+    .join("");
+  if(!jobs.length&&allJobs.length)el('clips').innerHTML='<div class="simple-empty">No sources match this view. Try another project, search or archive filter.</div>';
+  const downloadable = ids.filter((k) =>
+    state.exports.some((e) => e.job === k),
+  );
+  el("selectedDownload").classList.toggle("hidden", !downloadable.length);
+  el("selectedDownload").href =
+    "/downloads/latest.zip?jobs=" + encodeURIComponent(downloadable.join(","));
+  const ready=ids.filter(k=>!state.jobs[k].archived&&!locked(state.jobs[k])&&state.jobs[k].settings.script.trim()&&!state.jobs[k].script_issue).length;
+  el("queue").disabled = !ready || !state.tools;
+  el("queue").textContent = `Render ${ready} video${ready===1?'':'s'}`;
+  el("queueHint").textContent = jobs.some(locked)
+    ? jobs.filter((j) => j.status === "Rendering").length +
+      " rendering · " +
+      jobs.filter((j) => j.status === "Queued").length +
+      " queued"
+    : `${ids.length} selected · ${ready} ready · ${ids.length-ready} need input`;
+  if(focusRow)document.querySelector(`[data-row="${focusRow}"] ${focusCheckbox?'input':'.clip-name'}`)?.focus({preventScroll:true});
+}
+function drawInserts() {
+  el("insertRows").innerHTML =
+    inserts
+      .map(
+        (r, i) =>
+          '<div class="insert" data-insert="' +
+          i +
+          '"><select aria-label="Cutaway source" data-k="asset">' +
+          options(r.asset, false) +
+          `</select><img class="insert-thumb" alt="Cutaway source thumbnail" src="/assets/${r.asset}/thumb"><small>Show in video · presenter audio continues</small><label>Spoken cue (optional)<input data-k="cue" maxlength="240" placeholder="Exact words from this script" value="` +
+          esc(r.cue || "") +
+          `"></label><button type="button" class="textbtn" data-resolve="${i}">Find phrase in script</button><small>${r.occurrence!=null?'Chosen occurrence '+(r.occurrence+1)+' · ':''}${r.cue&&r.occurrence==null?'At spoken phrase · resolve to inspect timing':'Insertion at '+Number(r.at).toFixed(2)+'s'} · ${Number(r.duration).toFixed(2)}s long · ${esc(el('insert_sound')?.value||'none')} sound</small><div class="times">` +
+          [
+            ["at", "Starts at (s)"],
+            ["offset", "Source in (s)"],
+            ["duration", "Length (s)"],
+          ]
+            .map(
+              ([k, l]) =>
+                "<label>" +
+                l +
+                '<input data-k="' +
+                k +
+                '" type="number" min="0" step="any" value="' +
+                Number(r[k]) +
+                '"></label>',
+            )
+            .join("") +
+          `</div>${anchorControls(r)}<button type="button" data-remove="` +
+          i +
+          '" class="textbtn">Remove</button></div>',
+      )
+      .join("") || '<small class="simple-empty">No cutaways assigned.</small>';
+}
+function drawForm() {
+  const ids = selectedIds();
+  const single = ids.length === 1;
+  const active = ids.some((id) => locked(state.jobs[id]));
+  el("target").textContent = single
+    ? 'Editing '+state.assets[ids[0]].name
+    : ids.length
+      ? 'Editing '+ids.length + " recordings"
+      : "Select a recording to edit";
+  el("blankInspect").classList.toggle("hidden", ids.length > 0 && !active);
+  el("form").classList.toggle("hidden", !ids.length || active);
+  el("blankInspect").querySelector("strong").textContent = active
+    ? "Rendering in progress"
+    : "Your edit controls";
+  el("blankInspect").querySelector("p").textContent = active
+    ? "You can edit these recordings again when the export finishes."
+    : "Select one or more recordings to assign a script, set a style, or add a cutaway.";
+  if (!ids.length || active) return;
+  const key =
+    ids.map((k) => k + ":" + state.jobs[k].revision).join("|") +
+    ":" +
+    refs().length;
+  if (key === versionKey || touched.size) return;
+  versionKey = key;
+  const first = state.jobs[ids[0]].settings;
+  ["script", "style", "fit", "insert_sound", "caption_position"].forEach(
+    (k) => {
+      el(k).value = first[k];
+    },
+  );
+  el('music_asset').innerHTML='<option value="">Choose a cleared track…</option>'+Object.values(state.assets).filter(a=>a.kind==='music').map(a=>`<option value="${a.id}">${esc(a.name)}</option>`).join('');
+  extraSettings.forEach(k=>{el(k).value=first[k]??({motion_profile:'baseline',motion_intensity:.5,music_mode:'off',music_track:'calm',music_gain_db:-20,music_asset:'',planner_mode:'built_in'}[k]);});
+  const planner=state.jobs[ids[0]].planner_receipt;el('plannerStatus').textContent=planner?(planner.origin+' · '+planner.model_version+' · '+(planner.weights_loaded?'weights actually loaded':'no model weights loaded')+(planner.fallback?' · '+planner.fallback:'')):'Built-in rules · no model weights loaded. Pacing references do not automatically enter training.';
+  const mixed = (k) =>
+    ids.some(
+      (id) =>
+        JSON.stringify(state.jobs[id].settings[k]) !== JSON.stringify(first[k]),
+    );
+  if (mixed("script")) {
+    el("script").value = "";
+    el("script").placeholder =
+      "Different scripts selected. Type to replace all selected scripts…";
+  } else el("script").placeholder = "Paste what the presenter says…";
+  el("style_ref").innerHTML = options(first.style_ref);
+  ["style", "fit", "insert_sound", "caption_position", "style_ref",'motion_profile','music_mode','music_track','music_asset','planner_mode'].forEach(
+    (k) => {
+      const v = el(k);
+      v.querySelector('option[value="__mixed"]')?.remove();
+      if (mixed(k)) {
+        const o = new Option("Mixed values", "__mixed", true, true);
+        o.disabled = true;
+        v.prepend(o);
+        v.value = "__mixed";
+      }
+    },
+  );
+  inserts = mixed("inserts") ? [] : structuredClone(first.inserts);
+  manualEvents=mixed('events')?[]:structuredClone(first.events||[]);
+  drawEvents(mixed('events'));
+  el('motion_intensity').setAttribute('aria-label',mixed('motion_intensity')?'Motion intensity · Mixed':'Motion intensity');
+  drawInserts();
+  el("scriptHelp").textContent =
+    ids.length > 1
+      ? "Only changed fields apply to all selected clips. Import TXT/SRT files named after each recording to match scripts."
+      : "Plain text uses estimated timing. SRT uses your cue times.";
+  el("sourceBox").classList.toggle("hidden", !single);
+  el("sourceBox").innerHTML = single
+    ? '<button type="button" data-play="' +
+      ids[0] +
+      '">▶ Preview source</button>'
+    : "";
+  el("save").disabled = true;
+  el("dirty").textContent = mixed("inserts")
+    ? "Different cutaways selected"
+    : "Saved";
+  showPanel(activePanel);
+  drawFraming();
+}
+function anchorControls(r){
+ const coords=(label,key,values,names)=>`<div class="roi-inputs">${names.map((name,j)=>`<label>${label} ${name}<input type="number" min="0" data-anchor-array="${key}" data-coordinate="${j}" value="${values?.[j]??''}"></label>`).join('')}</div>`;
+ return `<details class="anchor-controls"><summary>Verified target, contact and result</summary><small>Use source seconds and pixels. Leave unobserved anchors blank.</small>${['target','contact','result'].map(k=>`<label>${k==='target'?'Control recognizable':k==='contact'?'Actual contact':'Success visible'} (source s)<input type="number" min="0" step="any" data-anchor="${k}" value="${r.anchors?.[k]??''}"></label>`).join('')}${coords('Control','roi_source',r.anchors?.roi_source,['x','y','width','height'])}${coords('Success','result_roi_source',r.anchors?.result_roi_source,['x','y','width','height'])}${coords('Contact point','contact_point_source',r.anchors?.contact_point_source,['x','y'])}<details><summary>Source crop · optional</summary><small>Original source pixels. Keep important details in view.</small>${coords('Crop','crop',r.crop,['width','height','x','y'])}</details></details>`;
+}
+function drawFraming(){
+ const id=selectedIds()[0],a=state.assets?.[id];if(!a)return;
+ const fit=el('fit').value,position=el('caption_position').value;
+ el('framingPreview').innerHTML=`<video aria-label="Source framing preview · sample caption" muted autoplay loop playsinline src="/assets/${id}/media" style="object-fit:${fit==='cover'?'cover':'contain'}"></video><span class="mini-caption ${position}">Biến ý tưởng thành video</span>`;
+ el('framingHelp').textContent=fit==='cover'?'Fill portrait frame: the sides of a horizontal recording will be cropped.':'Fit entire picture: keep the full source; unused portrait space is padded.';
+ all('[data-style]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.style===el('style').value)));
+}
+function drawEvents(mixed=false){
+ el('eventRows').innerHTML=mixed?'<p>Mixed manual cues. Changing profile, intensity or music preserves each recording’s cues.</p>':manualEvents.map((e,i)=>`<details class="cue-card" data-event="${i}"><summary>${esc(e.kind)} · ${Number(e.anchor?.timeline_source_pts??e.anchor?.source_pts??0).toFixed(2)}s · ${e.sound?.muted?'Silent':esc(e.sound?.id||'No sound')}</summary><label>Effect<select data-event-field="kind">${['speaker','keyword','ui_focus','contact','result','comparison','reframe','chapter'].map(k=>`<option ${k===e.kind?'selected':''}>${k}</option>`).join('')}</select></label><label>Presenter timeline anchor (s)<input type="number" step="any" data-event-field="at" value="${e.anchor?.timeline_source_pts??e.anchor?.source_pts??0}"></label><label>Readable hold (frames)<input type="number" min="1" data-event-field="hold_frames" value="${e.hold_frames||18}"></label><label>Text (optional)<input data-event-field="text" value="${esc(e.text||'')}"></label><label>Sound<select data-sound-field="id"><option value="">Intentional silence</option>${['click','tap','slide','chime','chapter'].map(k=>`<option value="${k}" ${e.sound?.id===k?'selected':''}>${k}</option>`).join('')}</select></label><label><input type="checkbox" data-sound-field="muted" ${e.sound?.muted?'checked':''}> Mute this cue</label><label>Gain (dB)<input type="number" step="1" min="-60" max="6" data-sound-field="gain_db" value="${e.sound?.gain_db??-14}"></label><label>Timing offset (frames)<input type="number" step="any" data-sound-field="offset_frames" value="${e.sound?.offset_frames||0}"></label><label>Reason for intentional offset<input data-sound-field="offset_reason" value="${esc(e.sound?.offset_reason||'')}"></label><details><summary>Advanced target / marker</summary>${['x','y','width','height'].map((k,j)=>`<label>Output ${k}<input type="number" data-event-roi="${j}" value="${e.roi?.[j]??''}"></label>`).join('')}<label>Perceptual marker sample (48 kHz)<input type="number" min="0" data-sound-field="marker_sample" value="${e.sound?.marker_sample??''}"></label><label>Trim audio from sample<input type="number" min="0" data-sound-field="trim_in_samples" value="${e.sound?.trim_in_samples??0}"></label></details>${(e.reference_evidence||[]).map(r=>`<small>Reference ${esc(r.reference_id?.slice(0,10))} · ${r.source_range.map(t=>Number(t).toFixed(2)).join('–')}s · ${esc(r.observation)} (${esc(r.status)})</small>`).join('')}<button type="button" class="textbtn" data-remove-event="${i}">Remove cue</button></details>`).join('')||'<small>No manual cues. Verified cutaway anchors can suggest focus, click and result cues.</small>';
+}
+function showReferenceAnalysis(id,result){
+ state.assets[id].analysis=result;
+ dialog('Reference profile · measured candidates',`<p>${esc(state.assets[id].name)} · ${esc(result.analysis)} · ${result.sample_seconds.toFixed(1)}s sampled</p><p>${esc(result.profile.id)} · ${esc(result.profile.origin)} · no trained model</p><p>Music and SFX: ${esc(result.audio.status)} · ${esc(result.audio.reason)}</p>${result.observations.map((o,i)=>`<div class="observation"><strong>${o.source_range.map(t=>Number(t).toFixed(2)).join('–')}s</strong><p>${esc(o.observation)}</p><small>${esc(o.status)} · confidence ${o.confidence} · ${esc(o.limitations||'')}</small><button class="textbtn" data-edit-observation="${i}" data-ref-id="${id}">Correct observation</button></div>`).join('')}<button class="soft" data-full-analysis="${id}">Analyze entire reference</button><small>Style references contribute timing rules and observations; their pictures, voice and music are not copied.</small>`);
+}
+function draw() {
+  el('graphicCount').textContent=Object.values(state.assets||{}).filter(a=>a.kind==='graphic').length+' local images available for original scenes';
+  drawList();
+  drawForm();
+  drawArtifacts();
+  el("refCount").textContent = refs().length;
+  el("refs").innerHTML =
+    refs()
+      .map(
+        (a) =>
+          '<div class="asset">' +
+          thumb(a) +
+          '<div class="details"><div class="name">' +
+          esc(a.name) +
+          '</div><div class="detail">' +
+          time(a.duration) +
+          " · " +
+          a.width +
+          " × " +
+          a.height +
+          '</div></div><button class="textbtn" data-play="' +
+          a.id +
+          `">Preview</button><div class="ref-actions"><button class="textbtn" data-analyze="${a.id}">Reference profile</button><button class="textbtn" data-pacing="${a.id}">Use for pacing</button><button class="textbtn" data-show-reference="${a.id}">Show in video</button><button class="textbtn" data-training-intake="${a.id}">Include in training</button></div></div>`,
+      )
+      .join("") ||
+    '<div class="simple-empty">Added footage will be available to every recording in this batch.</div>';
+  el("matchRow").classList.toggle("hidden", !refs().length);
+  el("matchRefs").disabled = !selectedIds().some(
+    (id) => !locked(state.jobs[id]) && state.jobs[id].settings.script.trim(),
+  );
+  el("exportCount").textContent = state.exports.length;
+  el("batchDownload").classList.toggle("hidden", !state.exports.length);
+  drawExports();
+  el("setupBanner").classList.toggle("hidden", !!state.tools);
+  if (!state.tools)
+    el("setupBanner").innerHTML =
+      "<span>" +
+      esc(
+        state.setup ||
+          "Install the video encoder once to import and render footage.",
+      ) +
+      '</span><button class="soft" data-setup>Encoder setup</button>';
+}
+function drawExports(){
+ const prior=el('exportSource').value;
+ el('exportSource').innerHTML='<option value="">All source recordings</option>'+Object.values(state.jobs||{}).map(j=>`<option value="${j.id}">${esc(sourceName(j.id))} · Take ${j.take_number||1} · ${j.id.slice(0,6)}</option>`).join('');el('exportSource').value=prior;
+ const filtered=state.exports.filter(e=>!prior||e.job===prior),allHistory=el('exportHistory').value==='all',shown=filtered.filter(e=>allHistory||latestFor(e.job)?.id===e.id).reverse();
+ el('exportSummary').textContent=`${shown.length} ${allHistory?'versions':'latest cuts'} shown · ${filtered.length} versions kept`;
+ el('batchDownload').href='/downloads/latest.zip?jobs='+encodeURIComponent([...new Set(shown.map(e=>e.job))].join(','));
+ el('outputs').innerHTML=shown.map(e=>`<div class="exportrow"><div class="cut-badge">${cutVersion(e)}<small>${latestFor(e.job)?.id===e.id?'Latest':'Previous'}</small></div>${thumb(state.assets[e.job])}<div class="details"><div class="name">${esc(sourceName(e.job))} · Take ${state.jobs[e.job].take_number||1}</div><div class="detail">Rendered MP4 · ${time(e.duration)} · ${new Date(e.created*1000).toLocaleString()}<br>From ${esc(state.assets[e.job].name)} · source ${e.job.slice(0,8)} · SHA ${e.sha256.slice(0,10)}${state.jobs[e.job].collection?' · '+esc(state.jobs[e.job].collection):''}</div></div><div class="actions">${status({READY:'Approved',REVISE:'Needs revision'}[e.verdict]||'For review')}<button type="button" class="soft" data-review="${e.id}">Review ${cutVersion(e)}</button><button type="button" class="textbtn" data-locate-source="${e.job}">Go to source</button>${!allHistory&&versionsFor(e.job).length>1?`<button type="button" class="textbtn" data-cut-history="${e.job}">${versionsFor(e.job).length} versions</button>`:''}</div></div>`).join('')||'<div class="outempty"><h2>No exports in this view</h2><p>Choose another source or render a new cut. Previous versions are kept.</p></div>';
+}
+async function manageSource(id){
+ const info=await req('/api/source-info',{id}),j=state.jobs[id],latest=latestFor(id),family=j.source_family||id;
+ dialog('Manage original · Take '+(j.take_number||1),`<div class="source-manager"><video controls src="/assets/${id}/media"></video><section><strong>Original recording</strong><p>${esc(info.original_name)}</p><small>Source ${id.slice(0,8)} · family ${family.slice(0,8)}<br>SHA256 ${esc(info.sha256)}</small><label>Display name<input id="sourceLabel" maxlength="100" value="${esc(j.label||'')}" placeholder="${esc(info.original_name)}"></label><label>Project / folder<input id="sourceProject" maxlength="80" value="${esc(j.collection||'')}" placeholder="e.g. 5 repo GitHub"></label><p class="local-path">Local original: ${esc(info.local_copy)}</p><button type="button" class="textbtn" data-reveal="source" data-local-id="${id}">Show original in Explorer</button><div class="dialogactions"><button type="button" class="primary" data-save-source="${id}">Save organization</button><button type="button" class="soft" data-new-take="${id}">Add new take</button><button type="button" class="textbtn" data-archive-source="${id}">${j.archived?'Restore source':'Archive source'}</button></div><small>Archive hides the source; it keeps the original, scenes and every export. A new take keeps style, starts with its own script/timing, and does not replace this recording.</small>${latest?`<p>Newest rendered cut: ${cutVersion(latest)} · ${esc(latest.verdict)} <button type="button" class="soft" data-source-cuts="${id}">View cuts</button></p>`:'<p>No rendered cut yet.</p>'}</section></div>${j.reference_script?`<details><summary>Previous take’s script · reference only</summary><textarea readonly rows="7">${esc(j.reference_script)}</textarea><small>Not applied. Compare with the new voice and realign captions before rendering.</small></details>`:''}`);
+}
+function drawArtifacts(){
+ const ids=selectedIds();el('generateArtifacts').disabled=!ids.length||ids.some(id=>locked(state.jobs[id]))||!ids.every(id=>state.jobs[id].settings.script.trim());
+ const records=Object.values(state.artifacts||{}).filter(r=>ids.includes(r.job));
+ el('storyboard').innerHTML=ids.length===1?(state.storyboards?.[ids[0]]?.passages||[]).map(p=>`<details class="passage"><summary>${time(p.start)} · Passage ${esc(p.id.slice(-6))} · occurrence ${p.occurrence+1}</summary><p>${esc(p.quote)}</p><small>${esc(p.timing)} · ${p.start.toFixed(2)}–${p.end.toFixed(2)}s</small></details>`).join(''):'';
+ el('artifactCards').innerHTML=records.map(r=>`<article class="artifact-card"><div class="artifact-heading"><img src="/artifacts/${r.id}/thumb?v=${r.version}" alt="${esc(r.plan.type)} thumbnail"><div><small>${r.plan.type==='introduction'?'Introduction':'Demo'} · v${String(r.version).padStart(3,'0')}</small><strong>${esc(r.plan.title)}</strong><span>${r.plan.duration.toFixed(1)}s · ${r.plan.enabled?'':'Disabled · '}${esc(r.status)}</span></div></div><blockquote>${esc(r.plan.source_quote)}</blockquote><small>${esc(r.plan.intended_visual)} · ${esc(r.plan.timing)}</small><div class="artifact-actions"><button type="button" class="soft" data-artifact-preview="${r.id}">Preview</button><button type="button" class="textbtn" data-artifact-edit="${r.id}">Edit</button><button type="button" class="textbtn" data-artifact-regenerate="${r.id}">Regenerate this scene</button><button type="button" class="textbtn" data-artifact-toggle="${r.id}">${r.plan.enabled?'Disable':'Enable'}</button><button type="button" class="textbtn" data-artifact-insert="${r.id}">${r.inserted?'Remove from episode':'Insert in episode'}</button><a class="link" download href="/artifacts/${r.id}/preview?download=1">Export MP4</a></div></article>`).join('');
+}
+function artifactEditor(id){
+ const r=state.artifacts[id],p=r.plan,parts=state.storyboards?.[r.job]?.passages||[];
+ dialog('Edit '+(p.type==='introduction'?'introduction':'demo'),`<label>Wording<input id="sceneTitle" value="${esc(p.title)}"></label><label>Spoken passage<select id="scenePassage">${parts.map(s=>`<option value="${s.id}" ${p.passage_ids.includes(s.id)?'selected':''}>${esc(s.quote)} · occurrence ${s.occurrence+1}</option>`).join('')}</select></label><small>${esc(p.timing)}. This is not a claim of successful speech alignment.</small><div class="scene-controls"><label>Duration (s)<input type="number" id="sceneDuration" min="0.5" max="30" step="any" value="${p.duration}"></label><label>Insert at (s)<input type="number" id="sceneAt" min="0" step="any" value="${p.at}"></label></div><label>Position<select id="scenePosition">${['top','center','bottom'].map(k=>`<option ${k===p.position?'selected':''}>${k}</option>`).join('')}</select></label><label>Motion intensity<input id="sceneIntensity" type="range" min="0" max="1" step="0.05" value="${p.intensity}"></label><label>Sound<select id="sceneSound"><option value="none" ${p.sound==='none'?'selected':''}>Off · intentional silence</option><option value="click+chime" ${p.sound!=='none'?'selected':''}>Click on contact · chime on result</option></select></label>${['contact','result'].map(key=>`<details><summary>${key==='contact'?'Contact click':'Success chime'} overrides</summary><label><input id="sceneMute-${key}" type="checkbox" ${p.sounds?.[key]?.muted?'checked':''}> Mute</label><label>Gain (dB)<input id="sceneGain-${key}" type="number" min="-60" max="6" value="${p.sounds?.[key]?.gain_db??-14}"></label><label>Offset (frames)<input id="sceneOffset-${key}" type="number" value="${p.sounds?.[key]?.offset_frames??0}"></label></details>`).join('')}${designFields(p.design)}${evidenceFields(p.evidence)}<button type="button" class="primary" data-save-scene="${id}">Save new scene version</button><p>Other scenes, their versions and manual edits remain unchanged.</p>`);
+}
+function evidenceFields(e){
+ const choices=refs().map(a=>`<option value="${a.id}" ${e?.asset===a.id?'selected':''}>${esc(a.name)}</option>`).join('');
+ const arrayField=(key,label,names)=>`<div class="roi-inputs">${names.map((name,i)=>`<label>${label} ${name}<input data-scene-evidence-array="${key}" data-coordinate="${i}" type="number" min="0" value="${e?.[key]?.[i]??''}"></label>`).join('')}</div>`;
+ return `<details class="scene-evidence"><summary>Actual proof and source anchors · optional</summary><label>On-screen proof (not pacing)<select id="sceneEvidence"><option value="">No proof · keep capture placeholder</option>${choices}</select></label><small>Enter only observed source times. Export completion and opening the file are separate events.</small>${['target','contact','result','opened','crop_start','crop_end'].map(k=>`<label>${({target:'Control recognizable',contact:'Actual contact',result:'Export completed',opened:'Exported file opened',crop_start:'Start close-up',crop_end:'End close-up'})[k]} (source s)<input data-scene-evidence="${k}" type="number" min="0" step="any" value="${e?.[k]??''}"></label>`).join('')}${arrayField('target_roi','Control',['x','y','width','height'])}${arrayField('result_roi','Success',['x','y','width','height'])}${arrayField('contact_point','Contact',['x','y'])}${arrayField('crop','Close-up crop',['width','height','x','y'])}${arrayField('result_crop','Opened-file crop',['width','height','x','y'])}</details>`;
+}
+function readSceneEvidence(){
+ const asset=el('sceneEvidence')?.value;if(!asset)return null;
+ const result={asset};all('[data-scene-evidence]').filter(x=>x.value!=='').forEach(x=>result[x.dataset.sceneEvidence]=Number(x.value));
+ for(const key of new Set(all('[data-scene-evidence-array]').map(x=>x.dataset.sceneEvidenceArray))){const inputs=all(`[data-scene-evidence-array="${key}"]`);if(inputs.every(x=>x.value!==''))result[key]=inputs.map(x=>Number(x.value));}
+ return result;
+}
+function designFields(d={}){const choices=(key)=>Object.values(state.assets||{}).filter(a=>a.kind==='graphic').map(a=>`<option value="${a.id}" ${d[key]===a.id?'selected':''}>${esc(a.name)}</option>`).join('');return `<details><summary>Branding / supplied comparison images · optional</summary><label>Brand accent<input id="sceneBrandColor" type="color" value="${esc(d.color||'#173a2c')}"></label>${['logo','before','after'].map(k=>`<label>${k}<select id="sceneDesign-${k}"><option value="">None</option>${choices(k)}</select></label>`).join('')}<small>A before/after pair stays labeled and uses the same fit. Images are local; no third-party assets are downloaded.</small></details>`;}
+function readSceneDesign(){const result={color:el('sceneBrandColor')?.value||'#173a2c'};for(const k of ['logo','before','after'])if(el('sceneDesign-'+k)?.value)result[k]=el('sceneDesign-'+k).value;return result;}
+async function refresh() {
+  const initial=!state.jobs;
+  state = await req("/api/state");
+  if(initial){try{JSON.parse(localStorage.getItem('cutroom-selection:'+state.data_folder)||'[]').filter(id=>state.jobs[id]).forEach(id=>selected.add(id));}catch{}}
+  unresolvedScripts=state.script_inbox||[];
+  if(unresolvedScripts.length){el('scriptResults').classList.remove('hidden');el('scriptResults').innerHTML=`<span>${unresolvedScripts.length} scripts need assignment</span><button class="textbtn" id="resolveScripts">Resolve assignments</button>`;}
+  draw();
+}
+async function save() {
+  if (!touched.size) return;
+  const changes = {};
+  for (const k of touched) changes[k] = k === "inserts" ? inserts : k==='events'?manualEvents:['motion_intensity','music_gain_db'].includes(k)?Number(el(k).value):el(k).value;
+  await req("/api/update", { ids: selectedIds(), changes });
+  touched.clear();
+  versionKey = "";
+  await refresh();
+  notify("Edit settings saved");
+}
+async function upload(files, kind, parentSource='') {
+  if (!files.length) return;
+  if (importing) throw Error("Wait for the current import to finish.");
+  if (!allowChange()) return;
+  importing = true;
+  const ids = [],
+    errors = [];
+  el("importState").classList.remove("hidden");
+  try {
+    for (const [i, f] of [...files].entries()) {
+      el("importState").textContent =
+        "Importing " + (i + 1) + " of " + files.length + " · " + f.name;
+      try {
+        const res = await req(
+          "/api/import?kind=" + kind + "&name=" + encodeURIComponent(f.name)+(kind==='host'?'&collection='+encodeURIComponent(el('sourceCollection').value)+(parentSource?'&parent_source='+encodeURIComponent(parentSource):''):''),
+          f,
+          true,
+        );
+        ids.push(res.id);
+      } catch (e) {
+        errors.push(f.name + ": " + e.message);
+      }
+    }
+    touched.clear();
+    if (kind === "host" && ids.length) {
+      el('sourceSearch').value='';el('sourceVisibility').value='active';
+      selected.clear();
+      ids.forEach((id) => selected.add(id));
+      localStorage.setItem('cutroom-selection:'+state.data_folder,JSON.stringify([...selected]));
+    }
+    versionKey = "";
+    await refresh();
+    if(kind==='music'&&ids.length){el('modal').close();el('music_asset').value=ids[0];el('music_mode').value='my_track';setDirty('music_asset');setDirty('music_mode');showPanel('look');}
+    if (errors.length)
+      dialog("Import results", "<p>" + esc(errors.join(" · ")) + "</p>");
+    else
+      notify(
+        "Imported " + ids.length + " file" + (ids.length === 1 ? "" : "s"),
+      );
+  } finally {
+    importing = false;
+    el("importState").classList.add("hidden");
+  }
+}
+async function importScripts(files) {
+  if (!files.length || !selectedIds().length) return;
+  if (!allowChange()) return;
+  const result=await req('/api/scripts',{ids:selectedIds(),scripts:await Promise.all([...files].map(async f=>({name:f.name,text:await f.text()})))});
+  unresolvedScripts=result.unresolved;
+  touched.clear();
+  versionKey = "";
+  await refresh();
+  const summary=`${result.matched} scripts matched · ${unresolvedScripts.length} need assignment`;
+  el('scriptResults').classList.remove('hidden');el('scriptResults').innerHTML=`<span>${summary}</span>${unresolvedScripts.length?'<button class="textbtn" id="resolveScripts">Resolve assignments</button>':''}`;
+  notify(summary);
+}
+function setup() {
+  dialog(
+    "Workspace settings",
+    "<h3>Video encoder</h3><p>" +
+      esc(
+        state.tools
+          ? "FFmpeg and FFprobe are available."
+          : state.setup ||
+              "Install FFmpeg and FFprobe once to process your videos locally.",
+      ) +
+      '</p><div class="dialogactions">' +
+      (!state.tools && state.platform === "nt"
+        ? '<button id="install" class="primary">Install FFmpeg with WinGet</button>'
+        : "") +
+      '<button id="recheck" class="soft">Check again</button></div><h3>Local files</h3><p>Recordings, scripts and exports are stored on this computer. Closing the tab leaves active renders running.</p><div class="dialogactions"><button id="quit" class="soft">Quit Cutroom</button></div>',
+  );
+}
+document.addEventListener(
+  "click",
+  guard(async (e) => {
+    const b = e.target.closest("button,input,[data-row],a");
+    if (!b) return;
+    if(b.dataset.manageSource){await manageSource(b.dataset.manageSource);return;}
+    if(b.dataset.saveSource){await req('/api/source-organize',{id:b.dataset.saveSource,label:el('sourceLabel').value,collection:el('sourceProject').value});el('modal').close();versionKey='';await refresh();return;}
+    if(b.dataset.archiveSource){const id=b.dataset.archiveSource,restore=state.jobs[id].archived;await req('/api/source-organize',{id,archived:!restore});selected.delete(id);el('modal').close();if(restore)el('sourceVisibility').value='active';await refresh();notify(restore?'Source restored.':'Source archived. Original files and exports were kept.');return;}
+    if(b.dataset.sourceCuts||b.dataset.cutHistory){const id=b.dataset.sourceCuts||b.dataset.cutHistory;el('modal').close();el('exportSource').value=id;el('exportHistory').value=b.dataset.cutHistory?'all':'latest';tab('exports');drawExports();return;}
+    if(b.dataset.locateSource){el('sourceSearch').value='';el('sourceCollection').value='';el('sourceVisibility').value=state.jobs[b.dataset.locateSource].archived?'archived':'active';tab('workspace');changeSelection([b.dataset.locateSource]);return;}
+    if(b.dataset.newTake){pendingTakeParent=b.dataset.newTake;el('hostInput').multiple=false;el('hostInput').click();el('modal').close();notify('New take keeps the original and prior cuts. Add this take’s own script and timing.');return;}
+    if(b.dataset.reveal){await req('/api/reveal',{kind:b.dataset.reveal,id:b.dataset.localId});return;}
+    if(b.id==='addGraphic'){el('graphicInput').click();return;}
+    if(b.id==='generateArtifacts'){await save();dialog('Generate intro & demos',`<p>Use each recording’s own script. Built-in graphics work without an API key. A script alone does not prove these words were recorded.</p><label><input type="checkbox" id="sceneSpokenConfirmed"> I have checked that the script matches the recorded words.</label>${designFields()}${selectedIds().length===1?evidenceFields(null):'<p>For a batch, proof remains unassigned until you attach it to the intended scene. Shared pacing is preserved.</p>'}<button type="button" class="primary" id="confirmGenerateArtifacts">Generate storyboard & previews</button>`);return;}
+    if(b.id==='confirmGenerateArtifacts'){b.disabled=true;b.textContent='Generating original scenes…';try{await req('/api/artifacts/generate',{ids:selectedIds(),evidence:readSceneEvidence(),spoken_confirmed:el('sceneSpokenConfirmed').checked,design:readSceneDesign()});el('modal').close();versionKey='';await refresh();showPanel('script');notify('Storyboard and independent scene previews created. Review the original quote and any pickups.');}finally{b.disabled=false;}return;}
+    if(b.dataset.artifactPreview){const r=state.artifacts[b.dataset.artifactPreview];dialog(r.plan.title,`<video controls src="/artifacts/${r.id}/preview?v=${r.version}"></video><p>${esc(r.status)} · ${esc(r.plan.narration_status)}</p><blockquote>${esc(r.plan.source_quote)}</blockquote><p>${esc(r.plan.intended_visual)}</p><div class="dialogactions"><a class="link" download href="/artifacts/${r.id}/preview?download=1">Export MP4</a><a class="link" download href="/artifacts/${r.id}/source?download=1">Editable scene JSON</a><a class="link" download href="/artifacts/${r.id}/timeline?download=1">Timeline</a></div>`);return;}
+    if(b.dataset.artifactEdit){artifactEditor(b.dataset.artifactEdit);return;}
+    if(b.dataset.artifactRegenerate){const id=b.dataset.artifactRegenerate;b.disabled=true;try{await req('/api/artifacts/edit',{id,version:state.artifacts[id].version,changes:{}});await refresh();notify('Only this scene regenerated; prior version retained.');}finally{b.disabled=false;}return;}
+    if(b.dataset.artifactToggle){const id=b.dataset.artifactToggle;await req('/api/artifacts/toggle',{id,enabled:!state.artifacts[id].plan.enabled});await refresh();return;}
+    if(b.dataset.artifactInsert){const id=b.dataset.artifactInsert;await req('/api/artifacts/insert',{id,enabled:!state.artifacts[id].inserted});await refresh();notify('Episode insertion updated. Narration and episode music remain continuous.');return;}
+    if(b.dataset.saveScene){const id=b.dataset.saveScene,r=state.artifacts[id],passage=state.storyboards[r.job].passages.find(p=>p.id===el('scenePassage').value),sounds={};for(const key of ['contact','result'])sounds[key]={id:key==='contact'?'click':'chime',muted:el('sceneMute-'+key).checked,gain_db:Number(el('sceneGain-'+key).value),offset_frames:Number(el('sceneOffset-'+key).value)};b.disabled=true;try{await req('/api/artifacts/edit',{id,version:r.version,changes:{title:el('sceneTitle').value,source_quote:passage.quote,passage_ids:[passage.id],occurrence:passage.occurrence,duration:Number(el('sceneDuration').value),at:Number(el('sceneAt').value),position:el('scenePosition').value,intensity:Number(el('sceneIntensity').value),sound:el('sceneSound').value,sounds,design:readSceneDesign(),evidence:readSceneEvidence()}});el('modal').close();await refresh();}finally{b.disabled=false;}return;}
+    if(b.dataset.analyze){dialog('Reference observations','<p>Analyzing opening, middle and ending on this computer…</p>');const id=b.dataset.analyze,result=await req('/api/analyze-reference',{id});showReferenceAnalysis(id,result);return;}
+    if(b.id==='trainingReport'||b.id==='exportTrainingDataset'){const r=await req(b.id==='trainingReport'?'/api/training-report':'/api/training-export',{}),report=r.report||r;dialog('Training readiness',`<p>${report.accessible} references · ${report.distinct_recordings} distinct files · ${report.eligible_references} eligible · ${report.usable_labels} usable labels</p><p>${esc(report.status)} · no weight update started</p><ul>${report.blockers.map(s=>`<li>${esc(s)}</li>`).join('')}</ul><small>Unknown decisions remain UNLABELED. A deliberate presenter hold needs an explicit label. Groups are connected by creator, series, family, excerpts and hashes before splitting. Held-out transcripts and corrections stay outside retrieval.</small>${r.folder?`<p>Saved locally: ${esc(r.folder)}</p>`:'<button type="button" id="exportTrainingDataset" class="soft">Prepare versioned dataset</button>'}`);return;}
+    if(b.dataset.trainingIntake){const id=b.dataset.trainingIntake,t=state.assets[id].training||{};dialog('Include in training · deliberate intake',`<p>Style analysis and visible demonstration are separate uses. This action records eligibility; it does not start training.</p><label>Creator group<input id="trainingCreator" value="${esc(t.creator||'')}"></label><label>Series group<input id="trainingSeries" value="${esc(t.series||'')}"></label><label>Original recording family<input id="trainingFamily" value="${esc(t.family||'')}"></label><label>Excerpt / repost parent group, if any<input id="trainingParent" value="${esc(t.parent_group||'')}"></label><label>Permission evidence<input id="trainingPermission" value="${esc(t.permission||'')}" placeholder="Owner declaration / recorded permission for model training"></label><label>Reviewer<input id="trainingReviewer" value="${esc(t.reviewer||'')}"></label><label>Presenter evidence / source timecode<input id="trainingContentEvidence" value="${esc(t.content_evidence||'')}"></label><label><input id="trainingPresenter" type="checkbox" ${t.presenter_verified?'checked':''}> Presenter-led reference confirmed.</label><label><input id="trainingGrouped" type="checkbox" ${t.group_reviewed?'checked':''}> I checked creator, series, duplicates, excerpts and reposts.</label><button type="button" class="primary" data-save-training="${id}">Include / update eligibility</button><button type="button" class="textbtn" data-exclude-training="${id}">Exclude from future training</button>${(t.moments||[]).map(m=>`<p>${m.master_range.map(x=>Number(x).toFixed(2)).join('–')}s · ${esc(m.decision)} <button type="button" class="textbtn" data-label-moment="${m.id}" data-label-asset="${id}">Annotate</button></p>`).join('')}`);return;}
+    if(b.dataset.saveTraining){const id=b.dataset.saveTraining;await req('/api/training-intake',{id,metadata:{include:true,creator:el('trainingCreator').value,series:el('trainingSeries').value,family:el('trainingFamily').value,parent_group:el('trainingParent').value,permission:el('trainingPermission').value,reviewer:el('trainingReviewer').value,group_reviewed:el('trainingGrouped').checked,presenter_verified:el('trainingPresenter').checked,content_evidence:el('trainingContentEvidence').value}});el('modal').close();await refresh();notify('Recorded for eligibility. Add independently reviewed moments before training.');return;}
+    if(b.dataset.excludeTraining){await req('/api/training-intake',{id:b.dataset.excludeTraining,metadata:{include:false}});el('modal').close();await refresh();return;}
+    if(b.dataset.labelMoment){const id=b.dataset.labelAsset,m=state.assets[id].training.moments.find(m=>m.id===b.dataset.labelMoment),label={id:m.id,master_range:m.master_range,raw_source_range:null,passage:'',decision:'REVIEW',visible_evidence:'',audible_evidence:null,can_listen:false,reviewer:'',label_kind:'agent_experiment',input_independently_reviewed:false,input_evidence:'',input:{passage:'',speech_timing:m.master_range,available_media:[],reference_observations:[],choices:['STAY_PRESENTER','SHOW_CONTROL','CONTACT','HOLD_RESULT','OPEN_FILE','ILLUSTRATE','CTA','NO_EFFECT','REVIEW']},target:{choice:'REVIEW',reason:''}};dialog('Review an editorial moment',`<video controls src="/assets/${id}/media#t=${m.master_range[0]},${m.master_range[1]}"></video><p>Keep inference inputs separate from final-editor targets. A finished video cannot explain discarded raw takes. Audio claims require actual listening.</p><label>Structured moment annotation<textarea id="momentAnnotation" rows="20">${esc(JSON.stringify(label,null,2))}</textarea></label><button type="button" class="primary" data-save-moment="${id}">Save reviewed annotation</button>`);return;}
+    if(b.dataset.saveMoment){await req('/api/training-label',{asset:b.dataset.saveMoment,label:JSON.parse(el('momentAnnotation').value)});el('modal').close();await refresh();notify('Versioned annotation saved. It enters a dataset only after eligibility and split checks.');return;}
+    if(b.id==='reviewCorrections'){const rows=(state.corrections||[]).filter(c=>selectedIds().includes(c.job));dialog('Source-anchored editorial corrections',rows.map(c=>`<details><summary>${esc(c.id.slice(0,8))} · ${c.editor_confirmed?'editor confirmed':'unconfirmed'}</summary><small>${esc(c.alignment)} · source ${esc(c.source_sha256?.slice(0,12))}</small><pre>${esc(JSON.stringify({before:c.before,after:c.after},null,2))}</pre><label>Editor<input data-correction-reviewer="${c.id}" value="${esc(c.reviewer||'')}"></label><label>Reason · optional<textarea data-correction-reason="${c.id}">${esc(c.reason||'')}</textarea></label><button type="button" class="soft" data-confirm-correction="${c.id}">Confirm correction</button></details>`).join('')||'<p>No cutaway or sound-cue corrections saved for these recordings.</p>');return;}
+    if(b.dataset.confirmCorrection){const id=b.dataset.confirmCorrection;await req('/api/correction-review',{id,reviewer:document.querySelector(`[data-correction-reviewer="${id}"]`).value,reason:document.querySelector(`[data-correction-reason="${id}"]`).value,confirmed:true});notify('Editor confirmation recorded. Dataset eligibility and holdout exclusion still apply.');return;}
+    if(b.dataset.fullAnalysis){const id=b.dataset.fullAnalysis;dialog('Reference observations','<p>Analyzing the complete reference…</p>');showReferenceAnalysis(id,await req('/api/analyze-reference',{id,full:true}));return;}
+    if(b.dataset.correctObservation!=null){await req('/api/reference-observation',{id:b.dataset.refId,index:Number(b.dataset.correctObservation),observation:el('observationText').value,start:el('observationStart').value,end:el('observationEnd').value,reviewer:el('observationReviewer').value});notify('Observation saved with reviewer and source time.');return;}
+    if(b.dataset.editObservation!=null){const id=b.dataset.refId,index=Number(b.dataset.editObservation),r=state.assets[id]?.analysis?.observations[index];if(!r)throw Error('Reload the reference profile to inspect its current observations.');dialog('Correct reference observation',`<label>Source start (s)<input id="observationStart" type="number" value="${r.source_range[0]}"></label><label>Source end (s)<input id="observationEnd" type="number" value="${r.source_range[1]}"></label><label>Observed behavior<textarea id="observationText">${esc(r.observation)}</textarea></label><label>Reviewer<input id="observationReviewer"></label><button class="primary" data-correct-observation="${index}" data-ref-id="${id}">Save correction</button>`);return;}
+    if(b.id==='addMusic'){dialog('Import your music','<p>Choose audio you may use in this export. Reference permission does not automatically grant permission to reuse its soundtrack.</p><label><input id="musicRights" type="checkbox"> I have permission to use this track in my exported videos.</label><button id="chooseMusic" class="primary">Choose audio file</button>');return;}
+    if(b.id==='chooseMusic'){if(!el('musicRights').checked)throw Error('Confirm permission for this audio before importing it.');el('musicInput').click();return;}
+    if(b.id==='addEvent'){if(selectedIds().length!==1)throw Error('Select one recording to add its manual cues.');manualEvents.push({id:crypto.randomUUID(),kind:'keyword',anchor:{asset:selectedIds()[0],source_pts:0,type:'manual_source_pts'},hold_frames:30,text:'',origin:'manual',confidence:1,sound:{id:null,muted:true,gain_db:-14,offset_frames:0}});setDirty('events');drawEvents();return;}
+    if(b.dataset.removeEvent!=null){manualEvents.splice(Number(b.dataset.removeEvent),1);setDirty('events');drawEvents();return;}
+    if(b.id==='previewCues'){if(selectedIds().length!==1)throw Error('Select one recording to inspect its exact cue plan.');await save();const result=await req('/api/preview-cues',{id:selectedIds()[0]});manualEvents=result.events.filter(e=>e.origin!=='legacy_insert_sound_v1');setDirty('events');drawEvents();notify('Cue proposal loaded. Save to accept it; existing overrides were preserved.');return;}
+    if(b.dataset.seek!=null){el('dialogBody').querySelector('video').currentTime=Number(b.dataset.seek);return;}
+    if(b.dataset.addScript){changeSelection([b.dataset.addScript]);showPanel('script');el('script').focus();return;}
+    if(b.dataset.style){el('style').value=b.dataset.style;setDirty('style');drawFraming();return;}
+    if(b.id==='toggleInspector'){inspectorOpen=!inspectorOpen;el('form').classList.toggle('collapsed',!inspectorOpen);b.setAttribute('aria-expanded',String(inspectorOpen));b.textContent=inspectorOpen?'Hide settings':'Show settings';return;}
+    if(b.dataset.pacing){if(!selectedIds().length)throw Error('Select recordings to apply pacing.');await save();await req('/api/update',{ids:selectedIds(),changes:{style_ref:b.dataset.pacing}});versionKey='';await refresh();showPanel('look');notify('Pacing reference applied. It stays off screen.');return;}
+    if(b.dataset.showReference){if(selectedIds().length!==1)throw Error('Select one recording to add its on-screen demonstration.');inserts.push({asset:b.dataset.showReference,at:0,offset:0,duration:Math.min(2,state.assets[b.dataset.showReference].duration,state.assets[selectedIds()[0]].duration)});setDirty('inserts');showPanel('inserts');drawInserts();return;}
+    if(b.id==='resolveScripts'){
+      dialog('Assign unmatched scripts',unresolvedScripts.map((f,i)=>`<div class="assignment"><strong>${esc(f.name)}</strong><small>${esc(f.reason)}</small><label>Recording<select data-assignment="${i}"><option value="">Choose recording…</option>${Object.values(state.jobs).map(j=>`<option value="${j.id}">${esc(state.assets[j.id].name)}</option>`).join('')}</select></label><button class="soft" data-assign="${i}">Assign script</button></div>`).join(''));return;
+    }
+    if(b.dataset.assign!=null){const i=Number(b.dataset.assign),id=all('[data-assignment]').find(x=>Number(x.dataset.assignment)===i).value;if(!id)throw Error('Choose the intended recording.');await req('/api/assign-script',{script_id:unresolvedScripts[i].id,job_id:id});el('modal').close();versionKey='';await refresh();return;}
+    if(b.dataset.resolve!=null){if(selectedIds().length!==1)throw Error('Choose one recording to resolve its spoken phrase.');const i=Number(b.dataset.resolve),r=inserts[i];if(!r.cue?.trim())throw Error('Enter the exact spoken phrase first.');await save();const result=await req('/api/phrases',{id:selectedIds()[0],phrase:r.cue});dialog('Choose the spoken occurrence',`<p>${esc(result.timing)} · review timing against speech.</p>`+(result.matches.map(m=>`<button class="occurrence soft" data-occurrence="${m.occurrence}" data-index="${i}" data-at="${m.at}">${time(m.at)} · ${esc(m.context)}</button>`).join('')||'<p>No match. Leave it unassigned or use an explicit timestamp.</p>'));return;}
+    if(b.dataset.occurrence!=null){const i=Number(b.dataset.index);inserts[i].occurrence=Number(b.dataset.occurrence);inserts[i].at=Number(b.dataset.at);setDirty('inserts');drawInserts();el('modal').close();return;}
+    if (b.classList.contains("importAction")) {
+      pendingTakeParent='';el('hostInput').multiple=true;
+      e.stopPropagation();
+      el("hostInput").click();
+      return;
+    }
+    if (b.dataset.verdict) {
+      const e = state.exports.find((x) => x.id === b.dataset.eid);
+      const checks = Object.fromEntries(
+        all("[data-gate]").map((x) => [x.dataset.gate, x.checked]),
+      );
+      await req("/api/review", {
+        id: e.id,
+        sha256: e.sha256,
+        verdict: b.dataset.verdict,
+        checks,
+        note: el("reviewNote").value,
+        reviewer:el('reviewerName')?.value,
+        gate_notes:Object.fromEntries(all('[data-qc-note]').map(x=>[x.dataset.qcNote,x.value])),
+        sync_observations:all('[data-sync-time]').filter(x=>x.value!=='').map(x=>({time:Number(x.dataset.syncTime),offset_frames:Number(x.value)})),
+        cue_observations:all('[data-cue-offset]').filter(x=>x.value!==''&&all('[data-cue-reviewed]').find(c=>c.dataset.cueReviewed===x.dataset.cueOffset)?.checked).map(x=>({id:x.dataset.cueOffset,offset_frames:Number(x.value),stem_checked:true,final_mix_checked:true})),
+      });
+      el("modal").close();
+      await refresh();
+      notify("Review saved");
+      return;
+    }
+    if (b.dataset.tab) {
+      tab(b.dataset.tab);
+      return;
+    }
+    if (b.dataset.panel) {
+      showPanel(b.dataset.panel);
+      return;
+    }
+    if (b.dataset.play) {
+      playsource(b.dataset.play);
+      return;
+    }
+    if (b.dataset.review) {
+      review(b.dataset.review);
+      return;
+    }
+    if (b.dataset.remove != null) {
+      inserts.splice(Number(b.dataset.remove), 1);
+      setDirty("inserts");
+      drawInserts();
+      return;
+    }
+    if (b.hasAttribute("data-setup") || b.id === "settings") {
+      setup();
+      return;
+    }
+    const row = b.closest("[data-row]");
+    if (row) {
+      const id = row.dataset.row;
+      if (b.tagName === "INPUT") {
+        const a = new Set(selected);
+        a.has(id) ? a.delete(id) : a.add(id);
+        changeSelection([...a]);
+      } else changeSelection([id]);
+      return;
+    }
+    switch (b.id) {
+      case "close":
+        el("modal").close();
+        break;
+      case "selectAll":
+        changeSelection(
+          visibleSources().every(j=>selected.has(j.id))
+            ? []
+            : visibleSources().map(j=>j.id),
+        );
+        break;
+      case "addRef":
+        el("refInput").click();
+        break;
+      case "importScript":
+        el("scriptInput").click();
+        break;
+      case "addInsert": {
+        const r = refs()[0];
+        if (!r) throw Error("Add reference footage first.");
+        const at = inserts.length
+          ? inserts.at(-1).at + inserts.at(-1).duration
+          : 0;
+        const len = Math.min(
+          2,
+          r.duration,
+          ...selectedIds().map((k) => state.assets[k].duration - at),
+        );
+        if (len < 1 / 30) throw Error("No time remains for another cutaway.");
+        inserts.push({
+          asset: r.id,
+          at: +at.toFixed(3),
+          offset: 0,
+          duration: Math.floor(len * 1000) / 1000,
+        });
+        setDirty("inserts");
+        drawInserts();
+        break;
+      }
+      case "matchRefs":
+        b.disabled = true;
+        try {
+          await save();
+          const r = await req("/api/match", { ids: selectedIds() });
+          await refresh();
+          notify(
+            r.matches
+              ? r.matches + " cutaway(s) matched. Review them under Cutaways."
+              : "No new matches. Use a unique filename phrase or assign Cutaways manually.",
+          );
+        } finally {
+          draw();
+        }
+        break;
+      case "queue":
+        if (waiting) return;
+        waiting = true;
+        try {
+          await save();
+          const r = await req("/api/queue", { ids: selectedIds(),request_id:crypto.randomUUID() });
+          await refresh();
+          notify(
+            "Queued " +
+              r.queued +
+              " recording(s)" +
+              (r.skipped.length
+                ? " · Needs input: " + r.skipped.join(", ")
+                : ""),
+          );
+        } finally {
+          waiting = false;
+        }
+        break;
+      case "recheck":
+        await req("/api/check", {});
+        await refresh();
+        setup();
+        break;
+      case "install":
+        await req("/api/setup", {});
+        await refresh();
+        el("modal").close();
+        break;
+      case "quit":
+        await req("/api/quit", {});
+        clearInterval(poll);
+        dialog(
+          "Workspace closed",
+          "<p>Your projects are saved. You can close this tab.</p>",
+        );
+        break;
+    }
+  }),
+);
+el("form").addEventListener(
+  "submit",
+  guard(async (e) => {
+    e.preventDefault();
+    await save();
+  }),
+);
+el("form").addEventListener("input", (e) => {
+  if(e.target.dataset.anchorArray){const i=Number(e.target.closest('[data-insert]').dataset.insert),key=e.target.dataset.anchorArray,index=Number(e.target.dataset.coordinate);inserts[i].anchors??={};if(key==='crop'){inserts[i].crop??=[1280,800,0,0];inserts[i].crop[index]=Number(e.target.value);}else{inserts[i].anchors[key]??=key==='contact_point_source'?[0,0]:[0,0,100,60];inserts[i].anchors[key][index]=Number(e.target.value);}setDirty('inserts');return;}
+  if(e.target.dataset.eventField||e.target.dataset.soundField||e.target.dataset.eventRoi!=null){const index=Number(e.target.closest('[data-event]').dataset.event),event=manualEvents[index],field=e.target.dataset.eventField,sound=e.target.dataset.soundField;
+    if(field==='at'){event.anchor.timeline_source_pts=Number(e.target.value);}else if(field)event[field]=field==='hold_frames'?Number(e.target.value):e.target.value;
+    if(sound){event.sound??={};if(sound==='muted')event.sound.muted=e.target.checked;else if(['id','offset_reason'].includes(sound))event.sound[sound]=e.target.value||null;else if(e.target.value==='')delete event.sound[sound];else event.sound[sound]=Number(e.target.value);}
+    if(e.target.dataset.eventRoi!=null){event.roi??=[0,0,100,60];event.roi[Number(e.target.dataset.eventRoi)]=Number(e.target.value);}
+    event.origin='manual';event.manual_override=true;setDirty('events');return;
+  }
+  if(e.target.dataset.anchor||e.target.dataset.roi!=null){const i=Number(e.target.closest('[data-insert]').dataset.insert);inserts[i].anchors??={};if(e.target.dataset.anchor){const k=e.target.dataset.anchor;if(e.target.value==='')delete inserts[i].anchors[k];else inserts[i].anchors[k]=Number(e.target.value);}else{inserts[i].anchors.roi_source??=[0,0,100,60];inserts[i].anchors.roi_source[Number(e.target.dataset.roi)]=Number(e.target.value);}setDirty('inserts');return;}
+  const k = e.target.dataset.k;
+  if (k) {
+    const i = Number(e.target.closest("[data-insert]").dataset.insert);
+    inserts[i][k] = ["asset", "cue"].includes(k)
+      ? e.target.value
+      : Number(e.target.value);
+    if(k==='cue')delete inserts[i].occurrence;
+    setDirty("inserts");
+  } else if (
+    [
+      "script",
+      "style",
+      "fit",
+      "insert_sound",
+      "caption_position",
+      "style_ref",
+    ].concat(extraSettings).includes(e.target.id)
+  )
+    setDirty(e.target.id);
+  if(['style','fit','caption_position'].includes(e.target.id))drawFraming();
+});
+for (const [id, kind] of [
+  ["hostInput", "host"],
+  ["refInput", "reference"], ["graphicInput", "graphic"],
+  ["scriptInput", "script"],
+  ['musicInput','music'],
+])
+  el(id).addEventListener(
+    "change",
+    guard(async (e) => {
+      const list = [...e.target.files];
+      e.target.value = "";
+      if (kind === "script") await importScripts(list);
+      else if(kind==='host'){const parent=pendingTakeParent;pendingTakeParent='';el('hostInput').multiple=true;await upload(list,kind,parent);}
+      else await upload(list, kind);
+    }),
+  );
+el("emptyDrop").addEventListener("click", (e) => {
+  if (!e.target.closest("button")) el("hostInput").click();
+});
+el("emptyDrop").addEventListener("keydown", (e) => {
+  if (e.target === el("emptyDrop") && ["Enter", " "].includes(e.key)) {
+    e.preventDefault();
+    el("hostInput").click();
+  }
+});
+el("emptyDrop").addEventListener("dragover", (e) => {
+  e.preventDefault();
+  el("emptyDrop").classList.add("drag");
+});
+el("emptyDrop").addEventListener("dragleave", () =>
+  el("emptyDrop").classList.remove("drag"),
+);
+el("emptyDrop").addEventListener(
+  "drop",
+  guard(async (e) => {
+    e.preventDefault();
+    el("emptyDrop").classList.remove("drag");
+    await upload([...e.dataTransfer.files], "host");
+  }),
+);
+let polling = false;
+const poll = setInterval(async () => {
+  if (
+    !state.jobs ||
+    importing ||
+    polling ||
+    waiting ||
+    (!Object.values(state.jobs).some(locked) &&
+      !state.installing &&
+      !el("setupBanner").offsetHeight)
+  )
+    return;
+  polling = true;
+  try {
+    await refresh();
+  } catch (e) {
+    notify(e.message);
+  } finally {
+    polling = false;
+  }
+}, 1600);
+guard(refresh)();
+document.addEventListener('change',e=>{if(e.target.id==='audioAudition'&&e.target.value){el('dialogBody').querySelector('video')?.pause();el('auditionPlayer').src=`/exports/${e.target.dataset.export}/audition-${e.target.value}`;}});
+const libraryValues={sourceSearch:'',sourceCollection:'',sourceVisibility:'active'};
+for(const id of Object.keys(libraryValues))el(id).addEventListener(id==='sourceSearch'?'input':'change',()=>{if(!allowChange()){el(id).value=libraryValues[id];return;}libraryValues[id]=el(id).value;touched.clear();selected.clear();versionKey='';draw();});
+for(const id of ['exportSource','exportHistory'])el(id).addEventListener('change',drawExports);

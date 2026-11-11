@@ -1,0 +1,19 @@
+Cutroom 0.1 preview component notes
+
+The render pipeline builds on the talking-head adaptation distributed in the owner's MoneyPrinterTurbo-Talking-Head starter. This archive includes the adapted editor modules it uses. It does not bundle the entire upstream application. Before public redistribution of this preview or its derivative, confirm the owner's distribution grant for the starter and chosen product terms. This is a development handoff.
+
+The embedded Python runtime is CPython 3.12.10 for Windows x64. Original distribution: https://www.python.org/ftp/python/3.12.10/python-3.12.10-embed-amd64.zip
+See runtime/LICENSE.txt. The Python distribution includes the notices for its bundled dependencies.
+
+The Windows GUI bootstrap uses the distlib Windows launcher by Vinay Sajip. See notices/distlib-launcher.txt.
+Source: https://github.com/pypa/distlib
+
+The UI embeds a Latin subset of DM Sans. See app/ui/DM-Sans-LICENSE.txt. Characters outside that bundled subset use local fallback fonts.
+Source: https://github.com/googlefonts/dm-fonts
+
+Burned-in captions use DejaVu Sans Bold. See app/fonts/LICENSE.txt.
+Source: https://dejavu-fonts.github.io/
+
+The click, slide and chime WAV files are synthesized sounds from the owner's earlier animation and SFX project. No third-party song or audio recording is included. The examples are synthetic process-verification footage and narration.
+
+FFmpeg and FFprobe are installed separately or provided by the user. The app invokes them as external processes. Compatible Windows Essentials builds: https://www.gyan.dev/ffmpeg/builds/
