@@ -3,7 +3,7 @@ import shutil,subprocess,urllib.request,zipfile
 from pathlib import Path
 from engine import media
 
-URL='https://www.gyan.dev/ffmpeg/builds/packages/ffmpeg-8.1.2-essentials_build.zip'
+URL='https://github.com/GyanD/codexffmpeg/releases/download/8.1.2/ffmpeg-8.1.2-essentials_build.zip'
 SHA256='db580001caa24ac104c8cb856cd113a87b0a443f7bdf47d8c12b1d740584a2ec'
 
 

@@ -433,7 +433,7 @@ function showReferenceAnalysis(id,result){
 }
 function draw() {
   const speech=state.speech_setup||{};el('speechBanner').classList.toggle('hidden',speech.status==='READY'||!speech.status);
-  el('speechBanner').innerHTML=`<span>${esc(speech.stage||'')}</span>${speech.status!=='INSTALLING'?'<button type="button" id="setupLocalCaptions" class="soft">Set up local captions</button>':''}`;
+  el('speechBanner').innerHTML=`<span>${esc(speech.stage||'')}<br><small>${esc(speech.download||'')} · ${esc(speech.destination||'')}</small></span>${speech.status!=='INSTALLING'?'<button type="button" id="setupLocalCaptions" class="soft">Set up local captions</button>':''}`;
   el('graphicCount').textContent=Object.values(state.assets||{}).filter(a=>a.kind==='graphic').length+' local images available for original scenes';
   drawList();
   drawForm();
