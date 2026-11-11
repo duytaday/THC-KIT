@@ -3,13 +3,13 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>Cutroom · Batch editor</title>
+    <title>Talking Head Cutroom · Batch editor</title>
     <link rel="icon" href="/icon.svg" />
     <link rel="stylesheet" href="/style.css" />
   </head>
   <body>
     <header>
-      <div class="brand"><img src="/icon.svg" alt="" />Cutroom</div>
+      <div class="brand"><img src="/icon.svg" alt="" /><span>Talking Head Cutroom</span></div>
       <div class="nav">
         <button data-tab="workspace" class="active">Workspace</button
         ><button data-tab="exports">
@@ -162,6 +162,8 @@
                 <button type="button" id="generateArtifacts" class="soft generate-artifacts">Generate intro &amp; demos</button>
                 <small>Built-in storyboard and original animation. No API key. Recorded words still need verification.</small>
                 <div id="storyboard"></div><div id="artifactCards"></div>
+                <button type="button" id="componentInventory" class="textbtn">Component inventory · specification / render / QC</button>
+                <details class="generative-panel"><summary>Optional lab · AI illustrations · outside V1</summary><p>Private Kaggle LoRA outputs are experimental illustrations. The core editor uses your real recording and voice. These outputs cannot replace real software proof.</p><button type="button" id="importGenerative" class="soft">Import trained run / previews</button><button type="button" id="generateIllustration" class="soft">Generate illustration on Kaggle</button><div id="generativeRuns"></div><div id="generativeJobs"></div></details>
               </div>
               <div data-body="look" class="hidden">
                 <div class="style-samples" aria-label="Built-in caption presets">
@@ -277,6 +279,7 @@
     /><input type="file" id="scriptInput" accept=".txt,.srt" multiple hidden />
     <input type="file" id="musicInput" accept=".wav,.mp3,.m4a,.flac,.ogg" hidden>
     <input type="file" id="graphicInput" accept=".png,.jpg,.jpeg" multiple hidden>
+    <input type="file" id="generativePackageInput" accept=".zip" hidden>
     <script src="/app.js"></script>
   </body>
 </html>

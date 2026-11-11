@@ -2,17 +2,19 @@
 import argparse,json,shutil,sys
 from pathlib import Path
 from engine import media,edit
-from engine.references import analyze,inventory
+from engine.references import analyze,inventory,inventory_delta
 import qc_bridge
 
 def main():
     p=argparse.ArgumentParser(description=__doc__);sub=p.add_subparsers(dest='action',required=True)
-    q=sub.add_parser('inventory');q.add_argument('directory',type=Path);q.add_argument('--out',type=Path,required=True);q.add_argument('--requested',type=int,default=50)
+    q=sub.add_parser('inventory');q.add_argument('directory',type=Path);q.add_argument('--out',type=Path,required=True);q.add_argument('--requested',type=int,default=50);q.add_argument('--previous',type=Path,help='Previous inventory JSON; compare hashes without training or changing presets')
     q=sub.add_parser('analyze');q.add_argument('video',type=Path);q.add_argument('--full',action='store_true');q.add_argument('--out',type=Path,required=True)
     q=sub.add_parser('render');q.add_argument('project',type=Path);q.add_argument('--out',type=Path,required=True)
     q=sub.add_parser('qc');q.add_argument('version',type=Path)
     a=p.parse_args()
-    if a.action=='inventory':result=inventory(a.directory,a.requested)
+    if a.action=='inventory':
+        result=inventory(a.directory,a.requested)
+        if a.previous:result['delta']=inventory_delta(json.loads(a.previous.read_text(encoding='utf-8')),result)
     elif a.action=='analyze':result=analyze(a.video,media.duration(media.stream(a.video,'video')),a.full)
     elif a.action=='render':
         data=json.loads(a.project.read_text(encoding='utf-8'));source=Path(data['source'])

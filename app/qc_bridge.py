@@ -18,7 +18,7 @@ def prepare_export(folder,host,settings,plan):
     for i,q in enumerate(plan['proof']):beats.append(dict(id=f'cutaway-{i}',source=q['file'],source_start=q['source_start'],source_end=q['source_start']+q['end']-q['start'],output_start=q['start'],output_end=q['end']))
     write(folder/'timeline.json',dict(expected_frames=round(duration*30),beats=beats,settings=copy.deepcopy(settings)))
     from engine.enhance import events_for,sound_asset
-    dependencies={Path(__file__).parent/'engine'/name for name in ('edit.py','media.py','enhance.py','cues.py')}
+    dependencies={Path(__file__).parent/'engine'/name for name in ('edit.py','media.py','enhance.py','cues.py','layouts.py','planner.py')}
     dependencies.add(Path(__file__).parent/'fonts/DejaVuSans-Bold.ttf')
     dependencies.update(Path(q['file']) for q in plan['proof'])
     for e in events_for(plan,[[0,host['duration'],0]]):
@@ -27,7 +27,7 @@ def prepare_export(folder,host,settings,plan):
     write(folder/'render-project.json',dict(source=host['path'],source_sha256=sha(host['path']),plan=copy.deepcopy(plan),renderer=str(Path(__file__).parent/'engine/edit.py'),renderer_sha256=sha(Path(__file__).parent/'engine/edit.py'),dependencies=[dict(path=str(p),sha256=sha(p)) for p in sorted(dependencies)]))
     profile=prepare(folder,expected_frames=round(duration*30))
     profile['project_hashes']={'render-project.json':sha(folder/'render-project.json')}
-    profile['demonstrations']=[dict(id=f'cutaway-{i}',claim='Original explanatory illustration; verify its correspondence to the spoken idea.' if q.get('artifact_kind') in ('process','list') else 'Creator-assigned demonstration must show target, action and readable result.',source_asset=q['file'],source_sha256=sha(q['file']),source_range=[q['source_start'],q['source_start']+q['end']-q['start']],master_range=[q['start'],q['end']]) for i,q in enumerate(plan['proof']) if q.get('artifact_type')!='introduction']
+    profile['demonstrations']=[dict(id=f'cutaway-{i}',claim='Original/generated explanatory illustration; not real product-action proof. Verify its correspondence to the spoken idea.' if q.get('artifact_kind') in ('process','list','generated_video') else 'Creator-assigned demonstration must show target, action and readable result.',source_asset=q['file'],source_sha256=sha(q['file']),source_range=[q['source_start'],q['source_start']+q['end']-q['start']],master_range=[q['start'],q['end']]) for i,q in enumerate(plan['proof']) if q.get('artifact_type')!='introduction']
     import re
     if re.search(r'\b(5|năm)\s+repo',settings['script'],re.I):
         from storyboard import REPOS
@@ -36,7 +36,7 @@ def prepare_export(folder,host,settings,plan):
         promised=[repo for match,repo in sorted([(m,r) for m,r in mentions if m is not None],key=lambda item:item[0].start())]
         promised += ['UNASSIGNED REPO '+str(i+1) for i in range(len(promised),5)]
         for repo in promised:
-            candidates=[q for q in plan['proof'] if q.get('artifact_type')!='introduction' and re.search(r'(?<!\w)'+re.escape(repo.split()[0])+r'(?!\w)',q.get('source_name',''),re.I)]
+            candidates=[q for q in plan['proof'] if q.get('artifact_type')!='introduction' and q.get('artifact_kind') not in ('process','list','generated_video') and re.search(r'(?<!\w)'+re.escape(repo.split()[0])+r'(?!\w)',q.get('source_name',''),re.I)]
             for i,q in enumerate(candidates or [None]):
                 profile['demonstrations'].append(dict(id='promised-'+repo.replace(' ','-')+'-'+str(i),repo_name=repo,claim='Verify this named repository’s own promised demo; a generic animation is not product proof.',source_asset=q['file'] if q else '',source_sha256=sha(q['file']) if q else '0'*64,source_range=[q['source_start'],q['source_start']+q['end']-q['start']] if q else None,master_range=[q['start'],q['end']] if q else [0,duration]))
     profile['gates']['B']['evidence_ids']=[d['id'] for d in profile['demonstrations']] or ['presenter_visuals']

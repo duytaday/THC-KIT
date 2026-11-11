@@ -1,6 +1,7 @@
 """Turn a script, estimated speech windows and optional timestamped subtitles into a render plan."""
 
 import math
+import copy
 import re
 import unicodedata
 import statistics
@@ -238,7 +239,8 @@ def build(host, settings, assets):
                 "id": insert.get('id',asset['id']+'-'+str(insert.get('occurrence',0))),
                 "cue": cue,
                 "source_name": asset['name'],
-                "anchors": insert.get('anchors',{}),
+                "anchors": copy.deepcopy(insert.get('anchors',{})),
+                **{k:insert[k] for k in ('layout','pip_corner','pip_width') if k in insert},
                 **({'crop':insert['crop']} if insert.get('crop') else {}),
             }
         )
@@ -273,6 +275,11 @@ def build(host, settings, assets):
                 x,y=q['anchors']['contact_point_source'];q['anchors']['contact_roi']=[round((1080-cw*scale)/2+(x-cx)*scale)-8,round((1920-ch*scale)/2+(y-cy)*scale)-8,16,16]
         for key in ('target','contact','result'):
             if key in q['anchors'] and not q['source_start']<=q['anchors'][key]<q['source_start']+q['end']-q['start']:raise ValueError('Source '+key+' anchor is outside the inserted footage; extend the hold or correct its timestamp.')
+        from .layouts import resolve
+        caption_y=390 if settings.get('caption_position')=='top' else 1500
+        protected=[q['anchors'][key] for key in ('roi','result_roi','contact_roi') if q['anchors'].get(key)]
+        protected.append([60,caption_y-80,960,160])
+        q['layout_decision']=resolve(q,protected)
     plan['events']=suggest(settings,plan['proof'],pace)
     plan['motion_profile']=settings.get('motion_profile','baseline');plan['motion_intensity']=settings.get('motion_intensity',.5)
     plan['music']={'mode':settings.get('music_mode','off'),'track':settings.get('music_track','calm'),'gain_db':settings.get('music_gain_db',-20)}

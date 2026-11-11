@@ -67,6 +67,7 @@ class ArtifactStore:
             plan=copy.deepcopy(record.get('pending_proposal',record['plan']))
             for k in record.get('manual_fields',[]):plan[k]=copy.deepcopy(record['plan'][k])
             plan.update(copy.deepcopy(changes))
+            if plan['kind']=='generated_video' and not plan.get('evidence'):raise ValueError('Preserve the generated illustration’s source and provenance.')
             if plan.get('evidence') and plan['kind']=='placeholder':
                 plan['kind']='software';plan['intended_visual']='Actual supplied screen footage; verify its own control, action and readable result.'
             if plan['position'] not in ('top','center','bottom') or type(plan['intensity']) not in (int,float) or not 0<=plan['intensity']<=1:raise ValueError('Choose a valid scene position and intensity.')

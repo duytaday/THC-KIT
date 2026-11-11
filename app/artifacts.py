@@ -32,7 +32,17 @@ def render(plan,folder,host,assets):
     for key in ('logo','before','after'):
         if design.get(key) and (design[key] not in assets or assets[design[key]]['kind']!='graphic'):raise ValueError('Choose an imported image for '+key)
     events=[]
-    if kind=='software' and evidence:
+    if kind=='generated_video' and not evidence:raise ValueError('This generated scene needs its provenance-tagged video asset.')
+    if kind=='generated_video' and evidence:
+        asset=assets[evidence['asset']]
+        if asset['kind']!='generated':raise ValueError('Use a provenance-tagged generated illustration.')
+        if duration>asset['duration']+1/30:raise ValueError('Shorten this scene or request a longer generation; do not silently stretch it.')
+        source_hashes['generated_video']=media.sha(asset['path']);duration=frames/30
+        args=['-i',asset['path']];text_file(folder,'generated-title.txt',lines(plan['title']))
+        text_file(folder,'disclosure.txt','AI minh họa · Không phải quay thao tác thật')
+        vf="fps=30,tpad=stop_mode=clone:stop_duration=0.1,scale=1080:1400:force_original_aspect_ratio=decrease,pad=1080:1920:(ow-iw)/2:(oh-ih)/2:color=0x10241d,setsar=1,drawtext=fontfile=fonts/DejaVuSans-Bold.ttf:textfile=generated-title.txt:fontsize=54:fontcolor=white:line_spacing=12:x=(w-text_w)/2:y=150,drawtext=fontfile=fonts/DejaVuSans-Bold.ttf:textfile=disclosure.txt:fontsize=32:fontcolor=white:x=(w-text_w)/2:y=1730"
+        media.ff(*args,'-vf',vf,*media.video_encoder_args(),'-r','30','-fps_mode','cfr','-video_track_timescale','15360','-pix_fmt','yuv420p','-t',duration,'-an',folder/'preview.mp4',cwd=folder);plan['events']=[]
+    elif kind=='software' and evidence:
         asset=assets[evidence['asset']];source=Path(asset['path']);source_hashes['evidence']=media.sha(source)
         duration=min(duration,asset['duration']);frames=round(duration*30);duration=frames/30
         crop=evidence.get('crop');start=float(evidence.get('crop_start',.9));stop=float(evidence.get('crop_end',min(5.4,duration)))

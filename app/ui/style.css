@@ -78,6 +78,8 @@ header {
   width: 36px;
   height: 36px;
 }
+.brand span { font-size: 22px; letter-spacing: -.7px; }
+@media(max-width:700px) { header { height: auto; min-height: 73px; flex-wrap: wrap; padding: 12px 18px; gap: 12px; }.brand span { font-size: 18px; max-width: 195px; }.nav { order: 3; flex-basis: 100%; min-height: 34px; }.right { margin-left: auto; } }
 .nav {
   align-self: stretch;
   display: flex;
@@ -794,3 +796,4 @@ form.collapsed { display: none; }
   .nav { gap: 4px; } header { gap: 12px; }.nav button { padding-left: 6px; padding-right: 6px; }
   #scriptResults { flex-wrap: wrap; }dialog { width: calc(100vw - 24px); padding: 16px; }
 }
+.generative-panel { margin-top: 18px; padding: 12px; border: 1px solid var(--line); border-radius: 8px; }.generative-panel summary { cursor: pointer; font-weight: 650; }.generative-panel small { display: block; overflow-wrap: anywhere; }.generative-panel .cue-card { padding: 12px; margin-top: 12px; }

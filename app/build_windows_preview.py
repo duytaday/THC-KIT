@@ -31,12 +31,12 @@ try:
 except Exception:
     import traceback,ctypes
     log=cache/'launch-error.txt';log.write_text(traceback.format_exc(),encoding='utf-8')
-    ctypes.windll.user32.MessageBoxW(0,'See '+str(log),'Cutroom',16)
+    ctypes.windll.user32.MessageBoxW(0,'See '+str(log),'Talking Head Cutroom',16)
 '''
     payload=io.BytesIO()
     with zipfile.ZipFile(payload,'w',zipfile.ZIP_DEFLATED) as z:z.writestr('__main__.py',source)
-    (a.out/'Cutroom.exe').write_bytes(prefix+payload.getvalue())
-    media.write_json(a.out/'build.json',dict(launcher_sha256=media.sha(a.out/'Cutroom.exe'),source_sha256=media.sha(repo/'app/app.py'),runtime='supplied CPython3.12.10; see runtime/LICENSE.txt',development_only=True,source_root=str(repo),clean_windows_tested=False))
-    print(str(a.out/'Cutroom.exe'))
+    executable=a.out/'Talking Head Cutroom.exe';executable.write_bytes(prefix+payload.getvalue())
+    media.write_json(a.out/'build.json',dict(product='Talking Head Cutroom',launcher_sha256=media.sha(executable),source_sha256=media.sha(repo/'app/app.py'),runtime='supplied CPython3.12.10; see runtime/LICENSE.txt',development_only=True,source_root=str(repo),clean_windows_tested=False))
+    print(str(executable))
 
 if __name__=='__main__':main()

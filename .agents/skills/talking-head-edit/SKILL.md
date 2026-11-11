@@ -1,9 +1,24 @@
 ---
 name: talking-head-edit
-description: Edit and revise English or Vietnamese presenter videos from a brief, inspect the rendered cut, and deliver versioned previews with timestamped QC evidence.
+description: Build and revise real-footage English or Vietnamese talking-head videos in Talking Head Cutroom, propose three evidence-backed hooks, render through the local batch editor and deliver versioned previews with timestamped QC.
 ---
 
-Work from the project root. Follow the editing, strict QC, revision and handoff sections of talking-head-qc/SETUP-PROMPT.md on every real job. Use talking-head-qc/README.md for the delivery and timeline schemas. Setup and the synthetic smoke test are environment checks.
+Work from the project root. Preserve the existing `$talking-head-edit` invocation.
+For the Cutroom workflow, read [references/real-footage-workflow.md](references/real-footage-workflow.md)
+first. It covers three hooks, source-linked audiovisual planning, the normal UI,
+two buyer acceptance cases and reproduction from a clean checkout. Read
+[references/components.md](references/components.md) when choosing components;
+20 specifications do not mean 20 rendered or approved components.
+
+Use the real recorded presenter and voice. “Avatar” means PiP of that recording.
+Do not synthesize a presenter, replace speech, or call generated imagery software
+proof. Optional generative experiments remain a separate lab, off the core path.
+No fixed graphics quota: retaining A-roll is valid. Missing speech/proof is a
+specific pickup, not permission to invent it. Source paths come from the current
+job, never from a developer's machine. Customer media and reference videos stay
+outside the distributable skill.
+
+Follow the editing, strict QC, revision and handoff sections of talking-head-qc/SETUP-PROMPT.md on every real job. Use talking-head-qc/README.md for the delivery and timeline schemas. Setup and the synthetic smoke test are environment checks.
 
 1. Copy talking-head-qc/templates/brief.md to briefs/<job>.md at intake if missing. Draft from the user's notes and source transcript. Use input/a-roll/ and input/b-roll/ for original footage and references/ for viewable references. Use talking-head-qc/templates/reference-notes.md to record the chosen treatment and limits of the observations. Map required beats to source words and visual proof before the first cut. Flag missing pickups and preserve locked wording.
 2. Use the installed ffmpeg-skill SKILL.md and its scripts for probing, cutting, reframing, captions, graphics, audio, export and inspection. Identify the working Python interpreter and actual installed skill root at setup. Reuse them for the job. Use local faster-whisper with multilingual base and language en or vi as appropriate. Verify words against speech. Preserve source assets.

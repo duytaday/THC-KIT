@@ -150,6 +150,10 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
     )
     args = ["-i", source]
     picture = "face"
+    pip_clips=[i for i,q in enumerate(plan.get('proof', []),1) if q.get('layout_decision',{}).get('resolved')=='presenter_pip']
+    if pip_clips:
+        graph.append('[face]split='+str(len(pip_clips)+1)+'[baseface]'+''.join(f'[hostpip{i}]' for i in pip_clips))
+        picture='baseface'
     prev_end = 0
     for i, clip in enumerate(plan.get("proof", []), 1):
         start, end = interval(clip["start"], clip["end"])
@@ -182,6 +186,11 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
             f"[{picture}][proof{i}]overlay=eof_action=pass:enable='gte(t,{start})*lt(t,{end})'[mix{i}]"
         )
         picture = f"mix{i}"
+        if i in pip_clips:
+            x,y,w,h=clip['layout_decision']['rect']
+            graph.append(f'[hostpip{i}]scale={w}:{h},setsar=1[pip{i}]')
+            graph.append(f"[{picture}][pip{i}]overlay=x={x}:y={y}:eof_action=pass:enable='gte(t,{start})*lt(t,{end})'[pipmix{i}]")
+            picture=f'pipmix{i}'
     from . import enhance
     resolved_events=enhance.events_for(plan,clock)
     picture=enhance.visuals(graph,picture,plan,resolved_events,out,total,args)

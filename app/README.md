@@ -1,4 +1,15 @@
-# Cutroom local development handoff
+# Talking Head Cutroom local development handoff
+
+Real-footage orchestration uses the existing `$talking-head-edit` repo skill.
+See `.agents/skills/talking-head-edit/references/real-footage-workflow.md` for
+the buyer invocation, three hooks, source-linked shot plan and missing-pickup case;
+`references/components.md` in that skill defines twenty components with honest
+implementation limits. `python app/buyer_acceptance.py --help` describes the
+optional Playwright UI acceptance runner. Playwright is a test dependency only.
+Render-tested layouts are Full demo and original-presenter PiP; Auto PiP avoids
+observed controls/results/captions or falls back to full demo. The optional lab
+imports private Kaggle generative receipts; configure `CUTROOM_KAGGLE_CLI` or put
+the CLI on PATH. Core editing needs neither Kaggle nor those model libraries.
 
 Python3.11+ and FFmpeg/ffprobe on PATH. The built-in app uses the Python standard
 library and included fonts/audio; Playwright and model libraries are test/training
@@ -12,7 +23,7 @@ From the checkout root on this machine:
 ```powershell
 . .\talking-head-qc\tools\use_d_storage.ps1
 $py='C:\Users\Acer\.cache\codex-runtimes\codex-primary-runtime\dependencies\python\python.exe'
-.\Start Cutroom.ps1 -Python $py
+& '.\Start Talking Head Cutroom.ps1' -Python $py
 ```
 
 Recordings appear in Workspace; assign each its own script. Plain text has

@@ -1,4 +1,4 @@
-# Talking head video editing skills
+# Talking Head Cutroom
 
 A local Codex workflow for English or Vietnamese presenter videos. Use a separate checkout for each client's work. Keep original media, briefs and revision folders on that client's machine.
 
@@ -9,6 +9,14 @@ separate reference-training intake. See [the app guide](app/README.md) and
 [actual implementation results](docs/CUTROOM-RESULTS.vi.md). Start it with
 `python app/app.py --data .\output\cutroom-workspace` from this D checkout (Python3.11+).
 The built-in path requires no model checkpoint or paid agent credentials.
+
+The existing [$talking-head-edit skill](.agents/skills/talking-head-edit/SKILL.md)
+now covers the real-footage workflow: three evidence-backed hooks, audiovisual
+shot planning, twenty component specifications, local UI rendering and exact-master
+review. [Buyer acceptance results](docs/REAL-FOOTAGE-RESULTS.vi.md) distinguish
+rendered variants from editorial approval. Use your own media; customer recordings
+and the reference corpus are not distributed. The optional generative lab does not
+replace the recorded presenter, voice or actual product demonstrations.
 
 Final exports use the [six-gate QC hooks](talking-head-qc/FINAL-QC-HOOKS.md).
 Prepare the acceptance profile before rendering, then use `qc_hook.py render`

@@ -85,6 +85,8 @@ class Workspace:
         self.tools = configure_tools(self.root)
         from artifact_store import ArtifactStore
         self.artifacts=ArtifactStore(self)
+        from generative import GenerativeStore
+        self.generative=GenerativeStore(self)
 
     def save(self):
         atomic(self.doc, self.data)
@@ -239,6 +241,8 @@ class Workspace:
         end = 0
         length = self.data["assets"][j["id"]]["duration"]
         for q in sorted(opts["inserts"], key=lambda x: x["at"]):
+            from engine.layouts import options
+            options(q)
             a = ref(q["asset"])
             if not all(
                 isinstance(q.get(k), (float, int)) and math.isfinite(q[k])

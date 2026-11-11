@@ -11,6 +11,8 @@ __pycache__/
 
 briefs/
 references/
+!.agents/skills/talking-head-edit/references/
+!.agents/skills/talking-head-edit/references/*.md
 SESSION-CHECKLIST.md
 *.recordly
 

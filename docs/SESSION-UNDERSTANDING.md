@@ -13,6 +13,10 @@
   time/preference/cost evidence is still needed; weight loading alone is not gain.
 - [x] User answered C to the controlled-unseen-comparison checkpoint: same media,
   renderer and listening level; quiz answers, corrections, repair time and cost.
+- [x] Updated real-footage skill: user answered that a `For review` badge is
+  insufficient for “open the exported file”; Recordly must capture that action.
+- [ ] New references: distinguish a newly observed badge/style from a render-tested
+  component and from an approved episode. More files alone do not establish gain.
 
 The current analyzer reports candidates. Training intake cannot turn an unlabeled
 interval into a deliberate presenter hold. Inference features and final-editor

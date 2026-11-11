@@ -119,10 +119,16 @@ class Handler(BaseHTTPRequestHandler):
             ws = self.server.ws
             if p == "/api/state":
                 return self.result({**ws.snapshot(), "key": self.server.secret})
+            if p == '/api/components':
+                from components import inventory
+                return self.result(inventory())
             if p.startswith('/artifacts/'):
                 _,_,id_,kind=p.split('/');record=ws.data.get('artifacts',{})[id_]
                 name={'preview':'preview.mp4','thumb':'thumbnail.jpg','source':'scene.json','timeline':'timeline.json'}[kind]
                 return self.file(Path(record['folder'])/name,(record['plan']['title']+'-'+str(record['version'])+Path(name).suffix) if 'download' in urllib.parse.parse_qs(u.query) else None)
+            if p.startswith('/generated/'):
+                _,_,run_id,index=p.split('/');run=ws.data['generative_runs'][run_id];output=run['receipt']['outputs'][int(index)]
+                return self.file(Path(run['folder'])/output['file'])
             if p in ('/sounds/click.wav','/sounds/slide.wav','/sounds/chime.wav'):
                 return self.file(HERE/'sounds'/Path(p).name)
             if p.startswith("/assets/"):
@@ -191,6 +197,18 @@ class Handler(BaseHTTPRequestHandler):
             u = urllib.parse.urlsplit(self.path)
             p = u.path
             n = int(self.headers.get("Content-Length", "-1"))
+            if p=='/api/generative-package':
+                if not 0<n<=300*1024**2:raise ValueError('Import a compact ZIP under300MB containing one completed run, adapter and previews.')
+                tmp=ws.root/'work'/(ident()+'.zip')
+                try:
+                    with tmp.open('wb') as f:
+                        left=n
+                        while left:
+                            block=self.rfile.read(min(1024**2,left))
+                            if not block:raise ValueError('Upload interrupted.')
+                            f.write(block);left-=len(block)
+                    query=urllib.parse.parse_qs(u.query);return self.result({'id':ws.generative.import_package(tmp,query.get('kernel',[''])[0])})
+                finally:tmp.unlink(missing_ok=True)
             if p == "/api/import":
                 if not 0 < n <= 8 * 1024**3:
                     raise ValueError("Select a video smaller than 8 GB.")
@@ -224,6 +242,16 @@ class Handler(BaseHTTPRequestHandler):
             b = json.loads(self.rfile.read(n) or "{}")
             if p == "/api/update":
                 ws.update(b["ids"], b["changes"])
+            elif p=='/api/generative-scene':
+                return self.result({'id':ws.generative.create_scene(b['run'],b['video'],b['job'],b['passage'],b['at'],b['title'])})
+            elif p=='/api/generative-passages':
+                import storyboard
+                job=ws.data['jobs'][b['id']];asset=ws.data['assets'][b['id']];parts,timing=storyboard.passages(job['settings']['script'],asset['duration'],Path(asset['path']))
+                return self.result({'passages':parts,'timing':timing})
+            elif p=='/api/generative-submit':
+                return self.result({'id':ws.generative.submit(b['run'],b['prompt'],b.get('seed',3407))})
+            elif p=='/api/generative-check':
+                return self.result(ws.generative.check(b['id']))
             elif p == '/api/artifacts/generate':
                 return self.result({'ids':ws.artifacts.generate(b['ids'],b.get('evidence'),bool(b.get('spoken_confirmed',False)),b.get('design'))})
             elif p == '/api/artifacts/edit':

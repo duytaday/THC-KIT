@@ -18,6 +18,15 @@ def analyze(path,length,full=False):
     strong=any(o['scene_times'] for o in observations)
     return dict(schema_version=1,source_sha256=sha(path),analysis='full' if full else 'opening_middle_ending_samples',sample_seconds=sum(b-a for a,b in windows),median_hold=round(hold,3),cuts_detected=sum(len(o['scene_times']) for o in observations),observations=observations,audio={'status':'UNVERIFIED','reason':'Mixed master has no isolated stems; music/SFX attribution and audibility require listening.'},profile=dict(id='rule-v1-'+('measured' if strong else 'house-fallback'),origin='reference_rule' if strong else 'house_weak_reference',anticipation_frames=12 if hold<1.6 else 20,settle_frames=5 if hold<1.6 else 9,optional_accent_gap_frames=45 if hold<1.6 else 90,trained=False),rights={'analysis':'confirm source permission','redistribute_pixels_or_audio':False})
 
+def inventory_delta(previous, current):
+    """Compare content, not filenames: a renamed/duplicate file is not new learning."""
+    old={r['sha256'] for r in previous.get('records',[]) if r.get('analyzable') and r.get('sha256')}
+    new={r['sha256'] for r in current.get('records',[]) if r.get('analyzable') and r.get('sha256')}
+    return dict(new_hashes=sorted(new-old),missing_hashes=sorted(old-new),
+                unchanged_unique=len(old & new),auto_trained=False,auto_approved=False,
+                next_action='Review new sources and timecoded style/badge candidates before using them.')
+
+
 def inventory(directory,requested=50):
     from .media import probe,duration
     records=[];seen={}
