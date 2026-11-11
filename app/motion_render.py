@@ -30,7 +30,7 @@ def append_ass(path,entry,master_start_frame):
         rows.append(dialogue(-2,master_start_frame,master_start_frame+n,body))
     bounds=[]
     for obj in spec['objects']:
-        start=anchors[obj['anchor']]['frame'];end=n
+        start=anchors[obj['anchor']]['frame'];end=schema.lifetime_end(obj,ctx)
         if obj['component']=='12':end=min(n,start+max(3,obj['hold_frames']))
         x,y,w,h=obj['rect'];changes=sorted(obj.get('changes',[]),key=lambda c:anchors[c['anchor']]['frame']);label=obj.get('text','');emphasis=obj.get('emphasis_line')
         for frame in range(start,end):
@@ -68,7 +68,8 @@ def sound_events(entry):
     ctx=entry['context'];anchors={a['id']:a for a in ctx['anchors']};events=[]
     for i,s in enumerate(entry['spec'].get('sfx',[])):
         a=anchors[s['anchor']];at=entry['source_start']+a['frame']/30
-        events.append(dict(id='motion-'+entry['id']+'-'+str(i),kind='contact' if s['id']=='click' else 'result' if s['id']=='chime' else 'chapter',anchor=dict(source_pts=at,timeline_source_pts=at,type=a['kind']),hold_frames=12,visual_disabled=True,origin='animation_spec',sound=dict(id=s['id'],muted=False,gain_db=s.get('gain_db',-26),offset_frames=0)))
+        proof=ctx.get('proof',{});observed=a.get('source_pts',proof.get('offset',0)+a['frame']/30) if proof else at
+        events.append(dict(id='motion-'+entry['id']+'-'+str(i),kind='contact' if s['id']=='click' else 'result' if s['id']=='chime' else 'chapter',anchor=dict(asset=proof.get('asset',entry.get('source_asset')),source_pts=observed,timeline_source_pts=at,type=a['kind']),hold_frames=12,visual_disabled=True,origin='animation_spec',sound=dict(id=s['id'],muted=False,gain_db=s.get('gain_db',-26),offset_frames=0)))
     return events
 
 

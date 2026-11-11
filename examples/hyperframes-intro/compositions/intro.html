@@ -1,0 +1,29 @@
+<template>
+<style>
+@font-face{font-family:KitVN;src:url(assets/fonts/DejaVuSans-Bold.ttf)}
+#root{position:absolute;inset:0;background:#101329;color:#fff;font-family:KitVN,sans-serif;overflow:hidden}
+.slot{position:absolute}.logo{left:180px;top:150px;width:720px;height:376px}.logo img{width:100%;height:100%;object-fit:contain;border-radius:32px}
+.hero{left:140px;top:565px;width:800px;height:260px;display:flex;align-items:center;gap:38px}.number{font-size:236px;line-height:1;color:#E8FF28}.headline{font-size:80px;line-height:1.06;max-width:590px}
+.row{left:140px;width:800px;height:122px}.card{box-sizing:border-box;display:flex;align-items:center;gap:28px;width:100%;height:100%;border:2px solid #454670;border-radius:24px;background:#2100BA;padding:0 32px;box-shadow:0 10px 0 #080D20}
+.card b{display:grid;place-items:center;width:64px;height:64px;border-radius:18px;background:#E8FF28;color:#101329;font-size:32px}.card span{font-size:52px}.note{left:140px;top:1690px;width:800px;font-size:30px;color:#C8C9DB}
+</style>
+<div id="root" data-composition-id="intro" data-width="1080" data-height="1920">
+<div id="community-slot" class="slot logo clip" data-start="0" data-duration="5"><img id="community-logo" src="assets/community-logo.png" alt="Việc Làm Video AI — Tuyển dụng và Freelance"></div>
+<div id="hero-slot" class="slot hero clip" data-start="0" data-duration="5"><strong id="repo-count" class="number">5</strong><h1 id="intro-title" class="headline" data-var-text="headline">repo GitHub</h1></div>
+<div id="item-1-slot" class="slot row clip" style="top:900px" data-start="0" data-duration="5"><div class="card" id="item-1"><b>01</b><span>FFmpeg Skill</span></div></div>
+<div id="item-2-slot" class="slot row clip" style="top:1044px" data-start="0" data-duration="5"><div class="card" id="item-2"><b>02</b><span>Recordly</span></div></div>
+<div id="item-3-slot" class="slot row clip" style="top:1188px" data-start="0" data-duration="5"><div class="card" id="item-3"><b>03</b><span>Remotion</span></div></div>
+<div id="item-4-slot" class="slot row clip" style="top:1332px" data-start="0" data-duration="5"><div class="card" id="item-4"><b>04</b><span>fal</span></div></div>
+<div id="item-5-slot" class="slot row clip" style="top:1476px" data-start="0" data-duration="5"><div class="card" id="item-5"><b>05</b><span>Runway</span></div></div>
+<div id="note-slot" class="slot note clip" data-start="0" data-duration="5"><span id="intro-note">MINH HỌA INTRO · CHƯA CĂN VỚI LỜI</span></div>
+</div>
+<script>
+const tl=gsap.timeline({paused:true});
+tl.fromTo('#community-logo',{y:-12,opacity:1},{y:0,opacity:1,duration:.32,ease:'power3.out'},0);
+tl.fromTo('#repo-count',{x:-32,rotation:-7,scale:.8,opacity:0},{x:0,rotation:0,scale:1,opacity:1,duration:.48,ease:'back.out(1.4)'},.05);
+tl.fromTo('#intro-title',{x:30,opacity:0},{x:0,opacity:1,duration:.38,ease:'power3.out'},.14);
+['#item-1','#item-2','#item-3','#item-4','#item-5'].forEach((id,i)=>tl.fromTo(id,{x:32,y:18,rotation:2,opacity:0},{x:0,y:0,rotation:0,opacity:1,duration:.36,ease:'power3.out'},.6+i*.18));
+tl.fromTo('#intro-note',{opacity:0},{opacity:1,duration:.2},1.8);tl.to({}, {duration:.1},4.9);
+window.__timelines=window.__timelines||{};window.__timelines.intro=tl;
+</script>
+</template>

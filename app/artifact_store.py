@@ -7,66 +7,101 @@ from engine import media
 def plain(script):return ' '.join(line.strip() for line in script.replace('\r','').splitlines() if line.strip() and not line.strip().isdigit() and '-->' not in line)
 
 class ArtifactStore:
-    def __init__(self,workspace):self.ws=workspace
+    def __init__(self,workspace):self.ws=workspace;self.generating=set()
     def records(self):return self.ws.data.setdefault('artifacts',{})
     def _check_job(self,job):
         if job['status'] in ('Queued','Rendering'):raise ValueError('Wait for the current render before changing its scenes.')
+        if job.get('id') in self.generating:raise ValueError('Wait for this recording’s scene generation to finish.')
     def _dirty(self,job):
         job.update(revision=job['revision']+1,status='Draft',stage='Scene changed; render a new export for review.')
-    def _render_version(self,record,plan):
+    def _render_version(self,record,plan,assets=None):
         version=record.get('version',0)+1;folder=self.ws.root/'artifacts'/record['id']/f'v{version:03d}'
         folder.resolve().relative_to((self.ws.root/'artifacts').resolve())
-        generated=artifacts.render(plan,folder,self.ws.data['assets'][record['job']],self.ws.data['assets'])
+        assets=assets if assets is not None else self.ws.data['assets']
+        generated=artifacts.render(plan,folder,assets[record['job']],assets)
         if record.get('version'):record.setdefault('versions',[]).append({k:copy.deepcopy(record[k]) for k in ('version','folder','sha256','plan')})
         record.update(version=version,folder=str(folder),sha256=media.sha(folder/'preview.mp4'),plan=generated,status=generated['status'])
         record.pop('pending_proposal',None)
         return record
-    def generate(self,ids,evidence=None,spoken_confirmed=False,design=None):
+    def generate(self,ids,evidence=None,spoken_confirmed=False,design=None,animation_mode=None):
         results=[]
-        with self.ws.lock:
-            for key in dict.fromkeys(ids):
-                job=self.ws.data['jobs'][key];self._check_job(job);host=self.ws.data['assets'][key];settings=job['settings']
+        for key in dict.fromkeys(ids):
+            with self.ws.lock:
+                original=self.ws.data['jobs'][key];self._check_job(original)
+                job=copy.deepcopy(original);assets=copy.deepcopy(self.ws.data['assets']);host=assets[key]
+                previous=copy.deepcopy(self.ws.data.get('storyboards',{}).get(key,{}).get('passages',[]))
+                existing_records=copy.deepcopy([r for r in self.records().values() if r['job']==key]);self.generating.add(key)
+            try:
+                settings=job['settings'];staged=[]
                 if not settings['script'].strip():raise ValueError('Attach this recording’s script first.')
                 proof=copy.deepcopy(evidence)
                 if proof:
-                    asset=self.ws.data['assets'].get(proof.get('asset'))
+                    asset=assets.get(proof.get('asset'))
                     if not asset or asset['kind']!='reference':raise ValueError('Choose actual on-screen proof, separate from the style reference.')
+                    if asset.get('data_class')=='reference_excerpt':raise ValueError('An archived reference animation is an illustration. Add it as a cutaway; capture this episode’s actual product result separately.')
                     if proof['asset']==settings.get('style_ref'):raise ValueError('This file is assigned only for pacing. Choose an on-screen proof asset explicitly.')
                     proof['duration']=asset['duration'];proof['source_sha256']=media.sha(asset['path'])
-                ref=self.ws.data['assets'].get(settings.get('style_ref'),{}).get('analysis',{})
+                ref=assets.get(settings.get('style_ref'),{}).get('analysis',{})
                 reference=[dict(reference_id=ref.get('source_sha256'),source_range=o['source_range'],observation=o['observation'],status=o['status'],confidence=o['confidence'],rule_parameters=ref.get('profile',{})) for o in ref.get('observations',[])[:1]]
                 proposal=storyboard.propose(settings['script'],host['duration'],Path(host['path']),proof,reference,spoken_confirmed)
-                previous=self.ws.data.setdefault('storyboards',{}).get(key,{}).get('passages',[])
+                if animation_mode:
+                    import motion_storyboard,motion_policy
+                    transcript=job.get('transcript')
+                    eligible=[(i,p) for i,p in enumerate(proposal['artifacts']) if p['kind']!='placeholder']
+                    prepared=[motion_storyboard.context(p,host,assets,transcript) for _,p in eligible]
+                    predictions=motion_policy.infer(self.ws.root,[ctx for ctx,_ in prepared],animation_mode,media.sha(host['path']))
+                    for (i,p),(ctx,at),prediction in zip(eligible,prepared,predictions):proposal['artifacts'][i]=motion_storyboard.attach(p,ctx,at,prediction)
                 mapping={}
                 for i,p in enumerate(proposal['passages']):
                     if i<len(previous) and previous[i]['quote']!=p['quote'] and not any(x['quote']==p['quote'] for x in previous):mapping[p['id']]=previous[i]['id'];p['id']=previous[i]['id']
                 for n,plan in enumerate(proposal['artifacts']):
                     plan['design']=copy.deepcopy(design or {})
-                    if plan['type']=='demo' and all(plan['design'].get(k) for k in ('before','after')):
+                    if not animation_mode and plan['type']=='demo' and all(plan['design'].get(k) for k in ('before','after')):
                         plan.update(kind='before_after',intended_visual='Supplied before/after images with consistent fit; verify they show the claimed change.',enabled=True,status='STORYBOARD · NARRATION PICKUP')
                     plan['passage_ids']=[mapping.get(id_,id_) for id_ in plan['passage_ids']]
                     identity=plan['type']+'|'+'|'.join(plan['passage_ids'])+'|'+(plan['title'] if plan.get('claim','').startswith('Show this repository') else plan['kind'] if plan['type']=='demo' else '')
-                    existing=next((r for r in self.records().values() if r['job']==key and r.get('story_key')==identity),None)
+                    if animation_mode:identity+='|animation:'+animation_mode
+                    existing=next((r for r in existing_records if r.get('story_key')==identity),None)
                     if existing:
                         if existing['plan']['source_quote']!=plan['source_quote']:
                             existing.update(pending_proposal=plan,status='STALE · source passage changed')
-                        results.append(existing);continue
+                        staged.append(existing);continue
                     import uuid
                     record=dict(id=uuid.uuid4().hex,job=key,story_key=identity,inserted=False,versions=[])
-                    self._render_version(record,plan);self.records()[record['id']]=record;results.append(record)
-                self.ws.data['storyboards'][key]=proposal
-                self._dirty(job)
-            self.ws.save()
+                    self._render_version(record,plan,assets);staged.append(record)
+                with self.ws.lock:
+                    current=self.ws.data['jobs'][key]
+                    if current['revision']!=job['revision'] or current['status'] in ('Queued','Rendering'):raise ValueError('Project changed during generation; stale proposals were not applied. Generate again from the current script.')
+                    for record in staged:self.records()[record['id']]=record
+                    self.ws.data.setdefault('storyboards',{})[key]=proposal;self._dirty(current);self.ws.save();results.extend(staged)
+            finally:
+                with self.ws.lock:self.generating.discard(key)
         return [r['id'] for r in results]
     def edit(self,id_,changes,expected_version,regenerate=True):
-        allowed={'title','duration','at','position','intensity','sound','sounds','enabled','source_quote','passage_ids','occurrence','evidence','design'}
+        allowed={'title','duration','at','position','intensity','sound','sounds','enabled','source_quote','passage_ids','occurrence','evidence','design','animation','locked'}
         if set(changes)-allowed:raise ValueError('Unknown scene setting.')
         with self.ws.lock:
             record=self.records()[id_];job=self.ws.data['jobs'][record['job']];self._check_job(job)
             if expected_version!=record['version']:raise ValueError('This scene has a newer version. Reopen its settings.')
+            if 'locked' in changes:
+                if set(changes)!={'locked'} or type(changes['locked']) is not bool:raise ValueError('Change the scene lock separately')
+                record['locked']=changes['locked'];self.ws.save();return
+            if record.get('locked'):raise ValueError('Unlock this scene before editing or regenerating it')
             plan=copy.deepcopy(record.get('pending_proposal',record['plan']))
             for k in record.get('manual_fields',[]):plan[k]=copy.deepcopy(record['plan'][k])
             plan.update(copy.deepcopy(changes))
+            if plan['kind']=='animation_spec':
+                import motion_policy,motion_specs
+                if 'animation' in changes:
+                    if changes['animation'].get('model')!=record['plan']['animation'].get('model'):raise ValueError('Model provenance is immutable; edit the scene specification instead')
+                    plan['animation']['manual_override']=True
+                if any(k in changes and changes[k]!=record['plan'].get(k) for k in ('at','source_quote')) and 'animation' not in changes:raise ValueError('Reassign animation source anchors when moving it to another spoken passage')
+                if not changes and 'animation' not in record.get('manual_fields',[]):
+                    ctx=plan['animation']['context'];mode=plan['animation']['model']['mode']
+                    predicted=motion_policy.infer(self.ws.root,[ctx],mode,media.sha(self.ws.data['assets'][record['job']]['path']))[0]
+                    plan['animation'].update(spec=predicted['spec'],model=predicted['model'])
+                if 'duration' in changes:plan['animation']['context']['frames']=round(float(plan['duration'])*30)
+                motion_specs.validate(plan['animation']['spec'],plan['animation']['context'])
             if plan['kind']=='generated_video' and not plan.get('evidence'):raise ValueError('Preserve the generated illustration’s source and provenance.')
             if plan.get('evidence') and plan['kind']=='placeholder':
                 plan['kind']='software';plan['intended_visual']='Actual supplied screen footage; verify its own control, action and readable result.'
@@ -77,11 +112,26 @@ class ArtifactStore:
             plan['review_status']='UNVERIFIED';plan['status']='NEEDS_REVIEW' if plan.get('narration_status')=='operator_confirmed' else 'STORYBOARD · NARRATION PICKUP'
             if plan['kind']=='placeholder':plan['status']='NEEDS_INPUT · proof capture'
             self._render_version(record,plan);self._dirty(job);self.ws.save()
+            if 'animation' in changes:
+                import uuid,time
+                previous=record['versions'][-1]['plan']
+                self.ws.data.setdefault('corrections',[]).append(dict(id=uuid.uuid4().hex,job=record['job'],source=self.ws.data['assets'][record['job']]['path'],source_sha256=media.sha(self.ws.data['assets'][record['job']]['path']),before={'animation':previous['animation']},after={'animation':copy.deepcopy(plan['animation'])},reason=None,editor_confirmed=False,created=time.time(),alignment='stable scene/source anchors; proposed and final animation specs; not a human training label until confirmed',task='animation_spec_edit_v1',source_span=[plan['at'],plan['at']+plan['duration']]))
+                self.ws.save()
     def insert(self,id_,enabled):
         with self.ws.lock:
             record=self.records()[id_];job=self.ws.data['jobs'][record['job']];self._check_job(job)
             if enabled and (record['status'].startswith(('STALE','NEEDS_INPUT')) or record['plan']['kind']=='placeholder'):raise ValueError(record['plan']['intended_visual'])
             record['inserted']=bool(enabled);self._dirty(job);self.ws.save()
+    def reuse(self,id_,library_id,version):
+        import animation_library
+        with self.ws.lock:
+            record=self.records()[id_];job=self.ws.data['jobs'][record['job']];self._check_job(job)
+            if record.get('locked') or record['version']!=version:raise ValueError('Unlock and reopen the current scene version before adapting a template')
+            plan=copy.deepcopy(record['plan'])
+            if plan['kind']!='animation_spec':raise ValueError('Generate an editable spec scene for this take first')
+            prediction=animation_library.adapt(self.ws.root,library_id,plan['animation']['context'])
+            plan['animation'].update(spec=prediction['spec'],model=prediction['model']);plan['status']='NEEDS_REVIEW'
+            self._render_version(record,plan);record['manual_fields']=sorted(set(record.get('manual_fields',[]))|{'animation'});self._dirty(job);self.ws.save()
     def toggle(self,id_,enabled):
         with self.ws.lock:
             record=self.records()[id_];job=self.ws.data['jobs'][record['job']];self._check_job(job)
@@ -97,6 +147,18 @@ class ArtifactStore:
             scene=r['plan'];start=float(scene['at']);end=start+float(scene['duration']);length=self.ws.data['assets'][key]['duration']
             if end>length:raise ValueError('Scene '+scene['title']+' runs past the recording; shorten it or move its insertion.')
             if any(start<q['end'] and end>q['start'] for q in plan['proof']):raise ValueError('Scene '+scene['title']+' overlaps a manual cutaway. Move/disable one; manual work was preserved.')
+            if scene['kind']=='animation_spec':
+                import motion_render
+                if any(start<e['source_end'] and end>e['source_start'] for e in plan.get('motion_specs',[])):raise ValueError('Animation scenes overlap; move or disable one before rendering')
+                entry=copy.deepcopy(scene['animation']);entry.update(id=r['id'],source_start=start,source_end=end,source_asset=key,artifact_version=r['version'])
+                plan.setdefault('motion_specs',[]).append(entry)
+                plan['events'].extend(motion_render.sound_events(entry))
+                proof=entry['context'].get('proof')
+                if proof:
+                    a=self.ws.data['assets'][proof['asset']]
+                    if proof.get('source_sha256') and media.sha(a['path'])!=proof['source_sha256']:raise ValueError('Screen source changed; reassign its action/result anchors')
+                    plan['proof'].append(dict(id='motion-proof-'+r['id'],file=a['path'],start=start,end=end,source_start=proof.get('offset',0),artifact_type=scene['type'],artifact_kind='software',source_name=a['name']))
+                continue
             plan['proof'].append(dict(id='artifact-'+r['id'],start=start,end=end,file=str(Path(r['folder'])/'preview.mp4'),source_start=0,artifact_id=r['id'],artifact_version=r['version'],artifact_type=scene['type'],artifact_kind=scene['kind'],source_name=scene['title']))
             for cue in scene.get('events',[]):
                 e=copy.deepcopy(cue);e['id']='artifact-'+r['id']+'-'+e['id'];e['anchor']['timeline_source_pts']=start+e['master_frame']/30;e['visual_disabled']=True;plan['events'].append(e)

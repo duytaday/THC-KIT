@@ -32,7 +32,7 @@ def wrap(value,width,font_size):
     return lines
 
 
-def validate(spec,context):
+def validate(spec,context,*,check_hold=True):
     if not isinstance(spec,dict) or set(spec)-{'v','scene_type','layout','objects','sfx','evidence','missing','rationale'}:
         raise ValueError('Unknown animation-spec fields')
     if spec.get('v')!=1 or spec.get('scene_type') not in SCENE_TYPES:raise ValueError('Unsupported animation-spec version/type')
@@ -112,7 +112,7 @@ def validate(spec,context):
             previous=k['frame'];finite(k['x'],-1,1,'X offset');finite(k['y'],-1,1,'Y offset');finite(k['scale'],.7,1.15,'Scale');finite(k['opacity'],0,1,'Opacity')
             if k['ease'] not in ('linear','smoothstep','ease_out'):raise ValueError('Unsupported easing')
         if keys[0]['frame']!=0 or keys[-1]['opacity']!=1 or keys[-1]['x']!=0 or keys[-1]['y']!=0 or keys[-1]['scale']!=1:raise ValueError('The entrance must end settled in its declared rectangle')
-        if frames-last-(0 if obj.get('changes') else keys[-1]['frame'])-6<hold:raise ValueError('Extend the scene to leave the final state readable')
+        if check_hold and lifetime_end(obj,context)-last-(0 if obj.get('changes') else keys[-1]['frame'])-6<hold:raise ValueError('Extend the scene to leave the final state readable')
         if obj['component'] in ('11','12','13') and any(k['x'] or k['y'] or k['scale']!=1 for k in keys):raise ValueError('A proof marker must stay on the observed source target')
         # Check the swept geometry at output frames, not just the final card position.
         if obj['component'] not in ('11','12','13'):
@@ -137,6 +137,40 @@ def validate(spec,context):
         if sound['id'] in ('click','chime') and not context.get('proof'):raise ValueError('Action sounds require screen evidence')
     if not isinstance(result.get('missing',[]),list) or not all(isinstance(x,str) for x in result.get('missing',[])):raise ValueError('Missing pickups must be explicit text entries')
     return result
+
+
+def compile_spec(spec,context):
+    """Compile a proposed hold to source-frame budgets; never repair content/proof.
+
+    Report raw validation separately. Both model arms use the same compiler.
+    A budget below the readable minimum remains an actionable rejection.
+    """
+    raw_error=None
+    try:validate(spec,context)
+    except ValueError as e:raw_error=str(e)
+    result=copy.deepcopy(spec);anchors={a['id']:a for a in context['anchors']};repairs=[]
+    for i,obj in enumerate(result.get('objects',[])):
+        if isinstance(obj,dict) and obj.get('component') in ('11','12','13') and obj.get('anchor') in anchors and anchors[obj['anchor']].get('roi'):
+            roi=anchors[obj['anchor']]['roi']
+            if obj.get('rect')!=roi:
+                repairs.append(dict(field=f'objects[{i}].rect',before=obj.get('rect'),after=copy.deepcopy(roi),reason='Bind to verified current-source ROI; model geometry is not screen evidence'))
+                obj['rect']=copy.deepcopy(roi)
+    result=validate(result,context,check_hold=False)
+    for i,obj in enumerate(result['objects']):
+        last=max([anchors[obj['anchor']]['frame']]+[anchors[c['anchor']]['frame'] for c in obj.get('changes',[])])
+        available=lifetime_end(obj,context)-last-(0 if obj.get('changes') else obj['keyframes'][-1]['frame'])-6
+        if available<12:raise ValueError('Extend the scene: less than 12 frames remain for its final readable state')
+        if obj.get('hold_frames',30)>available:
+            repairs.append(dict(field=f'objects[{i}].hold_frames',before=obj.get('hold_frames',30),after=available,reason='Source frame budget; no word/action anchor moved'))
+            obj['hold_frames']=available
+    return validate(result,context),dict(raw_schema_error=raw_error,repairs=repairs)
+
+
+def lifetime_end(obj,context):
+    if obj.get('component')=='11':
+        anchors={a['id']:a for a in context['anchors']};start=anchors[obj['anchor']]['frame']
+        return min([context['frames']]+[a['frame'] for a in context['anchors'] if a['kind'] in ('contact','result') and a['frame']>start])
+    return context['frames']
 
 
 def pose(keys,frame):
@@ -171,6 +205,7 @@ def rules(context):
             if a['kind'] not in ('control','contact','result') or not a.get('roi'):continue
             keys=[dict(frame=0,x=0,y=0,scale=1,opacity=1,ease='linear'),dict(frame=1,x=0,y=0,scale=1,opacity=1,ease='linear')]
             objects.append(dict(id='mark'+str(len(objects)),component={'control':'11','contact':'12','result':'13'}[a['kind']],rect=a['roi'],anchor=a['id'],keyframes=keys,hold_frames=12 if a['kind']=='contact' else min(36,context['frames']-a['frame']-7)))
+            if a['kind']=='control':objects[-1]['hold_frames']=min(objects[-1]['hold_frames'],lifetime_end(objects[-1],context)-a['frame']-7)
             if a['kind'] in ('contact','result'):sounds.append(dict(anchor=a['id'],id='click' if a['kind']=='contact' else 'chime',gain_db=-24))
         if not any(a['kind']=='result' for a in anchors):missing=['Capture the actual resulting state; keep presenter where proof is absent.']
     elif texts:

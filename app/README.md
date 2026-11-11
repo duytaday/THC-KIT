@@ -79,3 +79,34 @@ after renderer/dependency changes is intentionally rejected; create a new recipe
 through the current UI. OpenBot/MausBot capability indicators are disconnected
 until a real endpoint and invocation have been verified. Ordinary editing works
 with those agents off.
+
+## Optional animation-spec worker and library
+
+`Generate intro & demos` can use native rules, base+training-only RAG or the
+separate animation-spec adapter. Import a completed compact Kaggle spec ZIP;
+configure `CUTROOM_ANIMATION_PYTHON`, `CUTROOM_ANIMATION_BASE` and optionally
+`CUTROOM_ASR_PYTHON`/`CUTROOM_WHISPER_MODEL` before launching. No Torch dependency
+is added to the core UI/runtime. The selector candidate described above is a
+different task; its weights cannot act as an animation-spec adapter. Inference
+failures remain errors with previous scenes preserved; no successful rules
+fallback is substituted for rejected spec output.
+
+Transcribe creates a local source-bound draft. The optional style CLI accepts a
+`terminology` list from the current episode; it does not inject the five-repo
+vlog's names into every Vietnamese recording. Check names/meaning against speech.
+
+Native scene cards expose editable JSON, motion intensity, individual cues and a
+lock. Save to animations creates a silent preview and reusable native template.
+Adapt rebinds new words, source clocks and observed ROIs; archived reference clips
+cannot supply proof for a new product run. Reference extraction keeps permission,
+source ranges, crop and file hash; separate watermark and layout inspections are
+required before Add as illustration. Prior crops and inspection history stay.
+
+See `talking-head-qc/integrations/video-skill-set.md` for HyperFrames0.9.33 and
+the pinned Claude editing Windows bridge. Those are optional CLI renderers;
+their local previews are not automatically installed as batch presets. Claude
+style previews already contain voice and burned captions: do not stack them
+under a second copy of narration/captions. Keep one authoritative caption/audio
+route when using a complete styled cut. Native scene specs are the tested UI
+path for compositing graphics directly onto its original episode buses. Run
+master QC after any assembly.

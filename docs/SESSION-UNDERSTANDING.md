@@ -22,6 +22,16 @@
   insufficient for “open the exported file”; Recordly must capture that action.
 - [ ] New references: distinguish a newly observed badge/style from a render-tested
   component and from an approved episode. More files alone do not establish gain.
+- [ ] Optional skill/render integration: distinguish a rendered layout template
+  from the current episode's actual action/result proof and from demonstrated
+  improvement. A focused checkpoint was sent; no answer recorded yet. Do not
+  mark this mastered from the installation, model logs or frame-grid inspection.
+
+Current explanation: one local master plan owns source timecodes, captions,
+voice, locked edits and QC. Optional HTML renderers and model workers produce
+versioned proposals; they do not independently approve the customer master.
+Raw-model failures, compiler repairs and unverified listening stay visible so
+the buyer can understand what each success actually establishes.
 
 The current analyzer reports candidates. Training intake cannot turn an unlabeled
 interval into a deliberate presenter hold. Inference features and final-editor

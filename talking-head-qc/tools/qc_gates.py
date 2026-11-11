@@ -84,6 +84,21 @@ def pcm(path):
     if sys.byteorder!='little':values.byteswap()
     return values
 
+
+def mix_alignment(scores,tolerance,threshold=.65):
+    """A periodic/masked waveform may match several lags; that is not a defect.
+
+    Never turn ambiguity into PASS. A unique supported shift still fails at the
+    unchanged one-frame tolerance; isolated timing failures remain failures.
+    """
+    best=max(scores,default=(-1,None))
+    inside=max((s for s in scores if abs(s[1])<=tolerance+1e-6),default=(-1,None))
+    outside=max((s for s in scores if abs(s[1])>tolerance+1e-6),default=(-1,None))
+    competing=inside if best[1] is not None and abs(best[1])>tolerance+1e-6 else outside
+    ambiguous=competing[0]>=threshold and best[0]-competing[0]<.05
+    status='UNVERIFIED' if best[0]<threshold or ambiguous else 'FAIL' if abs(best[1])>tolerance+1e-6 else 'PASS'
+    return dict(status=status,correlation=best[0],lag_frames=best[1],competing_correlation=competing[0],competing_lag_frames=competing[1],ambiguous=ambiguous)
+
 def cue_measure(video,profile,cue,cache,duration):
     """Peak from isolated stem; matched correlation, never final-voice peak picking."""
     fps=profile['specs']['fps'];event=cue['visual_frame']/fps;window=cue.get('window_seconds',.12)
@@ -116,7 +131,7 @@ def cue_measure(video,profile,cue,cache,duration):
                 if abs(result['offset_frames'])>profile['thresholds']['sfx_tolerance_frames']+1e-6:result['status']='FAIL'
         if 'final_pcm' not in cache:cache['final_pcm']=pcm(video)
         mixed=cache['final_pcm'];radius=round(.014*48000);a=max(0,index-radius);b=min(len(data),index+radius);template=data[a:b]
-        expected=round((a/48000+offset)*48000);norm_a=sum(v*v for v in template);best=(-1,None)
+        expected=round((a/48000+offset)*48000);norm_a=sum(v*v for v in template);scores=[]
         # Submillisecond grid around the assigned offset, with normalized score.
         # Search the declared evidence window, not only ±2frames. A four-frame
         # routing error must be observable rather than disappearing outside search.
@@ -126,11 +141,11 @@ def cue_measure(video,profile,cue,cache,duration):
             if start<0 or start+len(template)>len(mixed):continue
             sample=mixed[start:start+len(template)];energy=sum(v*v for v in sample)
             corr=sum(x*y for x,y in zip(template,sample))/math.sqrt(max(norm_a*energy,1e-20))
-            if corr>best[0]:best=(corr,lag)
-        confidence=best[0];result['final_mix_correlation']=confidence
-        result['final_mix_lag_frames']=None if best[1] is None else best[1]/48000*fps
-        if confidence<cue.get('correlation_threshold',.65):result['final_mix_crosscheck']='UNVERIFIED: overlapping voice/codec requires listening or stronger separation'
-        elif abs(result['final_mix_lag_frames'])>profile['thresholds']['sfx_tolerance_frames']+1e-6:result.update(status='FAIL',final_mix_crosscheck='FAIL')
+            scores.append((corr,lag/48000*fps))
+        alignment=mix_alignment(scores,profile['thresholds']['sfx_tolerance_frames'],cue.get('correlation_threshold',.65))
+        result['final_mix_correlation']=alignment['correlation'];result['final_mix_lag_frames']=alignment['lag_frames'];result['final_mix_alignment']=alignment
+        if alignment['status']=='UNVERIFIED':result['final_mix_crosscheck']='UNVERIFIED: ambiguous alignment or overlapping voice/codec requires listening or stronger separation'
+        elif alignment['status']=='FAIL':result.update(status='FAIL',final_mix_crosscheck='FAIL')
         else:result['final_mix_crosscheck']='PASS'
     except (OSError,ValueError,subprocess.SubprocessError) as e:result.update(status='UNVERIFIED',reason=str(e))
     return result

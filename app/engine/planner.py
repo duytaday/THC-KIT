@@ -239,6 +239,7 @@ def build(host, settings, assets):
                 "id": insert.get('id',asset['id']+'-'+str(insert.get('occurrence',0))),
                 "cue": cue,
                 "source_name": asset['name'],
+                **({'artifact_kind':'reference_excerpt','artifact_type':'illustration'} if asset.get('data_class')=='reference_excerpt' else {}),
                 "anchors": copy.deepcopy(insert.get('anchors',{})),
                 **{k:insert[k] for k in ('layout','pip_corner','pip_width') if k in insert},
                 **({'crop':insert['crop']} if insert.get('crop') else {}),

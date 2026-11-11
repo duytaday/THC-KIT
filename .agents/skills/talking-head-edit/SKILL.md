@@ -4,6 +4,8 @@ description: Build and revise real-footage English or Vietnamese talking-head vi
 ---
 
 Work from the project root. Preserve the existing `$talking-head-edit` invocation.
+When choosing an additional video tool, use the pinned `claude-video-catalog`
+skill; catalog entries are discovery data, not installed or audited capabilities.
 For reusable production rules and hook boundaries, read
 `docs/TALKING-HEAD-PRODUCTION-CONTRACT.vi.md`. Apply it per episode; never copy a
 previous episode's source paths, promises or demo timecodes into a new job.
@@ -12,6 +14,10 @@ first. It covers three hooks, source-linked audiovisual planning, the normal UI,
 two buyer acceptance cases and reproduction from a clean checkout. Read
 [references/components.md](references/components.md) when choosing components;
 20 specifications do not mean 20 rendered or approved components.
+Read [references/reference-flow.md](references/reference-flow.md) before adapting
+reference pacing or saving reusable animation excerpts. Additional HyperFrames
+and Claude editing workflows are optional renderer adapters; their pinned
+Windows integration is in `talking-head-qc/integrations/video-skill-set.md`.
 
 Use the real recorded presenter and voice. “Avatar” means PiP of that recording.
 Do not synthesize a presenter, replace speech, or call generated imagery software

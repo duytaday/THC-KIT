@@ -10,6 +10,7 @@ def run(dataset,out,steps=128):
     manifest,rows,pool=data.check_dataset(dataset)
     out=Path(out);out.mkdir(parents=True,exist_ok=False)
     receipt=dict(task='script_animation_spec_lora_v1',status='RUNNING',base_model=schema.BASE_MODEL,base_revision=schema.BASE_REVISION,dataset_fingerprint=manifest['dataset_fingerprint'],label_scope=manifest['dataset_kind'],human_confirmed_labels=manifest['human_confirmed_labels'],agent_experimental_labels=manifest['agent_experimental_labels'],source_families=manifest['source_content_families'],actual_optimizer_steps=0,training_completed=False,production_eligible=False,code_sha256=media.sha(__file__),style='maverick_fast',full_master_listening='UNVERIFIED')
+    receipt['prompt_version']=data.PROMPT_VERSION;receipt['training_device']='cuda:0'
     def save():media.write_json(out/'provenance.json',receipt)
     def stage(s):receipt['stage']=s;save();print('STAGE',s,flush=True)
     save()
@@ -82,7 +83,16 @@ def run(dataset,out,steps=128):
                 try:spec=schema.validate(json.loads(raw),row['input'])
                 except (ValueError,KeyError,TypeError,IndexError) as e:error=str(e)
                 predictions.append(dict(id=row['id'],scene_type=row['input']['request'],arm=arm,source_video_id=row['source_video_id'],input=row['input'],raw_output=raw,spec=spec,error=error,retrieved_ids=[e['id'] for e in retrieved[row['id']]],runtime_seconds=time.monotonic()-begin));media.write_json(out/'predictions.json',predictions)
-        receipt.update(status='COMPLETE',stage='complete',quality_improvement=None,complete_episode_reviewers=0,first_pass_acceptance=None,repair_minutes_per_finished_minute=None);save();media.write_json(out/'evaluation.json',dict(schema_success={arm:{role:sum(p['error'] is None for p in predictions if p['arm']==arm and p['scene_type']==role) for role in ('intro','demo')} for arm in ('base_rag','fine_tuned')},test_samples=len(chosen),not_independent_creator_benchmark=True,editorial_review='NEEDS_REVIEW'));print(json.dumps(receipt,ensure_ascii=False),flush=True)
+        receipt.update(status='COMPLETE',stage='complete',quality_improvement=None,complete_episode_reviewers=0,first_pass_acceptance=None,repair_minutes_per_finished_minute=None);save();media.write_json(out/'evaluation.json',dict(schema_success={arm:{role:sum(p['error'] is None for p in predictions if p['arm']==arm and p['scene_type']==role) for role in ('intro','demo')} for arm in ('base_rag','fine_tuned')},test_samples=len(chosen),not_independent_creator_benchmark=True,editorial_review='NEEDS_REVIEW'))
+        import shutil,zipfile
+        shutil.copy2(Path(dataset)/'retrieval-train-only.json',out/'retrieval-train-only.json')
+        receipt['retrieval_sha256']=media.sha(out/'retrieval-train-only.json');save()
+        with zipfile.ZipFile(out/'motion-spec-package.zip','w',zipfile.ZIP_DEFLATED) as z:
+            for name in ('provenance.json','evaluation.json','predictions.json','retrieval-train-only.json'):
+                z.write(out/name,name)
+            for file in (out/'adapter').iterdir():
+                if file.is_file():z.write(file,'adapter/'+file.name)
+        print(json.dumps(receipt,ensure_ascii=False),flush=True)
     except BaseException as e:
         receipt.update(status='FAILED',error=str(e));save();(out/'failure.log').write_text(traceback.format_exc(),encoding='utf-8');raise
 

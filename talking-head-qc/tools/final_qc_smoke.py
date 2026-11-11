@@ -64,7 +64,11 @@ def main():
         center=frame/FPS;sigma=.002 if id_ in ('click','control') else .04
         samples=[0.0]*round(6*SR)
         for i in range(max(0,round((center-4*sigma)*SR)),min(len(samples),round((center+4*sigma)*SR))):
-            dt=i/SR-center;value=.12*math.exp(-.5*(dt/sigma)**2)*math.cos(2*math.pi*freq*dt);samples[i]=value;mixed[i]+=value
+            # Long pure tones match several lags after AAC. A chirped test cue
+            # gives this positive fixture a unique acoustic landmark. Ambiguous
+            # real/periodic cues remain UNVERIFIED in the production checker.
+            dt=i/SR-center;phase=freq*dt+(12000*dt*dt if sigma>.01 else 0)
+            value=.12*math.exp(-.5*(dt/sigma)**2)*math.cos(2*math.pi*phase);samples[i]=value;mixed[i]+=value
         wav(stems/(id_+'.wav'),samples)
     wav(root/'sfx.wav',mixed)
     base=root/'original';metadata(base,6)

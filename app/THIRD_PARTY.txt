@@ -17,3 +17,8 @@ Source: https://dejavu-fonts.github.io/
 The click, slide and chime WAV files are synthesized sounds from the owner's earlier animation and SFX project. No third-party song or audio recording is included. The examples are synthetic process-verification footage and narration.
 
 FFmpeg and FFprobe are installed separately or provided by the user. The app invokes them as external processes. Compatible Windows Essentials builds: https://www.gyan.dev/ffmpeg/builds/
+
+Optional video skill adapters (installed separately; not embedded in the EXE):
+- artemnovitckii/claude-editing-skills, commit beff6b868a8c1bdfad8661bd8a298497e75568a3, MIT code by Artem Novitckii. Keep its LICENSE and font OFL notices with the upstream checkout. Its third-party photographs, sample footage and showcase previews are excluded from that software license and are not packaged here.
+- heygen-com/hyperframes: new HTML bridge pinned to npm0.9.33; existing editing workflows use compatible0.8.52. Keep the notices supplied with those packages. GSAP and user assets are supplied locally at runtime; review their own distribution terms.
+- awesome-claude-video-skills is a CC0 catalog. Its catalog license is included in the repo skill. Catalog project licenses and upstream security labels are independent; the list is not a bundle of audited engines.

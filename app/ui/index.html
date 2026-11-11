@@ -160,8 +160,12 @@
                   times.</small
                 >
                 <button type="button" id="generateArtifacts" class="soft generate-artifacts">Generate intro &amp; demos</button>
+                <button type="button" id="transcribeRecording" class="textbtn">Transcribe this take · Vietnamese</button>
+                <button type="button" id="importMotionModel" class="textbtn">Import animation-spec adapter</button>
+                <small id="animationModelStatus">Animation model optional; existing rules remain available.</small>
                 <small>Built-in storyboard and original animation. No API key. Recorded words still need verification.</small>
                 <div id="storyboard"></div><div id="artifactCards"></div>
+                <details><summary>Animation library · reusable templates and clips</summary><button type="button" id="extractReferenceAnimation" class="soft">Save an animation from reference footage</button><div id="animationLibrary"></div></details>
                 <button type="button" id="componentInventory" class="textbtn">Component inventory · specification / render / QC</button>
                 <details class="generative-panel"><summary>Optional lab · AI illustrations · outside V1</summary><p>Private Kaggle LoRA outputs are experimental illustrations. The core editor uses your real recording and voice. These outputs cannot replace real software proof.</p><button type="button" id="importGenerative" class="soft">Import trained run / previews</button><button type="button" id="generateIllustration" class="soft">Generate illustration on Kaggle</button><div id="generativeRuns"></div><div id="generativeJobs"></div></details>
               </div>
@@ -280,6 +284,7 @@
     <input type="file" id="musicInput" accept=".wav,.mp3,.m4a,.flac,.ogg" hidden>
     <input type="file" id="graphicInput" accept=".png,.jpg,.jpeg" multiple hidden>
     <input type="file" id="generativePackageInput" accept=".zip" hidden>
+    <input type="file" id="motionPackageInput" accept=".zip" hidden>
     <script src="/app.js"></script>
   </body>
 </html>

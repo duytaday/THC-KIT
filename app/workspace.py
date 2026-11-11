@@ -94,6 +94,9 @@ class Workspace:
     def snapshot(self):
         with self.lock:
             d = copy.deepcopy(self.data)
+            d['scene_generating']=sorted(self.artifacts.generating)
+            model_file=self.root/'models/animation-spec/candidate.json'
+            d['animation_model']=({k:v for k,v in json.loads(model_file.read_text(encoding='utf-8')).items() if k!='folder'} if model_file.exists() else None)
             for v in d["assets"].values():
                 v.pop("path", None)
             for e in d["exports"]:
@@ -101,6 +104,7 @@ class Workspace:
             for artifact in d.get('artifacts',{}).values():
                 artifact.pop('folder',None)
                 for version in artifact.get('versions',[]):version.pop('folder',None)
+            for item in d.get('animation_library',{}).values():item.pop('folder',None)
             return {
                 **d,
                 "tools": self.tools,

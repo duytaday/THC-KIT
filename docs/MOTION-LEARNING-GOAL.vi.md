@@ -41,10 +41,16 @@ thì master NEEDS_REVIEW. Giữ mọi model/cut cũ và lặp sửa theo lỗi x
 - [x] Giữ v035 làm baseline: file thực tế `5 repo github cho ae edit video.mp4`,
   SHAca15d2c90348ddfa33d46e2504516075689179f31e5c1d3729deffb745603c09.
 - [x] Kiểm luồng hiện có: storyboard→artifact versions→edit.render→reproduction→QC.
-- [ ] Schema animation + renderer với cue theo nguồn và vùng bảo vệ.
-- [ ] Transcript/alignment, pickup và occurrence cho câu lặp.
-- [ ] Dataset có source groups, label provenance, train-only RAG và held-out tests.
-- [ ] LoRA thật; reload checkpoint trong worker mới của app.
+- [x] Schema animation + native renderer, cue theo nguồn, protected regions;
+  compiler giữ riêng raw validation error và mọi sửa hold/ROI.
+- [x] ASR local có word timestamps/occurrence, CUDA thực tế và source-bound cache;
+  đây là alignment draft, không chứng nhận đã nghe hoặc chọn take tự nhiên.
+- [x] Dataset spec-conformance có split/group checks và train-only RAG;
+ 216 nhãn agent thử nghiệm,0 nhãn human,0 reference-timecoded gold.
+- [x] Hai run Kaggle thật (128 và256 bước riêng biệt); candidate256 bước được
+  import và reload bằng worker mới từ app, không bật mặc định production.
+- [ ] Nhãn keyframe/flow gắn reference timecode thật, độc lập creator và được
+  editor xác nhận. Ba flow đã được khảo sát, chưa trở thành gold training data.
 - [ ] Intro và nhiều demo độc lập; sửa/regenerate/khóa từng scene.
 - [ ] Hai bài thử khác nội dung, baseline3arms và báo cáo metrics không giả.
 - [ ] User xác nhận fidelity theo mục tiêu; actual master viewing/listening.
@@ -53,3 +59,6 @@ Goal chưa hoàn tất chỉ vì loss giảm, checkpoint load được hoặc pr
 không lỗi. Các clip CogVideoX cũ bị watermark/sai thẻ không trở thành dữ liệu
 nghiệm thu đạt; giữ riêng cho regression. Training spec mới không được gọi là
 train tiếp cùng adapter video-diffusion vì hai nhiệm vụ/kiến trúc khác nhau.
+
+Kết quả cụ thể: `docs/VIDEO-SKILL-INTEGRATION-RESULTS.vi.md`;
+flow/provenance và pickup: `docs/REFERENCE-FLOW-ANALYSIS.vi.md`.

@@ -126,6 +126,9 @@ class Handler(BaseHTTPRequestHandler):
                 _,_,id_,kind=p.split('/');record=ws.data.get('artifacts',{})[id_]
                 name={'preview':'preview.mp4','thumb':'thumbnail.jpg','source':'scene.json','timeline':'timeline.json'}[kind]
                 return self.file(Path(record['folder'])/name,(record['plan']['title']+'-'+str(record['version'])+Path(name).suffix) if 'download' in urllib.parse.parse_qs(u.query) else None)
+            if p.startswith('/animations/'):
+                _,_,id_,kind=p.split('/');record=ws.data['animation_library'][id_]
+                return self.file(Path(record['folder'])/({'preview':'preview.mp4','template':'template.json'}[kind]))
             if p.startswith('/generated/'):
                 _,_,run_id,index=p.split('/');run=ws.data['generative_runs'][run_id];output=run['receipt']['outputs'][int(index)]
                 return self.file(Path(run['folder'])/output['file'])
@@ -209,6 +212,19 @@ class Handler(BaseHTTPRequestHandler):
                             f.write(block);left-=len(block)
                     query=urllib.parse.parse_qs(u.query);return self.result({'id':ws.generative.import_package(tmp,query.get('kernel',[''])[0])})
                 finally:tmp.unlink(missing_ok=True)
+            if p=='/api/motion-package':
+                if not 0<n<=100*1024**2:raise ValueError('Import a compact animation-spec adapter ZIP under 100MB')
+                tmp=ws.root/'work'/(ident()+'.zip')
+                try:
+                    with tmp.open('wb') as f:
+                        left=n
+                        while left:
+                            block=self.rfile.read(min(1024**2,left))
+                            if not block:raise ValueError('Upload interrupted')
+                            f.write(block);left-=len(block)
+                    import motion_policy
+                    return self.result(motion_policy.import_package(ws.root,tmp))
+                finally:tmp.unlink(missing_ok=True)
             if p == "/api/import":
                 if not 0 < n <= 8 * 1024**3:
                     raise ValueError("Select a video smaller than 8 GB.")
@@ -253,11 +269,33 @@ class Handler(BaseHTTPRequestHandler):
             elif p=='/api/generative-check':
                 return self.result(ws.generative.check(b['id']))
             elif p == '/api/artifacts/generate':
-                return self.result({'ids':ws.artifacts.generate(b['ids'],b.get('evidence'),bool(b.get('spoken_confirmed',False)),b.get('design'))})
+                return self.result({'ids':ws.artifacts.generate(b['ids'],b.get('evidence'),bool(b.get('spoken_confirmed',False)),b.get('design'),b.get('animation_mode'))})
+            elif p == '/api/transcribe':
+                import speech,copy
+                with ws.lock:
+                    job=ws.data['jobs'][b['id']];ws.artifacts._check_job(job);host=copy.deepcopy(ws.data['assets'][b['id']])
+                transcript=speech.load_or_transcribe(ws.root,host)
+                with ws.lock:
+                    ws.data['jobs'][b['id']]['transcript']=transcript;ws.save()
+                return self.result(transcript)
             elif p == '/api/artifacts/edit':
                 ws.artifacts.edit(b['id'],b.get('changes',{}),b['version'])
             elif p == '/api/artifacts/insert':
                 ws.artifacts.insert(b['id'],bool(b['enabled']))
+            elif p == '/api/animations/save':
+                import animation_library
+                return self.result({'id':animation_library.save(ws,b['id'])})
+            elif p == '/api/animations/excerpt':
+                import animation_library
+                return self.result({'id':animation_library.excerpt(ws,b['asset'],b['start'],b['end'],b['title'],b.get('crop'),b.get('permission',''))})
+            elif p == '/api/animations/reuse':
+                ws.artifacts.reuse(b['id'],b['library'],b['version'])
+            elif p == '/api/animations/import':
+                import animation_library
+                return self.result({'id':animation_library.import_illustration(ws,b['id'])})
+            elif p == '/api/animations/review':
+                import animation_library
+                animation_library.review(ws,b['id'],b.get('sha256'),b.get('reviewer'),b.get('evidence'),b.get('clear'),b.get('layout_clear'),b.get('defects',''))
             elif p == '/api/artifacts/toggle':
                 ws.artifacts.toggle(b['id'],bool(b['enabled']))
             elif p == '/api/training-intake':
@@ -301,6 +339,7 @@ class Handler(BaseHTTPRequestHandler):
                 if os.name!='nt':raise ValueError('Reveal in Explorer is available on Windows.')
                 if b['kind']=='source':path=Path(ws.data['assets'][b['id']]['path'])
                 elif b['kind']=='export':path=Path(ws.export(b['id'])['folder'])/'edit.mp4'
+                elif b['kind']=='animation':path=Path(ws.data['animation_library'][b['id']]['folder'])/'preview.mp4'
                 else:raise ValueError('Choose a source recording or an export.')
                 if not path.is_file():raise ValueError('The selected local file is missing.')
                 __import__('subprocess').Popen(['explorer.exe','/select,',str(path)])
@@ -331,7 +370,7 @@ class Handler(BaseHTTPRequestHandler):
 
                 ws.tools = configure_tools(ws.root)
             elif p == "/api/quit":
-                if any(j["status"] in ACTIVE for j in ws.data["jobs"].values()):
+                if any(j["status"] in ACTIVE for j in ws.data["jobs"].values()) or ws.artifacts.generating:
                     raise ValueError("Let the active batch finish before quitting.")
                 threading.Thread(target=self.server.shutdown, daemon=True).start()
             else:

@@ -67,6 +67,30 @@ class AnimationContractTests(unittest.TestCase):
         e=self.entry();e['model']=dict(mode='fine_tuned')
         with self.assertRaisesRegex(ValueError,'checkpoint'):hooks.before_render(dict(motion_specs=[e]),10)
 
+    def test_compiler_reports_hold_repair_without_moving_source_cue(self):
+        e=self.entry();e['context']['frames']=78;s=e['spec'];s['objects'][0]['changes']=[];s['objects'][0]['hold_frames']=100
+        result,receipt=specs.compile_spec(s,e['context'])
+        self.assertEqual(receipt['repairs'][0]['after'],63)
+        self.assertEqual(result['objects'][0]['anchor'],s['objects'][0]['anchor'])
+        self.assertEqual(s['objects'][0]['hold_frames'],100)
+
+    def test_compiler_never_replaces_hallucinated_text(self):
+        ctx=self.context();s=specs.rules(ctx);s['objects'][0]['text']='Borrowed reference words'
+        with self.assertRaises(ValueError):specs.compile_spec(s,ctx)
+
+    def test_compiler_binds_markers_to_current_source_and_ends_target_at_contact(self):
+        ctx=dict(request='demo',texts=[],frames=180,protected=[],proof=dict(data_class='real_screen'),anchors=[
+            dict(id='button',kind='control',frame=0,roi=[.2,.3,.2,.05]),
+            dict(id='press',kind='contact',frame=44,roi=[.3,.33,.01,.01]),
+            dict(id='done',kind='result',frame=100,roi=[.2,.4,.4,.08])])
+        s=specs.rules(ctx);s['objects'][0]['rect']=[.1,.1,.5,.05]
+        result,receipt=specs.compile_spec(s,ctx)
+        self.assertEqual(result['objects'][0]['rect'],ctx['anchors'][0]['roi'])
+        self.assertEqual(specs.lifetime_end(result['objects'][0],ctx),44)
+        self.assertIn('ROI',receipt['raw_schema_error'])
+        self.assertEqual(result['sfx'][0]['anchor'],'press')
+        self.assertEqual(s['objects'][0]['rect'],[.1,.1,.5,.05])
+
     def test_ass_escape_and_source_text_survive(self):
         e=self.entry()
         with tempfile.TemporaryDirectory() as d:

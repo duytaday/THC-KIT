@@ -13,6 +13,9 @@ briefs/
 references/
 !.agents/skills/talking-head-edit/references/
 !.agents/skills/talking-head-edit/references/*.md
+!.agents/skills/claude-video-catalog/references/
+!.agents/skills/claude-video-catalog/references/catalog.json
+!.agents/skills/claude-video-catalog/references/CATALOG-LICENSE.txt
 SESSION-CHECKLIST.md
 *.recordly
 

@@ -10,6 +10,13 @@ separate reference-training intake. See [the app guide](app/README.md) and
 `python app/app.py --data .\output\cutroom-workspace` from this D checkout (Python3.11+).
 The built-in path requires no model checkpoint or paid agent credentials.
 
+Optional [pinned video skills](talking-head-qc/integrations/video-skill-set.md)
+add HyperFrames HTML animations, Claude editing style adapters and a searchable
+catalog. See the [local architecture decision](docs/ARCHITECTURE-RESEARCH.vi.md)
+and [actual integration results](docs/VIDEO-SKILL-INTEGRATION-RESULTS.vi.md).
+Installed templates and experimental model outputs still need per-episode proof
+and exact-master review.
+
 The existing [$talking-head-edit skill](.agents/skills/talking-head-edit/SKILL.md)
 now covers the real-footage workflow: three evidence-backed hooks, audiovisual
 shot planning, twenty component specifications, local UI rendering and exact-master
