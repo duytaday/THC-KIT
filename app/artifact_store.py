@@ -1,5 +1,5 @@
 """Per-recording artifact versions and bounded insertion; no agent credentials required."""
-import copy,json,re
+import copy,json,re,time,uuid
 from pathlib import Path
 import artifacts,storyboard
 from engine import media
@@ -23,9 +23,11 @@ class ArtifactStore:
         record.update(version=version,folder=str(folder),sha256=media.sha(folder/'preview.mp4'),plan=generated,status=generated['status'])
         record.pop('pending_proposal',None)
         return record
-    def generate(self,ids,evidence=None,spoken_confirmed=False,design=None,animation_mode=None):
+    def generate(self,ids,evidence=None,spoken_confirmed=False,design=None,animation_mode=None,animation_style=None):
+        if animation_style not in (None,'balanced','maverick_fast'):raise ValueError('Choose a supported animation style')
         results=[]
         for key in dict.fromkeys(ids):
+            started=time.monotonic()
             with self.ws.lock:
                 original=self.ws.data['jobs'][key];self._check_job(original)
                 job=copy.deepcopy(original);assets=copy.deepcopy(self.ws.data['assets']);host=assets[key]
@@ -41,9 +43,12 @@ class ArtifactStore:
                     if asset.get('data_class')=='reference_excerpt':raise ValueError('An archived reference animation is an illustration. Add it as a cutaway; capture this episode’s actual product result separately.')
                     if proof['asset']==settings.get('style_ref'):raise ValueError('This file is assigned only for pacing. Choose an on-screen proof asset explicitly.')
                     proof['duration']=asset['duration'];proof['source_sha256']=media.sha(asset['path'])
+                    if proof.get('for_repo') and proof['for_repo'] not in storyboard.REPOS:raise ValueError('Choose a named repository for this proof')
                 ref=assets.get(settings.get('style_ref'),{}).get('analysis',{})
                 reference=[dict(reference_id=ref.get('source_sha256'),source_range=o['source_range'],observation=o['observation'],status=o['status'],confidence=o['confidence'],rule_parameters=ref.get('profile',{})) for o in ref.get('observations',[])[:1]]
                 proposal=storyboard.propose(settings['script'],host['duration'],Path(host['path']),proof,reference,spoken_confirmed)
+                if animation_style:
+                    for plan in proposal['artifacts']:plan['motion_style']=animation_style
                 if animation_mode:
                     import motion_storyboard,motion_policy
                     transcript=job.get('transcript')
@@ -61,12 +66,12 @@ class ArtifactStore:
                     plan['passage_ids']=[mapping.get(id_,id_) for id_ in plan['passage_ids']]
                     identity=plan['type']+'|'+'|'.join(plan['passage_ids'])+'|'+(plan['title'] if plan.get('claim','').startswith('Show this repository') else plan['kind'] if plan['type']=='demo' else '')
                     if animation_mode:identity+='|animation:'+animation_mode
+                    if animation_style:identity+='|style:'+animation_style
                     existing=next((r for r in existing_records if r.get('story_key')==identity),None)
                     if existing:
                         if existing['plan']['source_quote']!=plan['source_quote']:
                             existing.update(pending_proposal=plan,status='STALE · source passage changed')
                         staged.append(existing);continue
-                    import uuid
                     record=dict(id=uuid.uuid4().hex,job=key,story_key=identity,inserted=False,versions=[])
                     self._render_version(record,plan,assets);staged.append(record)
                 with self.ws.lock:
@@ -74,6 +79,13 @@ class ArtifactStore:
                     if current['revision']!=job['revision'] or current['status'] in ('Queued','Rendering'):raise ValueError('Project changed during generation; stale proposals were not applied. Generate again from the current script.')
                     for record in staged:self.records()[record['id']]=record
                     self.ws.data.setdefault('storyboards',{})[key]=proposal;self._dirty(current);self.ws.save();results.extend(staged)
+                    self.ws.data.setdefault('generation_attempts',[]).append(dict(id=uuid.uuid4().hex,job=key,mode=animation_mode or 'native',style=animation_style or 'balanced',status='GENERATED',scene_ids=[r['id'] for r in staged],wall_seconds=time.monotonic()-started,source_script_sha256=storyboard.digest(settings['script'])))
+                    self.ws.save()
+            except Exception as error:
+                with self.ws.lock:
+                    self.ws.data.setdefault('generation_attempts',[]).append(dict(id=uuid.uuid4().hex,job=key,mode=animation_mode or 'native',style=animation_style or 'balanced',status='REJECTED',error=str(error),wall_seconds=time.monotonic()-started,source_script_sha256=storyboard.digest(job['settings']['script'])))
+                    self.ws.save()
+                raise
             finally:
                 with self.ws.lock:self.generating.discard(key)
         return [r['id'] for r in results]

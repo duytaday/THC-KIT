@@ -29,7 +29,7 @@ def event(start, end, style, body):
     return f"Dialogue: 0,{timestamp(start)},{timestamp(end)},{style},,0,0,0,,{body}"
 
 
-def render(source, plan, out):
+def render(source, plan, out, *, scene_preview=False):
     out=out.resolve()
     source = source.resolve(strict=True)
     input_seconds = duration(stream(source, "video"))
@@ -150,7 +150,7 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
         for scene in plan['motion_specs']:
             start,end=interval(scene['source_start'],scene['source_end'])
             if abs((end-start)*FPS-scene['context']['frames'])>1:raise ValueError('Trim changed an animation span; reassign its source cues before render.')
-            receipts.append(motion_render.append_ass(out/'captions.ass',scene,round(start*FPS)))
+            receipts.append(motion_render.append_ass(out/'captions.ass',scene,round(start*FPS),show_status=scene_preview))
         write_json(out/'motion-render-receipt.json',receipts)
     z = "1" + "".join("+0.08*" + p for p in pulses)
     fit = (
@@ -237,7 +237,7 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
         intermediate,
         cwd=out,
     )
-    levels = enhance.mix(intermediate,target,plan,resolved_events,out,total)
+    levels = enhance.mix(intermediate,target,plan,resolved_events,out,total,scene_preview=scene_preview)
     intermediate.unlink()
     write_json(
         out / "edit-review.json",
@@ -245,6 +245,8 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
             "verdict": "NEEDS_REVIEW",
             "source_sha256": sha(source),
             "output_audio": levels,
+            "scene_preview": scene_preview,
+            "video_encoding": json.loads((out/'ffmpeg-encode.jsonl').read_text(encoding='utf-8').splitlines()[-1]) if (out/'ffmpeg-encode.jsonl').exists() else None,
             "time_map_source_in_out_master_in": clock,
             "verified": verify_av(target, total, FPS),
         },

@@ -41,6 +41,13 @@ def ff(*args, cwd=None):
         raise ValueError(
             result.stderr.decode(errors="replace")[-1400:] or "FFmpeg could not encode this source."
         )
+    if '-c:v' in args and str(args[args.index('-c:v')+1]) not in ('copy','png','mjpeg'):
+        target=Path(args[-1])
+        if not target.is_absolute() and cwd:target=Path(cwd)/target
+        if target.is_file():
+            record=dict(encoder=str(args[args.index('-c:v')+1]),output=str(target.resolve()),
+                        command=[str(a) for a in result.args],returncode=result.returncode)
+            with (target.parent/'ffmpeg-encode.jsonl').open('a',encoding='utf-8') as f:f.write(json.dumps(record,ensure_ascii=False)+'\n')
 
 
 def probe(path):
@@ -144,6 +151,19 @@ def finish_audio(source, target):
             f"Final loudness is {final['input_i']} LUFS and {final['input_tp']} dBTP. Check the source audio."
         )
     return {"integrated_lufs": final["input_i"], "true_peak_dbtp": final["input_tp"]}
+
+
+def preview_audio(source, target):
+    """Keep source-level scene auditions. Integrated programme targets belong to masters."""
+    before=loudness(source)
+    gain=min(0.,-2.-before['input_tp'])
+    ff('-i',source,'-map','0:v:0','-map','0:a:0','-c:v','copy',
+       '-af',f'volume={gain}dB','-c:a','aac','-ar','48000','-b:a','192k',
+       '-movflags','+faststart',target)
+    after=loudness(target)
+    if after['input_tp']>-1:raise ValueError('Scene preview exceeds the true-peak ceiling; inspect its source/mix')
+    return dict(integrated_lufs=after['input_i'],true_peak_dbtp=after['input_tp'],
+                purpose='scene_preview_original_level',gain_db=gain,master_loudness_verified=False)
 
 
 def verify_av(path, expected=None, fps=30):

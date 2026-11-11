@@ -49,6 +49,13 @@ class SpecIntegrationTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError,'Rejected'):self.ws.artifacts.generate(['host'],animation_mode='fine_tuned')
         self.assertFalse(self.ws.data.get('artifacts'))
 
+    def test_explicit_style_is_per_generation_and_preserves_previous_scenes(self):
+        original=self.generate()
+        fast=self.ws.artifacts.generate(['host'],animation_mode='rules',animation_style='maverick_fast')
+        self.assertTrue(set(original).isdisjoint(fast))
+        self.assertEqual(self.ws.data['artifacts'][original[0]]['plan']['animation']['context']['style'],'balanced')
+        self.assertEqual(self.ws.data['artifacts'][fast[0]]['plan']['animation']['context']['style'],'maverick_fast')
+
     def test_model_work_does_not_hold_the_workspace_lock(self):
         import threading,motion_policy
         infer=motion_policy.infer

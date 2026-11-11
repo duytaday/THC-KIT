@@ -23,41 +23,42 @@ def dialogue(layer,start,end,body):
     return f'Dialogue: {layer},{stamp(start)},{stamp(end)},Motion,,0,0,0,,{body}'
 
 
-def append_ass(path,entry,master_start_frame):
+def append_ass(path,entry,master_start_frame,*,show_status=False):
     ctx=entry['context'];spec=schema.validate(entry['spec'],ctx);n=ctx['frames'];anchors={a['id']:a for a in ctx['anchors']};rows=[]
     if spec['scene_type']=='intro' and spec['layout']=='full':
         body=r'{\an7\pos(0,0)\p1\bord0\shad0\1c&HEBF4F8&}m 0 0 l 1080 0 1080 1920 0 1920'+r'{\p0}'
         rows.append(dialogue(-2,master_start_frame,master_start_frame+n,body))
     bounds=[]
     for obj in spec['objects']:
-        start=anchors[obj['anchor']]['frame'];end=schema.lifetime_end(obj,ctx)
+        start=schema.object_start(obj,anchors);end=schema.lifetime_end(obj,ctx);exit_frames=obj.get('exit_frames',6)
         if obj['component']=='12':end=min(n,start+max(3,obj['hold_frames']))
         x,y,w,h=obj['rect'];changes=sorted(obj.get('changes',[]),key=lambda c:anchors[c['anchor']]['frame']);label=obj.get('text','');emphasis=obj.get('emphasis_line')
         for frame in range(start,end):
             for change in changes:
                 if anchors[change['anchor']]['frame']<=frame:label=change['text'];emphasis=change.get('emphasis_line')
             state=schema.pose(obj['keyframes'],frame-start)
-            opacity=state['opacity']*min(1,max(0,(end-frame)/6))
+            opacity=state['opacity']*(min(1,max(0,(end-frame)/exit_frames)) if exit_frames else 1)
             if opacity<=0:continue
             px=(x+state['x'])*1080;py=(y+state['y'])*1920;pw=w*1080*state['scale'];ph=h*1920*state['scale'];alpha=round((1-opacity)*255)
             prefix=r'{\an7\pos('+f'{px:.2f},{py:.2f}'+r')\p1\shad0\1a&H'+f'{alpha:02X}'+r'&'
             marker=obj['component'] in ('11','12','13')
             if marker:
                 prefix+=r'\1a&HFF&\3a&H'+f'{alpha:02X}'+r'&\bord5\3c&H28F1E8&}'
-            else:prefix+=r'\bord0\1c&HBA0021&}'
+            else:prefix+=r'\bord0\1c&H'+{'brand':'BA0021','paper':'FFFFFF','charcoal':'1B1510'}[obj.get('theme','brand')]+r'&}'
             begin=master_start_frame+frame
             rows.append(dialogue(1,begin,begin+1,prefix+rectangle(pw,ph)+r'{\p0}'))
             if not marker:
                 fs=obj['font_size']*state['scale'];lines=schema.wrap(label,w,obj['font_size']);text='\n'.join(lines)
                 ty=py+(ph-len(lines)*fs*1.18)/2
-                tag=r'{\an8\pos('+f'{px+pw/2:.2f},{ty:.2f}'+r')\fs'+f'{fs:.2f}'+r'\bord0\shad0\1c&HFFFFFF&\1a&H'+f'{alpha:02X}'+r'&}'
+                text_color='1B1510' if obj.get('theme')=='paper' else 'FFFFFF'
+                tag=r'{\an8\pos('+f'{px+pw/2:.2f},{ty:.2f}'+r')\fs'+f'{fs:.2f}'+r'\bord0\shad0\1c&H'+text_color+r'&\1a&H'+f'{alpha:02X}'+r'&}'
                 rows.append(dialogue(2,begin,begin+1,tag+escaped(text)))
                 if emphasis is not None and 0<=emphasis<len(lines):
                     yy=ty+(emphasis+1)*fs*1.18
                     underline=r'{\an7\pos('+f'{px+18:.2f},{yy:.2f}'+r')\p1\bord0\shad0\1c&H28F1E8&}m 0 0 l '+f'{pw-36:.2f} 0 {pw-36:.2f} 5 0 5'+r'{\p0}'
                     rows.append(dialogue(3,begin,begin+1,underline))
-        bounds.append(dict(id=obj['id'],source_anchor=obj['anchor'],rect=obj['rect'],font_size=obj.get('font_size'),last_state=label))
-    if not ctx.get('voice_aligned',False):
+        bounds.append(dict(id=obj['id'],source_anchor=obj['anchor'],rect=obj['rect'],font_size=obj.get('font_size'),last_state=label,theme=obj.get('theme','brand'),lead_frames=obj.get('lead_frames',0),exit_frames=exit_frames))
+    if show_status and not ctx.get('voice_aligned',False):
         footer=r'{\an5\pos(540,1780)\fs30\bord3\shad0\1c&HFFFFFF&\3c&H101010&}STORYBOARD · CẦN THU / CĂN LỜI'
         rows.append(dialogue(9,master_start_frame,master_start_frame+n,footer))
     with Path(path).open('a',encoding='utf-8') as f:f.write('\n'+'\n'.join(rows)+'\n')
@@ -81,7 +82,7 @@ def preview(plan,folder,host,assets):
     proof=entry['context'].get('proof')
     if proof:
         a=assets[proof['asset']];render_plan['proof']=[dict(id='motion-proof',file=a['path'],start=at,end=at+duration,source_start=proof.get('offset',0),**({'crop':proof['crop']} if proof.get('crop') else {}))]
-    edit.render(Path(host['path']),render_plan,folder)
+    edit.render(Path(host['path']),render_plan,folder,scene_preview=True)
     (folder/'edit.mp4').rename(folder/'preview.mp4');media.ff('-ss',min(.8,duration/2),'-i',folder/'preview.mp4','-frames:v','1','-vf','scale=270:480',folder/'thumbnail.jpg')
     result=copy.deepcopy(plan);result.update(duration=duration,preview_frames=entry['context']['frames'],preview_audio='Original source voice; no synthesis. Source/script alignment is recorded separately.',events=[])
     media.write_json(folder/'scene.json',result);media.write_json(folder/'timeline.json',dict(schema_version=2,animation=entry,episode_audio='Original narration continues; SFX routed once on episode bus'))

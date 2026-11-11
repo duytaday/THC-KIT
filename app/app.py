@@ -122,6 +122,10 @@ class Handler(BaseHTTPRequestHandler):
             if p == '/api/components':
                 from components import inventory
                 return self.result(inventory())
+            if p.startswith('/benchmarks/'):
+                _,_,id_,name=p.split('/')
+                if not re.fullmatch(r'[a-f0-9]{32}',id_) or name not in ('index.html','review.js','review-data.json','report.vi.md','results.json') and not re.fullmatch(r'(video|reference)-\d+\.mp4',name):raise ValueError('Unknown benchmark file')
+                return self.file(ws.root/'benchmarks'/id_/name)
             if p.startswith('/artifacts/'):
                 _,_,id_,kind=p.split('/');record=ws.data.get('artifacts',{})[id_]
                 name={'preview':'preview.mp4','thumb':'thumbnail.jpg','source':'scene.json','timeline':'timeline.json'}[kind]
@@ -269,7 +273,13 @@ class Handler(BaseHTTPRequestHandler):
             elif p=='/api/generative-check':
                 return self.result(ws.generative.check(b['id']))
             elif p == '/api/artifacts/generate':
-                return self.result({'ids':ws.artifacts.generate(b['ids'],b.get('evidence'),bool(b.get('spoken_confirmed',False)),b.get('design'),b.get('animation_mode'))})
+                return self.result({'ids':ws.artifacts.generate(b['ids'],b.get('evidence'),bool(b.get('spoken_confirmed',False)),b.get('design'),b.get('animation_mode'),b.get('animation_style'))})
+            elif p == '/api/benchmarks/create':
+                import video_benchmark
+                return self.result(video_benchmark.from_workspace(ws,b['ids'],b.get('references',[])))
+            elif p == '/api/benchmarks/review':
+                import video_benchmark
+                return self.result(video_benchmark.save_review(ws,b['id'],b['review']))
             elif p == '/api/transcribe':
                 import speech,copy
                 with ws.lock:

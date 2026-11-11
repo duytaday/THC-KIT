@@ -9,7 +9,7 @@ def verify_run(folder):
     folder=Path(folder);receipt=json.loads((folder/'provenance.json').read_text(encoding='utf-8'))
     if receipt.get('task')!='script_animation_spec_lora_v1' or receipt.get('status')!='COMPLETE' or not receipt.get('training_completed') or receipt.get('actual_optimizer_steps',0)<=0 or receipt.get('weight_update_l2',0)<=0:raise ValueError('Import a completed animation-spec LoRA run, not selector/video-generation weights')
     if receipt.get('base_model')!=motion_specs.BASE_MODEL or receipt.get('base_revision')!=motion_specs.BASE_REVISION:raise ValueError('Incompatible or unpinned animation base')
-    if receipt.get('prompt_version',1)!=motion_learning.PROMPT_VERSION:raise ValueError('This checkpoint uses an older prompt contract; preserve it and import a matching candidate')
+    if receipt.get('prompt_version',1) not in motion_learning.SYSTEMS:raise ValueError('Unsupported checkpoint prompt contract; preserve it and import a matching candidate')
     for name,h in receipt.get('adapter_files',{}).items():
         if Path(name).name!=name or name.endswith('.bin') or media.sha(folder/'adapter'/name)!=h:raise ValueError('Changed/unsafe adapter file')
     weight=folder/'adapter/adapter_model.safetensors'
@@ -68,7 +68,8 @@ def infer(root,contexts,mode,source_sha256=None):
     hashes={name:media.sha(base/name) for name in names if (base/name).is_file()}
     if 'config.json' not in hashes or not any(n.endswith('.safetensors') for n in hashes):raise ValueError('Local base snapshot is incomplete')
     rows=[dict(id=str(i),context=c,examples=motion_learning.retrieve(c,pool)) for i,c in enumerate(contexts)]
-    request=dict(mode=mode,base_path=str(base),base_files=hashes,adapter_path=str(folder/'adapter'),adapter_files=verify_run(folder)['adapter_files'],rows=rows,version=record['version'],checkpoint_sha256=record['checkpoint_sha256'])
+    receipt=verify_run(folder)
+    request=dict(mode=mode,base_path=str(base),base_files=hashes,adapter_path=str(folder/'adapter'),adapter_files=receipt['adapter_files'],prompt_version=receipt['prompt_version'],rows=rows,version=record['version'],checkpoint_sha256=record['checkpoint_sha256'])
     run_id=uuid.uuid4().hex;run=Path(root)/'model-runs'/run_id;run.mkdir(parents=True,exist_ok=False)
     media.write_json(run/'request.json',dict(**request,source_sha256=source_sha256,worker_sha256=media.sha(Path(__file__).parent/'motion_worker.py')))
     executable=os.environ.get('CUTROOM_ANIMATION_PYTHON',sys.executable)

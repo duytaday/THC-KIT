@@ -64,12 +64,17 @@ def validate(spec,context,*,check_hold=True):
     if result['evidence']=='real_screen' and (not context.get('proof') or context['proof'].get('data_class')!='real_screen'):raise ValueError('Real screen evidence is missing or is only a synthetic reconstruction')
     ids=set();settled=[]
     for obj in objects:
-        allowed={'id','component','text','rect','font_size','anchor','keyframes','changes','hold_frames','emphasis_line'}
+        allowed={'id','component','text','rect','font_size','anchor','keyframes','changes','hold_frames','emphasis_line','lead_frames','exit_frames','theme'}
         if not isinstance(obj,dict) or set(obj)-allowed:raise ValueError('Unknown component fields')
         if not isinstance(obj.get('id'),str) or not re.fullmatch(r'[a-z][a-z0-9_-]{0,30}',obj['id']) or obj['id'] in ids:raise ValueError('Component IDs must be unique')
         ids.add(obj['id'])
         if obj.get('component') not in COMPONENTS or obj.get('anchor') not in anchors:raise ValueError('Unknown component or source anchor')
         anchor=anchors[obj['anchor']]
+        lead=obj.get('lead_frames',0);exit_frames=obj.get('exit_frames',6)
+        if type(lead) is not int or not 0<=lead<=30 or anchor['frame']<lead:raise ValueError('Anticipation must be0–30 frames within the source scene')
+        if type(exit_frames) is not int or not 0<=exit_frames<=30:raise ValueError('Exit fade must be0–30 frames')
+        if obj.get('theme','brand') not in ('brand','paper','charcoal'):raise ValueError('Choose an approved neutral or brand theme')
+        if obj['component'] in ('11','12','13') and lead:raise ValueError('A proof marker cannot precede its actual source event')
         if obj['component'] in ('12','13'):
             required='contact' if obj['component']=='12' else 'result'
             if anchor['kind']!=required or not context.get('proof'):raise ValueError('Contact/result must come from actual screen evidence')
@@ -102,7 +107,7 @@ def validate(spec,context,*,check_hold=True):
                 if emphasis is not None and (type(emphasis) is not int or not 0<=emphasis<len(lines)):raise ValueError('Emphasis line does not exist')
         hold=obj.get('hold_frames',30)
         if type(hold) is not int or not 12<=hold<=180:raise ValueError('Readable hold must be12–180frames')
-        last=max([anchor['frame']]+[anchors[c['anchor']]['frame'] for c in obj.get('changes',[])])
+        last=max([object_start(obj,anchors)]+[anchors[c['anchor']]['frame'] for c in obj.get('changes',[])])
         keys=obj.get('keyframes',[])
         if not isinstance(keys,list) or not 2<=len(keys)<=8:raise ValueError('Provide2–8 editable keyframes')
         previous=-1
@@ -112,7 +117,7 @@ def validate(spec,context,*,check_hold=True):
             previous=k['frame'];finite(k['x'],-1,1,'X offset');finite(k['y'],-1,1,'Y offset');finite(k['scale'],.7,1.15,'Scale');finite(k['opacity'],0,1,'Opacity')
             if k['ease'] not in ('linear','smoothstep','ease_out'):raise ValueError('Unsupported easing')
         if keys[0]['frame']!=0 or keys[-1]['opacity']!=1 or keys[-1]['x']!=0 or keys[-1]['y']!=0 or keys[-1]['scale']!=1:raise ValueError('The entrance must end settled in its declared rectangle')
-        if check_hold and lifetime_end(obj,context)-last-(0 if obj.get('changes') else keys[-1]['frame'])-6<hold:raise ValueError('Extend the scene to leave the final state readable')
+        if check_hold and lifetime_end(obj,context)-last-(0 if obj.get('changes') else keys[-1]['frame'])-exit_frames<hold:raise ValueError('Extend the scene to leave the final state readable')
         if obj['component'] in ('11','12','13') and any(k['x'] or k['y'] or k['scale']!=1 for k in keys):raise ValueError('A proof marker must stay on the observed source target')
         # Check the swept geometry at output frames, not just the final card position.
         if obj['component'] not in ('11','12','13'):
@@ -157,13 +162,17 @@ def compile_spec(spec,context):
                 obj['rect']=copy.deepcopy(roi)
     result=validate(result,context,check_hold=False)
     for i,obj in enumerate(result['objects']):
-        last=max([anchors[obj['anchor']]['frame']]+[anchors[c['anchor']]['frame'] for c in obj.get('changes',[])])
-        available=lifetime_end(obj,context)-last-(0 if obj.get('changes') else obj['keyframes'][-1]['frame'])-6
+        last=max([object_start(obj,anchors)]+[anchors[c['anchor']]['frame'] for c in obj.get('changes',[])])
+        available=lifetime_end(obj,context)-last-(0 if obj.get('changes') else obj['keyframes'][-1]['frame'])-obj.get('exit_frames',6)
         if available<12:raise ValueError('Extend the scene: less than 12 frames remain for its final readable state')
         if obj.get('hold_frames',30)>available:
             repairs.append(dict(field=f'objects[{i}].hold_frames',before=obj.get('hold_frames',30),after=available,reason='Source frame budget; no word/action anchor moved'))
             obj['hold_frames']=available
     return validate(result,context),dict(raw_schema_error=raw_error,repairs=repairs)
+
+
+def object_start(obj,anchors):
+    return anchors[obj['anchor']]['frame']-obj.get('lead_frames',0)
 
 
 def lifetime_end(obj,context):

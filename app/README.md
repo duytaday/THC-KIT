@@ -1,6 +1,10 @@
 # Talking Head Cutroom local development handoff
 
 Real-footage orchestration uses the existing `$talking-head-edit` repo skill.
+Full-export benchmarking is in Exports → Benchmark full videos. See
+`docs/FULL-VIDEO-BENCHMARK.vi.md` for the frozen protocol, blind review, quiz,
+repair timer and approved-development-feedback export. Model rejections are
+retained; a scene preview is not a programme-loudness or release approval.
 See `.agents/skills/talking-head-edit/references/real-footage-workflow.md` for
 the buyer invocation, three hooks, source-linked shot plan and missing-pickup case;
 `references/components.md` in that skill defines twenty components with honest

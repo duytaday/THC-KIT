@@ -1,0 +1,17 @@
+<!doctype html>
+<html lang="vi"><meta charset="utf-8"><meta name="viewport" content="width=device-width">
+<title>Talking Head Cutroom · benchmark toàn tập</title>
+<style>
+body{font:16px/1.5 system-ui,sans-serif;background:#f3f4f0;color:#1b3028;max-width:1100px;margin:auto;padding:24px}
+video{display:block;width:360px;max-width:100%;margin:auto;background:#111}article{background:white;padding:24px;margin:24px 0;border-radius:14px}
+label{display:block;margin:12px 0}input:not([type=checkbox]),select,textarea{box-sizing:border-box;width:100%;padding:10px;font:inherit;border:1px solid #bbc8bc;border-radius:6px}
+textarea{min-height:95px}button{padding:12px 18px;border:0;border-radius:7px;background:#1b4332;color:white;font:inherit;cursor:pointer;margin:4px 8px 4px 0}
+small,.muted{color:#54665b}fieldset{margin:18px 0;border:1px solid #ccd4cc;border-radius:8px}summary{cursor:pointer;font-weight:650}pre{white-space:pre-wrap}#json{min-height:240px}.notice{background:#edf4d9;padding:15px;border-radius:8px}
+</style>
+<h1>Benchmark video hoàn chỉnh</h1>
+<p class="notice">Xem toàn bộ mỗi bản ở 1×, khung điện thoại. Điểm máy, điểm trải nghiệm và quyết định giao là ba bản ghi riêng. Nếu không nghe được, để âm thanh chưa xác minh. Không ưu tiên bản có nhiều hiệu ứng hơn.</p>
+<label>Người thực sự review<input id="reviewer" autocomplete="name"></label>
+<div id="references"></div><main id="videos"></main>
+<button id="prepare">Tạo phiếu</button><button id="save">Lưu và chấm trong Cutroom</button>
+<p id="message" role="status"></p><label>Phiếu JSON · có thể lưu trên D<textarea id="json" readonly></textarea></label>
+<script src="review.js"></script></html>

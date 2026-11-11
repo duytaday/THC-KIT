@@ -86,7 +86,7 @@ def render(plan,folder,host,assets):
         picture=enhance.visuals(graph,'body',{'motion_profile':'focus','motion_intensity':plan['intensity']},resolved,folder,duration,args)
         graph.append(f'[{picture}]ass=captions.ass:fontsdir=fonts[final]');(folder/'scene-filters.txt').write_text(';'.join(graph),encoding='utf-8')
         intermediate=folder/'scene.mov';media.ff(*args,'-filter_complex_threads','2','-filter_complex_script','scene-filters.txt','-map','[final]','-map','1:a:0',*media.video_encoder_args(),'-r','30','-fps_mode','cfr','-video_track_timescale','15360','-pix_fmt','yuv420p','-t',duration,'-c:a','pcm_s24le',intermediate,cwd=folder)
-        if any(not e['sound'].get('muted') and e['sound'].get('id') for e in resolved):enhance.mix(intermediate,folder/'preview.mp4',{'music':{'mode':'off'}},resolved,folder,duration)
+        if any(not e['sound'].get('muted') and e['sound'].get('id') for e in resolved):enhance.mix(intermediate,folder/'preview.mp4',{'music':{'mode':'off'}},resolved,folder,duration,scene_preview=True)
         else:media.ff('-i',intermediate,'-map','0:v:0','-map','0:a:0','-c:v','copy','-c:a','aac','-ar','48000',folder/'preview.mp4')
         intermediate.unlink();plan['events']=resolved
     else:

@@ -20,7 +20,7 @@ def run(request):
     model=PeftModel.from_pretrained(model,adapter,local_files_only=True,is_trainable=False);model.eval()
     rows=[]
     for row in request['rows']:
-        prompt=tok.apply_chat_template(motion_learning.messages(row['context'],row['examples']),tokenize=False,add_generation_prompt=True)
+        prompt=tok.apply_chat_template(motion_learning.messages(row['context'],row['examples'],request.get('prompt_version',2)),tokenize=False,add_generation_prompt=True)
         ids=tok(prompt,return_tensors='pt',add_special_tokens=False).input_ids.to(device)
         if ids.shape[1]>3072:raise ValueError('Context too long; curate it without truncating source anchors')
         started=time.monotonic()

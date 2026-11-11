@@ -17,6 +17,11 @@ class StoryboardTests(unittest.TestCase):
     def test_real_export_and_opened_result_are_separate(self):
         p=self.propose('Xuất video trong Cutroom. Bấm nút xuất.',evidence={'asset':'screen','duration':10,'result':3.8,'opened':8.1})
         self.assertEqual(p['artifacts'][0]['kind'],'result_first');self.assertNotEqual(p['artifacts'][1]['evidence']['result'],p['artifacts'][1]['evidence']['opened']);self.assertIn('PICKUP',p['artifacts'][0]['status'])
+    def test_one_repo_proof_never_fills_other_promised_demos(self):
+        p=self.propose('5 repo GitHub. FFmpeg Skill. Recordly bấm vào đây. Remotion. fal. Runway.',evidence={'asset':'recordly-screen','for_repo':'Recordly','duration':13})
+        demos=p['artifacts'][1:];assigned=[d for d in demos if d['evidence']]
+        self.assertEqual([d['title'] for d in assigned],['Recordly']);self.assertEqual(assigned[0]['kind'],'software')
+        self.assertEqual(sum(d['kind']=='placeholder' for d in demos),4)
     def test_preserve_promised_count_and_do_not_invent_fal_from_fallback(self):
         p=self.propose('5 repo GitHub. Recordly có fallback.')
         intro=p['artifacts'][0];self.assertEqual(intro['title'],'5 repo GitHub');self.assertEqual(intro['missing_repo_names'],4);self.assertEqual(len(p['artifacts'][1:]),1);self.assertTrue(intro['status'].startswith('NEEDS_INPUT'))

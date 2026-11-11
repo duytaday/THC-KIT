@@ -105,6 +105,7 @@ class Workspace:
                 artifact.pop('folder',None)
                 for version in artifact.get('versions',[]):version.pop('folder',None)
             for item in d.get('animation_library',{}).values():item.pop('folder',None)
+            for item in d.get('benchmarks',{}).values():item.pop('folder',None)
             return {
                 **d,
                 "tools": self.tools,

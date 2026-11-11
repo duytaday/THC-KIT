@@ -36,6 +36,9 @@ def propose(script,duration,source,evidence=None,reference=None,spoken_confirmed
         for repo in items:
             part=next(p for p in parts if re.search(r'(?<!\w)'+re.escape(repo.casefold())+r'(?!\w)',p['quote'].casefold()))
             demos.append(dict(type='demo',kind='placeholder',title=repo,source_quote=part['quote'],passage_ids=[part['id']],occurrence=part['occurrence'],claim='Show this repository’s own promised behavior.',intended_visual=f'Capture {repo}, its relevant action and the readable resulting state. A different repo cannot stand in.',duration=3,at=part['start'],position='center',intensity=.5,sound='none',evidence=None,enabled=False,status='NEEDS_INPUT · repository proof',narration_status=intro['narration_status'],timing=timing))
+            if evidence and evidence.get('for_repo')==repo:
+                demos[-1].update(kind='software',evidence=evidence,duration=min(10.7,evidence.get('duration',10.7)),
+                                 enabled=True,status=status,sound='click+chime',intended_visual='This repository’s explicitly assigned real control, contact and readable result.')
         if promised_five and len(items)<5:
             intro['missing_repo_names']=5-len(items)
             intro['items']=items+[f'Cần tên repo {i+1}' for i in range(len(items),5)]

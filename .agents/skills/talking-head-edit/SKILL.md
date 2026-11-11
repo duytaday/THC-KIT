@@ -18,6 +18,11 @@ Read [references/reference-flow.md](references/reference-flow.md) before adaptin
 reference pacing or saving reusable animation excerpts. Additional HyperFrames
 and Claude editing workflows are optional renderer adapters; their pinned
 Windows integration is in `talking-head-qc/integrations/video-skill-set.md`.
+For whole-episode quality comparisons and learning from approved corrections,
+read `docs/FULL-VIDEO-BENCHMARK.vi.md`. Exports → Benchmark full videos measures
+complete masters and opens a blinded, source-bound review. Scene/spec scores do
+not replace full viewing/listening; development corrections cannot remain unseen
+test examples after entering training or RAG.
 
 Use the real recorded presenter and voice. “Avatar” means PiP of that recording.
 Do not synthesize a presenter, replace speech, or call generated imagery software

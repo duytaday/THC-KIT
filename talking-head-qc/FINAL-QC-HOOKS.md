@@ -62,3 +62,15 @@ Copy review-form.json to review.json once. Record reviewer ID/runtime, actual wa
 Retiming shifts output anchors only; source times/hashes stay fixed. It rejects a removed required event, collapsed required range, nonfinite/out-of-bounds interval. Refresh plan hashes after editing the real timeline; trim the real isolated SFX stems and update their hashes. Expected times alone do not retime audio.
 
 The persistent6s/30fps labelled synthetic fixture has click42, wipe78 and chime123; a0.5s trim before them yields27,63,108 while a control before the trim staysframe3. The fixture rerenders real files, measures acoustic/visual alignment and tests covered proof, wrong critical caption, unretimed audio, stale review and missing listening. Fixture READY is explicitly not customer approval, and cannot produce a release receipt.
+
+## Full-video benchmark after QC
+
+Exports → Benchmark full videos runs `app/video_benchmark.py` on complete masters,
+separate from release. Freeze the exact brief/timeline/captions/project and media,
+collect blind phone-size whole-programme review, reference flow evidence, viewer
+answers and measured repair time. Label scene pilots and revisions separately;
+neither increases the first-pass episode denominator. Preserve rejected model
+attempts. See `docs/FULL-VIDEO-BENCHMARK.vi.md` for protocol and correction intake.
+Approved development corrections can enter a new dataset/RAG version. Frozen
+validation/test groups cannot. No benchmark score bypasses `release` or certifies
+audio for a reviewer who cannot listen.

@@ -89,7 +89,7 @@ def arrange(track,out,total):
     with wave.open(str(out/'music-arranged.wav'),'wb') as w:w.setnchannels(1);w.setsampwidth(2);w.setframerate(48000);w.writeframes(arranged.tobytes())
     return out/'music-arranged.wav'
 
-def mix(source,target,plan,events,out,total):
+def mix(source,target,plan,events,out,total,scene_preview=False):
     music=plan.get('music',{'mode':'off'});active=[e for e in events if not e['sound'].get('muted') and e['sound'].get('id')]
     media.ff('-i',source,'-map','0:a:0','-ar','48000','-ac','1','-c:a','pcm_s24le',out/'voice.wav')
     cue_sheet=[];args=[];graph=[];labels=[];bus_samples=round(total*48000)
@@ -118,8 +118,9 @@ def mix(source,target,plan,events,out,total):
         vf=f'[0:a]atrim=end_sample={samples},apad=whole_len={pad},asetnsamples=n=1024:p=1,volume={gain}dB,afade=t=in:d=0.35,afade=t=out:st={max(0,total-.65)}:d=0.65[bed];[1:a]atrim=end_sample={samples},apad=whole_len={pad},asetnsamples=n=1024:p=1[detector];[bed][detector]sidechaincompress=threshold=0.02:ratio=6:attack=25:release=500:makeup=1,atrim=end_sample={samples}[ducked]'
         media.ff('-i',arranged,'-i',out/'voice.wav','-filter_complex',vf,'-map','[ducked]','-ar','48000','-c:a','pcm_s24le',out/'music.wav')
     else:silence(out/'music.wav',total)
-    if not active and music.get('mode','off')=='off':levels=media.finish_audio(source,target)
+    finish=media.preview_audio if scene_preview else media.finish_audio
+    if not active and music.get('mode','off')=='off':levels=finish(source,target)
     else:
-        combined=out/'mixed.mov';media.ff('-i',source,'-i',out/'sfx.wav','-i',out/'music.wav','-filter_complex','[0:a][1:a][2:a]amix=inputs=3:normalize=0:duration=first[a]','-map','0:v:0','-map','[a]','-c:v','copy','-video_track_timescale','15360','-c:a','pcm_s24le','-ar','48000',combined);levels=media.finish_audio(combined,target);combined.unlink()
+        combined=out/'mixed.mov';media.ff('-i',source,'-i',out/'sfx.wav','-i',out/'music.wav','-filter_complex','[0:a][1:a][2:a]amix=inputs=3:normalize=0:duration=first[a]','-map','0:v:0','-map','[a]','-c:v','copy','-video_track_timescale','15360','-c:a','pcm_s24le','-ar','48000',combined);levels=finish(combined,target);combined.unlink()
     media.write_json(out/'cue-sheet.json',dict(schema_version=2,timebase=dict(fps='30/1',sample_rate=48000),cues=cue_sheet,music=music,output_audio=levels,voice_continuity='Original cut narration routed continuously; actual syllable intelligibility requires full listening.'))
     return levels

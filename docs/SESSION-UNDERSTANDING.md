@@ -1,9 +1,10 @@
 # Session understanding
 
-- [ ] Reusable production contract: user intends rules/workflow/hooks for future
-  episodes. Confirm the distinction between shared branding/style defaults and
-  episode-specific narration/proof/locked decisions; implementation tests alone
-  do not demonstrate human understanding.
+- [x] Reusable production contract: the user explicitly distinguished customer
+  script, industry, B-roll/footage, logo/branding, then chose full blinded review,
+  QC, viewer answers and repair time before enabling a candidate. Earlier shared
+  branding and storyboard/proof answers remain applicable. This is conceptual
+  understanding, not a completed review of the current master.
 
 - [x] Shared branding can remain consistent while edit style, animation and demo
   choices change. Per-recording scripts and proof remain independent.
@@ -26,6 +27,14 @@
   from the current episode's actual action/result proof and from demonstrated
   improvement. A focused checkpoint was sent; no answer recorded yet. Do not
   mark this mastered from the installation, model logs or frame-grid inspection.
+- [x] Full-video benchmark: after an initial answer that reused a trained-on test
+  episode, the user identified the episode-specific inputs and then selected
+  blinded complete-video comparison on new material, same source/listening level,
+  all QC gates, viewer answers and actual repair time. A corrected training episode
+  remains a regression example; the next unseen claim requires fresh held-out data.
+- [x] Benchmark granularity: user explicitly requires full edited videos and
+  reference-based flow criteria. Scene/spec diagnostics do not replace whole-episode
+  acceptance. A future folder of 30 shorts is intake, not a claim that 30 exist now.
 
 Current explanation: one local master plan owns source timecodes, captions,
 voice, locked edits and QC. Optional HTML renderers and model workers produce
