@@ -84,8 +84,8 @@ def main():
     manifest=dict(product='Talking Head Cutroom',version=VERSION,channel='internal release candidate',source_commit=commit,source_dirty=dirty,source_tree_sha256=source_hash,platform='Windows x64',files=files,
                   license_status='Starter distribution grant unresolved; do not publicly publish',clean_windows_tested=False,archive_policy='Sorted allowlist, fixed ZIP timestamps, no machine configuration or customer media')
     (out/'version-manifest.json').write_text(json.dumps(manifest,ensure_ascii=False,indent=2),encoding='utf-8')
-    archive=out.with_suffix('.zip');archive_files(archive,{p.relative_to(out).as_posix():p.read_bytes() for p in out.rglob('*') if p.is_file()})
-    media.write_json(archive.with_suffix('.receipt.json'),dict(version=VERSION,package=archive.name,sha256=media.sha(archive),bytes=archive.stat().st_size,source_commit=commit,source_dirty=dirty,source_tree_sha256=source_hash,files=len(files)+1))
+    archive=Path(str(out)+'.zip');archive_files(archive,{p.relative_to(out).as_posix():p.read_bytes() for p in out.rglob('*') if p.is_file()})
+    media.write_json(Path(str(out)+'.receipt.json'),dict(version=VERSION,package=archive.name,sha256=media.sha(archive),bytes=archive.stat().st_size,source_commit=commit,source_dirty=dirty,source_tree_sha256=source_hash,files=len(files)+1))
     print(str(archive),flush=True)
 
 
