@@ -40,6 +40,7 @@ class ArtifactStore:
                 if proof:
                     asset=assets.get(proof.get('asset'))
                     if not asset or asset['kind']!='reference':raise ValueError('Choose actual on-screen proof, separate from the style reference.')
+                    if asset.get('media_is_reusable_proof') is False or asset.get('data_class') not in (None,'real_screen'):raise ValueError('Choose actual screen footage; an illustration or reference excerpt is not action proof')
                     if asset.get('data_class')=='reference_excerpt':raise ValueError('An archived reference animation is an illustration. Add it as a cutaway; capture this episode’s actual product result separately.')
                     if proof['asset']==settings.get('style_ref'):raise ValueError('This file is assigned only for pacing. Choose an on-screen proof asset explicitly.')
                     proof['duration']=asset['duration'];proof['source_sha256']=media.sha(asset['path'])

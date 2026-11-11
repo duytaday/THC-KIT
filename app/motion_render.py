@@ -40,22 +40,23 @@ def append_ass(path,entry,master_start_frame,*,show_status=False):
             opacity=state['opacity']*(min(1,max(0,(end-frame)/exit_frames)) if exit_frames else 1)
             if opacity<=0:continue
             px=(x+state['x'])*1080;py=(y+state['y'])*1920;pw=w*1080*state['scale'];ph=h*1920*state['scale'];alpha=round((1-opacity)*255)
+            turn=(r'\org('+f'{round(px+pw/2)},{round(py+ph/2)}'+r')\frz'+f'{state["rotation"]:.4f}') if state['rotation'] else ''
             prefix=r'{\an7\pos('+f'{px:.2f},{py:.2f}'+r')\p1\shad0\1a&H'+f'{alpha:02X}'+r'&'
             marker=obj['component'] in ('11','12','13')
             if marker:
                 prefix+=r'\1a&HFF&\3a&H'+f'{alpha:02X}'+r'&\bord5\3c&H28F1E8&}'
-            else:prefix+=r'\bord0\1c&H'+{'brand':'BA0021','paper':'FFFFFF','charcoal':'1B1510'}[obj.get('theme','brand')]+r'&}'
+            else:prefix+=turn+r'\bord0\1c&H'+{'brand':'BA0021','paper':'FFFFFF','charcoal':'1B1510'}[obj.get('theme','brand')]+r'&}'
             begin=master_start_frame+frame
             rows.append(dialogue(1,begin,begin+1,prefix+rectangle(pw,ph)+r'{\p0}'))
             if not marker:
                 fs=obj['font_size']*state['scale'];lines=schema.wrap(label,w,obj['font_size']);text='\n'.join(lines)
                 ty=py+(ph-len(lines)*fs*1.18)/2
                 text_color='1B1510' if obj.get('theme')=='paper' else 'FFFFFF'
-                tag=r'{\an8\pos('+f'{px+pw/2:.2f},{ty:.2f}'+r')\fs'+f'{fs:.2f}'+r'\bord0\shad0\1c&H'+text_color+r'&\1a&H'+f'{alpha:02X}'+r'&}'
+                tag=r'{\an8\pos('+f'{px+pw/2:.2f},{ty:.2f}'+r')'+turn+r'\fs'+f'{fs:.2f}'+r'\bord0\shad0\1c&H'+text_color+r'&\1a&H'+f'{alpha:02X}'+r'&}'
                 rows.append(dialogue(2,begin,begin+1,tag+escaped(text)))
                 if emphasis is not None and 0<=emphasis<len(lines):
                     yy=ty+(emphasis+1)*fs*1.18
-                    underline=r'{\an7\pos('+f'{px+18:.2f},{yy:.2f}'+r')\p1\bord0\shad0\1c&H28F1E8&}m 0 0 l '+f'{pw-36:.2f} 0 {pw-36:.2f} 5 0 5'+r'{\p0}'
+                    underline=r'{\an7\pos('+f'{px+18:.2f},{yy:.2f}'+r')'+turn+r'\p1\bord0\shad0\1c&H28F1E8&}m 0 0 l '+f'{pw-36:.2f} 0 {pw-36:.2f} 5 0 5'+r'{\p0}'
                     rows.append(dialogue(3,begin,begin+1,underline))
         bounds.append(dict(id=obj['id'],source_anchor=obj['anchor'],rect=obj['rect'],font_size=obj.get('font_size'),last_state=label,theme=obj.get('theme','brand'),lead_frames=obj.get('lead_frames',0),exit_frames=exit_frames))
     if show_status and not ctx.get('voice_aligned',False):

@@ -21,6 +21,7 @@ def run(dataset,out,steps=128):
     styles={name:sum(r['input'].get('style','unspecified')==name for r in rows['train']) for name in sorted({r['input'].get('style','unspecified') for r in rows['train']})}
     receipt.update(training_style_counts=styles,style=next(iter(styles)) if len(styles)==1 else 'mixed')
     receipt.update(initialization='fresh_pinned_base_no_adapter_resume',target_coverage=manifest.get('target_coverage',{}),experiment_lineage=manifest.get('experiment_lineage',{}))
+    receipt['sampling']=data.training_schedule(rows['train'],steps);receipt['applied_example_ids']=[]
     def save():media.write_json(out/'provenance.json',receipt)
     def stage(s):receipt['stage']=s;save();print('STAGE',s,flush=True)
     save()
@@ -54,6 +55,7 @@ def run(dataset,out,steps=128):
             return dict(input_ids=torch.tensor([head+tail],device=device),attention_mask=torch.ones((1,len(head)+len(tail)),device=device,dtype=torch.long),labels=torch.tensor([[-100]*len(head)+tail],device=device))
         # Keep encoded sequences on CPU; activate only the current example.
         encoded={part:[{k:v.cpu() for k,v in encode(r).items()} for r in rs] for part,rs in rows.items()}
+        train_by_id={r['id']:e for r,e in zip(rows['train'],encoded['train'])}
         receipt['max_training_tokens']=max(e['input_ids'].shape[1] for e in encoded['train'])
         def loss(e):return model(**{k:v.to(device) for k,v in e.items()}).loss
         model.eval()
@@ -62,12 +64,13 @@ def run(dataset,out,steps=128):
         while receipt['actual_optimizer_steps']<steps:
             attempt+=1
             if attempt>steps*4:raise FloatingPointError('Too many skipped gradient steps')
-            optimizer.zero_grad(set_to_none=True);e=encoded['train'][(attempt-1)%len(encoded['train'])]
+            example_id=receipt['sampling']['example_ids'][receipt['actual_optimizer_steps']]
+            optimizer.zero_grad(set_to_none=True);e=train_by_id[example_id]
             with torch.autocast('cuda',dtype=torch.float16):value=loss(e)
             if not torch.isfinite(value):raise FloatingPointError('Nonfinite causal-LM loss')
             scaler.scale(value).backward();scaler.unscale_(optimizer);torch.nn.utils.clip_grad_norm_(params,1);old=scaler.get_scale();scaler.step(optimizer);scaler.update()
             if scaler.get_scale()<old:continue
-            receipt['actual_optimizer_steps']+=1;losses.append(float(value.detach()));receipt['losses']=losses
+            receipt['actual_optimizer_steps']+=1;receipt['applied_example_ids'].append(example_id);losses.append(float(value.detach()));receipt['losses']=losses
             if receipt['actual_optimizer_steps']%8==0:save();print('OPTIMIZER_STEP',receipt['actual_optimizer_steps'],'LOSS',losses[-1],flush=True)
             if receipt['actual_optimizer_steps']%32==0:model.save_pretrained(out/('checkpoint-'+str(receipt['actual_optimizer_steps'])),safe_serialization=True)
         receipt.update(training_completed=True,training_wall_seconds=time.monotonic()-started,weight_update_l2=float(sum(((p.detach().cpu()-initial[n])**2).sum() for n,p in model.named_parameters() if p.requires_grad).sqrt()),peak_gpu_bytes=torch.cuda.max_memory_allocated(0))

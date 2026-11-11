@@ -119,19 +119,21 @@ def validate(spec,context,*,check_hold=True):
         if not isinstance(keys,list) or not 2<=len(keys)<=8:raise ValueError('Provide2–8 editable keyframes')
         previous=-1
         for k in keys:
-            if set(k)!={'frame','x','y','scale','opacity','ease'}:raise ValueError('Keyframe needs frame/x/y/scale/opacity/ease')
+            if set(k)-{'frame','x','y','scale','opacity','ease','rotation'} or not {'frame','x','y','scale','opacity','ease'}<=set(k):raise ValueError('Keyframe needs frame/x/y/scale/opacity/ease; rotation is optional')
             if type(k['frame']) is not int or not previous<k['frame']<=60:raise ValueError('Entrance keyframes must be ordered within60frames')
             previous=k['frame'];finite(k['x'],-1,1,'X offset');finite(k['y'],-1,1,'Y offset');finite(k['scale'],.7,1.15,'Scale');finite(k['opacity'],0,1,'Opacity')
+            finite(k.get('rotation',0),-45,45,'Rotation degrees')
             if k['ease'] not in ('linear','smoothstep','ease_out'):raise ValueError('Unsupported easing')
-        if keys[0]['frame']!=0 or keys[-1]['opacity']!=1 or keys[-1]['x']!=0 or keys[-1]['y']!=0 or keys[-1]['scale']!=1:raise ValueError('The entrance must end settled in its declared rectangle')
+        if keys[0]['frame']!=0:raise ValueError('Entrance keyframes are object-relative; the first frame must be 0')
+        if keys[-1]['opacity']!=1 or keys[-1]['x']!=0 or keys[-1]['y']!=0 or keys[-1]['scale']!=1 or keys[-1].get('rotation',0)!=0:raise ValueError('The entrance must end settled in its declared rectangle')
         if check_hold and lifetime_end(obj,context)-last-(0 if obj.get('changes') else keys[-1]['frame'])-exit_frames<hold:raise ValueError('Extend the scene to leave the final state readable')
-        if obj['component'] in ('11','12','13') and any(k['x'] or k['y'] or k['scale']!=1 for k in keys):raise ValueError('A proof marker must stay on the observed source target')
+        if obj['component'] in ('11','12','13') and any(k['x'] or k['y'] or k['scale']!=1 or k.get('rotation',0) for k in keys):raise ValueError('A proof marker must stay on the observed source target')
         # Check the swept geometry at output frames, not just the final card position.
         if obj['component'] not in ('11','12','13'):
             for frame in range(keys[-1]['frame']+1):
                 state=pose(keys,frame)
                 if state['opacity']<=.05:continue
-                moved=[box[0]+state['x'],box[1]+state['y'],box[2]*state['scale'],box[3]*state['scale']]
+                moved=pose_bounds(box,state)
                 for protected in context.get('protected',[]):
                     if protected.get('kind')=='face' and result['scene_type']=='intro' and result['layout']=='full':continue
                     if overlap(moved,protected['rect']):raise ValueError('Animation covers a protected '+protected['kind']+' region')
@@ -152,7 +154,7 @@ def validate(spec,context,*,check_hold=True):
 
 
 def compile_spec(spec,context):
-    """Compile a proposed hold to source-frame budgets; never repair content/proof.
+    """Bind source facts and normalize an unambiguous scene/object clock.
 
     Report raw validation separately. Both model arms use the same compiler.
     A budget below the readable minimum remains an actionable rejection.
@@ -160,8 +162,24 @@ def compile_spec(spec,context):
     raw_error=None
     try:validate(spec,context)
     except ValueError as e:raw_error=str(e)
-    result=copy.deepcopy(spec);anchors={a['id']:a for a in context['anchors']};repairs=[]
+    result=copy.deepcopy(spec);anchors={a['id']:a for a in context['anchors']};repairs=[];semantic=[]
+    proof=context.get('proof') or {}
+    if proof.get('data_class')=='real_screen' and isinstance(result.get('missing'),list) and all(isinstance(x,str) for x in result['missing']):
+        norm=lambda x:unicodedata.normalize('NFC',x).strip().casefold()
+        supplied={norm(a['id']) for a in anchors.values() if a['kind'] in ('control','contact','result') and type(a.get('source_pts')) in (int,float) and math.isfinite(a['source_pts'])}
+        if proof.get('for_repo'):supplied.add(norm(proof['for_repo']))
+        missing=[x for x in result['missing'] if norm(x) not in supplied]
+        if missing!=result['missing']:
+            semantic.append('A missing-input note names an explicitly supplied source fact')
+            repairs.append(dict(field='missing',before=result['missing'],after=missing,reason='Exact supplied source-anchor/repository identity; no result, asset or contact was fabricated'))
+            result['missing']=missing
     for i,obj in enumerate(result.get('objects',[])):
+        if isinstance(obj,dict) and obj.get('anchor') in anchors:
+            keys=obj.get('keyframes',[]);origin=keys[0].get('frame') if keys and isinstance(keys[0],dict) else None
+            times=[k.get('frame') if isinstance(k,dict) else None for k in keys]
+            if type(origin) is int and origin>0 and origin==object_start(obj,anchors) and all(type(t) is int for t in times) and all(a<b for a,b in zip(times,times[1:])):
+                for k in keys:k['frame']-=origin
+                repairs.append(dict(field=f'objects[{i}].keyframes.frame',before=times,after=[k['frame'] for k in keys],reason='Scene-clock keys start exactly at this object’s supplied onset; normalize to object-relative frames without moving its anchor or changing intervals'))
         if isinstance(obj,dict) and obj.get('component') in ('11','12','13') and obj.get('anchor') in anchors and anchors[obj['anchor']].get('roi'):
             roi=anchors[obj['anchor']]['roi']
             if obj.get('rect')!=roi:
@@ -175,7 +193,7 @@ def compile_spec(spec,context):
         if obj.get('hold_frames',30)>available:
             repairs.append(dict(field=f'objects[{i}].hold_frames',before=obj.get('hold_frames',30),after=available,reason='Source frame budget; no word/action anchor moved'))
             obj['hold_frames']=available
-    return validate(result,context),dict(raw_schema_error=raw_error,repairs=repairs)
+    return validate(result,context),dict(raw_schema_error=raw_error,raw_semantic_flags=semantic,repairs=repairs)
 
 
 def object_start(obj,anchors):
@@ -189,6 +207,16 @@ def lifetime_end(obj,context):
     return context['frames']
 
 
+def pose_bounds(box,state):
+    """Conservative rotated bounds in pixels before returning normalized units."""
+    if not state.get('rotation',0):return [box[0]+state['x'],box[1]+state['y'],box[2]*state['scale'],box[3]*state['scale']]
+    x=(box[0]+state['x'])*1080;y=(box[1]+state['y'])*1920
+    w=box[2]*state['scale']*1080;h=box[3]*state['scale']*1920
+    angle=math.radians(state.get('rotation',0));c,s=abs(math.cos(angle)),abs(math.sin(angle))
+    wide,tall=w*c+h*s,w*s+h*c
+    return [(x+w/2-wide/2)/1080,(y+h/2-tall/2)/1920,wide/1080,tall/1920]
+
+
 def pose(keys,frame):
     left=keys[0]
     for right in keys[1:]:
@@ -196,9 +224,9 @@ def pose(keys,frame):
             t=max(0,min(1,(frame-left['frame'])/(right['frame']-left['frame'])))
             if right['ease']=='smoothstep':t=t*t*(3-2*t)
             elif right['ease']=='ease_out':t=1-(1-t)**3
-            return {k:left[k]+(right[k]-left[k])*t for k in ('x','y','scale','opacity')}
+            return {k:left.get(k,0)+(right.get(k,0)-left.get(k,0))*t for k in ('x','y','scale','opacity','rotation')}
         left=right
-    return {k:left[k] for k in ('x','y','scale','opacity')}
+    return {k:left.get(k,0) for k in ('x','y','scale','opacity','rotation')}
 
 
 def entrance(frames=10,direction='right'):

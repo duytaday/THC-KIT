@@ -17,6 +17,9 @@ class SourceGrammarTests(unittest.TestCase):
         return p.can_end()
     def test_full_native_intro_with_vietnamese_is_expressible(self):
         c=self.context();s=motion_specs.rules(c);self.assertTrue(self.accepts(s,c))
+    def test_editable_graphic_rotation_remains_expressible(self):
+        c=self.context();s=motion_specs.rules(c);s['objects'][0]['keyframes'][0]['rotation']=12
+        self.assertTrue(self.accepts(s,c));motion_specs.validate(s,c)
     def test_borrowed_reference_text_and_early_lead_are_rejected(self):
         c=self.context();s=motion_specs.rules(c)
         for field,value in [('text','A borrowed reference claim'),('lead_frames',10)]:
@@ -54,6 +57,7 @@ class SourceGrammarTests(unittest.TestCase):
     def test_source_actions_and_neutral_themes_remain_expressible(self):
         c=dict(request='demo',texts=[],frames=180,protected=[],proof=dict(data_class='real_screen'),anchors=[dict(id='target',kind='control',frame=0,roi=[.2,.3,.2,.05]),dict(id='tap',kind='contact',frame=44,roi=[.3,.33,.01,.01]),dict(id='result',kind='result',frame=100,roi=[.2,.4,.4,.08])])
         s=motion_specs.rules(c);self.assertTrue(self.accepts(s,c))
+        s['objects'][0]['keyframes'][0]['rotation']=5;self.assertFalse(self.accepts(s,c));s['objects'][0]['keyframes'][0]['rotation']=0
         s['objects'][0]['lead_frames']=1;self.assertFalse(self.accepts(s,c))
 
 

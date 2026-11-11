@@ -1,17 +1,28 @@
 """Render matched complete episodes through the real UI; keep failed model arms visible."""
 import argparse,json,time
 from pathlib import Path
-from playwright.sync_api import sync_playwright
 from engine import media
 
 
+def implementation_identity(root=None):
+    root=Path(root or Path(__file__).parent)
+    return {p.relative_to(root).as_posix():media.sha(p) for p in sorted(root.rglob('*'))
+        if p.is_file() and p.suffix in ('.py','.js','.html','.css') and not p.name.startswith('test_')}
+
+
 def main():
+    from playwright.sync_api import sync_playwright
     p=argparse.ArgumentParser(description=__doc__);p.add_argument('--url',required=True);p.add_argument('--config',type=Path,required=True);p.add_argument('--out',type=Path,required=True);p.add_argument('--resume',action='store_true');p.add_argument('--modes',nargs='+',choices=('rules','base_rag','fine_tuned'),default=['rules','base_rag','fine_tuned']);a=p.parse_args()
     config=json.loads(a.config.read_text(encoding='utf-8'));out=a.out.resolve();out.mkdir(parents=True,exist_ok=a.resume)
     report=dict(exports=[],attempts=[],page_errors=[],coverage='complete_episode',scope='development',listening='UNVERIFIED')
     if a.resume and (out/'results.json').exists():report=json.loads((out/'results.json').read_text(encoding='utf-8'))
+    implementation=implementation_identity()
+    if report.get('implementation_identity') and report['implementation_identity']!=implementation:raise ValueError('Implementation changed; start a new comparison and retain the previous one')
+    if (report.get('exports') or report.get('attempts')) and not report.get('implementation_identity'):raise ValueError('Legacy comparison has no implementation hashes; start a new comparison')
+    report['implementation_identity']=implementation
     fixed={k:v for k,v in config.items() if k!='package'}
     inputs=[config[k] for k in ('source','srt','proof','style_reference')]+[r['path'] for r in config['captures']]
+    if config.get('branding'):inputs.append(config['branding']['path'])
     identity=dict(config=fixed,files={str(Path(f).resolve()):media.sha(f) for f in inputs})
     if report.get('source_identity') and report['source_identity']!=identity:raise ValueError('Source/config changed; start a new comparison and retain the previous one')
     report['source_identity']=identity
@@ -41,7 +52,7 @@ def main():
             name=Path(file).name
             found=next((x for x in state()['assets'].values() if x['name']==name and x['kind']==kind),None)
             if found:return found['id']
-            before=set(state()['assets']);page.locator('#hostInput' if kind=='host' else '#refInput').set_input_files(str(file))
+            before=set(state()['assets']);page.locator({'host':'#hostInput','reference':'#refInput','graphic':'#graphicInput'}[kind]).set_input_files(str(file))
             deadline=time.monotonic()+180
             while time.monotonic()<deadline:
                 s=state();new=[v for k,v in s['assets'].items() if k not in before and v['name']==name]
@@ -60,6 +71,7 @@ def main():
         if page.locator('#script').input_value()!=script:
             page.locator('#script').fill(script);save_settings()
         proof=import_file(config['proof'],'reference');style=import_file(config['style_reference'],'reference')
+        brand=import_file(config['branding']['path'],'graphic') if config.get('branding') else None
         report.update(proof=proof,style_reference=style);save()
         capture_ids={q['id']:import_file(q['path'],'reference') for q in config['captures']}
         choose_host(job)
@@ -70,8 +82,12 @@ def main():
                 for k in ('at','offset','duration'):row.locator(f'[data-k="{k}"]').fill(str(q[k]))
             save_settings();report['manual_inserts_saved']=True;save()
         page.locator('[data-panel="look"]').click();page.locator('#style_ref').select_option(style);page.locator('#motion_profile').select_option(config.get('motion_profile','baseline'));page.locator('#music_mode').select_option('off')
+        if brand:
+            page.locator('#brand_logo').select_option(brand)
+            for key in ('from','to'):page.locator('#brand_'+key).fill(str(config['branding'][key]))
         save_settings()
         expected_settings=dict(style_ref=style,motion_profile=config.get('motion_profile','baseline'),music_mode='off')
+        if brand:expected_settings.update(brand_logo=brand,brand_from=config['branding']['from'],brand_to=config['branding']['to'])
         if any(state()['jobs'][job]['settings'].get(k)!=v for k,v in expected_settings.items()):raise AssertionError('UI settings were not saved before rendering')
         if config.get('cta') and not report.get('cta_saved'):
             cue=config['cta'];page.locator('#addEvent').click();card=page.locator('[data-event]').last;card.locator('summary').first.click()

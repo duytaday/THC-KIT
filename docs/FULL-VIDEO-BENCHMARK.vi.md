@@ -103,6 +103,9 @@ prompt/schema/decoder và worker của mỗi model scene. Không lấy settings 
 chỉnh hoặc file proof hôm nay để mô tả master cũ. Đổi brief dù MP4 không đổi
 cũng phải tạo hồ sơ phiên bản mới. Dùng frame count từ timeline đã render.
 Import lại cùng source hash không tạo thêm một tập hoặc first pass độc lập.
+Scene native đã sửa tay được tính là revision, kể cả khi master chứa nó là
+export đầu tiên. Không dùng số thứ tự export để biến một bản đã sửa thành đề
+xuất model được giữ nguyên lần đầu.
 
 Harness `app/full_video_acceptance.py` đợi API lưu/chèn scene hoàn tất, đọc lại
 settings và tập scene thực sự được chèn trước khi Queue. Scene model báo thiếu
@@ -110,6 +113,10 @@ input hoặc bị từ chối chèn được ghi là thất bại; không render
 rồi tính là một đối chứng hoàn chỉnh. Export kỹ thuật đạt nhưng thiếu proof vẫn
 không đủ điều kiện so model hoặc giao khách. Bài benchmark giữ cả thất bại và
 những controls không khớp; nó không tự chọn bản thắng hay bật adapter.
+Harness ghi hash mã Python và UI của lần chạy. Nếu code đổi giữa các arm,
+resume bị từ chối; mở lượt so sánh mới và giữ nguyên báo cáo cũ. Có thể tái dùng
+media đã nhập và thiết lập chung, nhưng không ghép kết quả từ hai compiler khác
+nhau thành một bài so mù.
 
 Developer commands từ checkout root:
 

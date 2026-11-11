@@ -26,8 +26,31 @@ Lời giải thích của planner không phải provenance về weights hay tr�
 PROMPT_VERSION=4
 SYSTEMS[5]=SYSTEMS[4].replace('Ghi rõ giới hạn trong missing/rationale.','Giới hạn tái dựng reference chỉ ghi trong rationale. missing chỉ dành cho input/pickup bắt buộc của cảnh hiện tại; không dùng nó để xin lại icon/ảnh gốc không được brief yêu cầu.')
 SYSTEMS[5]+='\nĐếm các text hiện tại trước khi xếp thẻ. Mọi thẻ phải nằm trong canvas và tránh protected; không kéo dài danh sách theo khoảng cách của ví dụ ít mục hơn. Không chép phần giải thích của annotation thành lỗi thiếu footage của khách.'
-PROMPT_VERSION=5
-RETRIEVAL_VERSION=2
+SYSTEMS[6]=SYSTEMS[5].replace('ảnh, icon, rotation hay counter','ảnh, icon hay counter')+'''\nPhân biệt headline giữ tĩnh với thẻ có entrance; style maverick_fast không tự chứng minh mọi vật đều chuyển động. Dùng keyframe có mục đích theo intent và ví dụ cùng loại, giữ trạng thái cuối đủ đọc.
+Nếu proof hiện tại là real_screen và đã có target/contact/result thì tư liệu thao tác đó đã được cấp; không đưa tên repo hay tên asset ấy vào missing. Chỉ xin một kết quả khác khi intent thực sự yêu cầu mà proof chưa có. Evidence mô tả nguồn hiện tại, không chép loại nguồn của ví dụ RAG.
+Ví dụ house_fixture là đồ họa nguyên gốc minh họa contract; không phải project/keyframe gốc của reference hoặc bằng chứng thành công phần mềm thật.
+Keyframe có thể thêm rotation theo độ trong [-45,45], mặc định0; cuối entrance phải về0 để chữ nằm ngang khi đọc. Marker11/12/13 không được xoay. Native text card có thể tái dựng nhịp xoay, không tự tạo icon/ảnh nguồn.'''
+PROMPT_VERSION=6
+RETRIEVAL_VERSION=3
+
+
+def has_motion(spec):
+    return any(len({tuple(k.get(p,0) for p in ('x','y','scale','opacity','rotation')) for k in o['keyframes']})>1 for o in spec['objects'])
+
+
+def training_schedule(rows,steps,seed=3407):
+    """Balance represented decision types; repeats are never independent labels."""
+    if not rows or type(steps) is not int or steps<1:raise ValueError('A training schedule needs rows and positive steps')
+    if any(r.get('split')!='train' for r in rows):raise ValueError('Only train rows may enter the optimizer schedule')
+    buckets={};rng=random.Random(seed)
+    for r in rows:
+        key='|'.join((r['input']['request'],'proof' if r['input'].get('proof') else 'graphic','moving' if has_motion(r['target']) else 'static'))
+        buckets.setdefault(key,[]).append(r['id'])
+    for values in buckets.values():values.sort();rng.shuffle(values)
+    keys=sorted(buckets);counts={k:0 for k in keys};ids=[]
+    for i in range(steps):
+        k=keys[i%len(keys)];values=buckets[k];ids.append(values[counts[k]%len(values)]);counts[k]+=1
+    return dict(version=1,seed=seed,method='round_robin_role_proof_motion',source_rows={k:len(v) for k,v in buckets.items()},planned_steps=counts,example_ids=ids)
 
 
 def coverage(rows):
@@ -35,7 +58,7 @@ def coverage(rows):
     return {part:dict(rows=len(rs),roles={k:sum(r['input']['request']==k for r in rs) for k in ('intro','demo')},
         layouts={k:sum(r['target']['layout']==k for r in rs) for k in ('host','shoulder','full','demo')},
         full_screen_intros=sum(r['target']['scene_type']=='intro' and r['target']['layout']=='full' for r in rs),
-        moving_entrances=sum(any(any(k['x'] or k['y'] or k['scale']!=1 or k['opacity']!=1 for k in o['keyframes']) for o in r['target']['objects']) for r in rs),
+        moving_entrances=sum(has_motion(r['target']) for r in rs),
         audio_supervised=sum(r.get('reference_evidence',{}).get('audio')=='supervised' for r in rs))
         for part in ('train','validation','test') for rs in [[r for r in rows if r['split']==part]]}
 
@@ -45,11 +68,12 @@ def fingerprint(data):
 
 
 def retrieve(context,pool,limit=1,version=1):
-    if version not in (1,2):raise ValueError('Unsupported animation retrieval version')
+    if version not in (1,2,3):raise ValueError('Unsupported animation retrieval version')
     words=set(context.get('quote','').casefold().split())
     def key(r):
         source=r['input'];prefix=(source.get('request')!=context.get('request'),source.get('intent')!=context.get('intent'))
         if version==2:prefix+=(abs(len(source.get('texts',[]))-len(context.get('texts',[]))),bool(source.get('proof'))!=bool(context.get('proof')),source.get('style')!=context.get('style'))
+        if version==3:prefix=(source.get('request')!=context.get('request'),bool(source.get('proof'))!=bool(context.get('proof')),source.get('layout_requirement')!=context.get('layout_requirement'),source.get('style')!=context.get('style'),abs(len(source.get('texts',[]))-len(context.get('texts',[]))),source.get('intent')!=context.get('intent'))
         return prefix+(-len(words & set(source.get('quote','').casefold().split())),r['id'])
     return sorted(pool,key=key)[:limit]
 

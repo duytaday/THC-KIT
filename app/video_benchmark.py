@@ -474,10 +474,11 @@ def from_workspace(ws, ids, reference_ids=(), quiz_by_job=None):
             if provenance.is_file():
                 pr=read(provenance);controls.update(rag=pr['retrieval_sha256'],prompt=prompt_identity(ws.root,specs,pr['prompt_version']))
         family='sha256:'+recipe['source_sha256']
+        manually_revised=any(s.get('manual_override') for s in specs)
         questions=quizzes.get(e['job'],[dict(id='target',text='Trong demo chính, người dẫn vừa bấm nút nào?',modality='visual'),dict(id='result',text='Sau khi bấm, điều gì thay đổi?',modality='visual')])
         questions=copy.deepcopy(questions)+[dict(id='covered',text='Có chữ hoặc kết quả nào chưa kịp đọc / bị che? Ghi timecode.',modality='visual')]
         videos.append(dict(id=e['id'],episode=family,source_group=state['jobs'][e['job']].get('parent_source') or family,
-                           scope='development',arm=arm,stage='revision' if previous else 'proposal',path=str(folder/'edit.mp4'),source_sha256=recipe['source_sha256'],controls=controls,
+                           scope='development',arm=arm,stage='revision' if previous or manually_revised else 'proposal',manual_animation_edits=manually_revised,path=str(folder/'edit.mp4'),source_sha256=recipe['source_sha256'],controls=controls,
                            expected=dict(width=1080,height=1920,fps=30,frames=expected_frames),
                            required_beats=[p['id'] for p in profile.get('demonstrations',[])],
                            quiz=questions,

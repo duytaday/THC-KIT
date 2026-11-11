@@ -49,6 +49,16 @@ class SpecIntegrationTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError,'Rejected'):self.ws.artifacts.generate(['host'],animation_mode='fine_tuned')
         self.assertFalse(self.ws.data.get('artifacts'))
 
+    def test_nonproof_assets_are_rejected_before_model_or_legacy_generation(self):
+        for flags in (dict(data_class='reference_excerpt'),dict(media_is_reusable_proof=False)):
+            for mode in (None,'rules'):
+                with self.subTest(flags=flags,mode=mode),patch('motion_policy.infer') as infer:
+                    self.ws.data['assets']['illustration']=dict(kind='reference',**flags)
+                    with self.assertRaisesRegex(ValueError,'not action proof'):
+                        self.ws.artifacts.generate(['host'],evidence=dict(asset='illustration'),animation_mode=mode)
+                    infer.assert_not_called()
+                    self.assertFalse(self.ws.artifacts.generating);self.assertFalse(self.ws.data.get('artifacts'))
+
     def test_explicit_style_is_per_generation_and_preserves_previous_scenes(self):
         original=self.generate()
         fast=self.ws.artifacts.generate(['host'],animation_mode='rules',animation_style='maverick_fast')
@@ -59,7 +69,7 @@ class SpecIntegrationTests(unittest.TestCase):
     def test_full_intro_constraint_is_input_and_does_not_reuse_a_legacy_context(self):
         ids=self.generate();record=self.ws.data['artifacts'][ids[0]]
         self.assertEqual(record['plan']['animation']['context']['layout_requirement'],'full')
-        record['story_key']=record['story_key'].replace('|context:2','')
+        record['story_key']=record['story_key'].replace('|context:'+str(motion_storyboard.CONTEXT_VERSION),'')
         new=self.generate();self.assertNotEqual(ids[0],new[0])
         self.assertIn(ids[0],self.ws.data['artifacts'])
 

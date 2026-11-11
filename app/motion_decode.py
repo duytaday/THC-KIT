@@ -23,7 +23,7 @@ def schema(context):
     box=array(number(0,1),4,4);branches=[]
     for anchor in anchors:
         later=[a['id'] for a in anchors if a['frame']>anchor['frame']]
-        key=obj(dict(frame=enum(range(61)),x=number(-1,1),y=number(-1,1),scale=number(.7,1.15),opacity=number(0,1),ease=enum(('linear','smoothstep','ease_out'))),['frame','x','y','scale','opacity','ease'])
+        key=obj(dict(frame=enum(range(61)),x=number(-1,1),y=number(-1,1),scale=number(.7,1.15),opacity=number(0,1),rotation=number(-45,45),ease=enum(('linear','smoothstep','ease_out'))),['frame','x','y','scale','opacity','ease'])
         base=dict(id=dict(type='string',pattern='[a-z][a-z0-9_-]{0,30}'),rect=box,anchor=enum([anchor['id']]),keyframes=array(key,2,8),
                   lead_frames=enum(range(min(30,anchor['frame'])+1)),exit_frames=enum(range(31)),hold_frames=enum(range(12,181)),theme=enum(('brand','paper','charcoal')))
         if texts:
@@ -33,7 +33,7 @@ def schema(context):
         if anchor.get('roi') and context.get('proof') and anchor['kind'] in ('control','contact','result'):
             component={'control':'11','contact':'12','result':'13'}[anchor['kind']]
             # Source markers cannot anticipate or leave their actual target.
-            stationary=obj(dict(frame=enum(range(61)),x=enum([0]),y=enum([0]),scale=enum([1]),opacity=number(0,1),ease=enum(('linear','smoothstep','ease_out'))),['frame','x','y','scale','opacity','ease'])
+            stationary=obj(dict(frame=enum(range(61)),x=enum([0]),y=enum([0]),scale=enum([1]),opacity=number(0,1),rotation=enum([0]),ease=enum(('linear','smoothstep','ease_out'))),['frame','x','y','scale','opacity','ease'])
             branches.append(obj(dict(base,component=enum([component]),keyframes=array(stationary,2,8),lead_frames=enum([0])),['id','component','rect','anchor','keyframes']))
     sounds=[]
     for a in anchors:

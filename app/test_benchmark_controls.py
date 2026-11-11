@@ -77,6 +77,12 @@ class FrozenControlTests(unittest.TestCase):
         ws,master=self.workspace();master.write_bytes(b'overwritten')
         with self.assertRaisesRegex(ValueError,'Export bytes changed'):bench.from_workspace(ws,['export'])
 
+    def test_manual_model_scene_repair_is_not_a_first_pass_proposal(self):
+        ws,_=self.workspace();file=self.root/'export/render-project.json';recipe=bench.read(file);recipe['plan']['motion_specs'][0]['manual_override']=True;media.write_json(file,recipe);seen=[]
+        with patch('video_benchmark.create',side_effect=lambda config,out:seen.append(config) or dict(videos=[])):bench.from_workspace(ws,['export'])
+        self.assertEqual(seen[0]['videos'][0]['stage'],'revision')
+        self.assertTrue(seen[0]['videos'][0]['manual_animation_edits'])
+
     def test_unchanged_mp4_does_not_keep_signoff_for_a_changed_brief(self):
         ws,_=self.workspace();(self.root/'export/brief.md').write_text('New payoff: show the WordPress page load')
         with self.assertRaisesRegex(ValueError,'Brief changed after export'):bench.from_workspace(ws,['export'])

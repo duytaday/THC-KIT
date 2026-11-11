@@ -29,6 +29,9 @@
   from the current episode's actual action/result proof and from demonstrated
   improvement. A focused checkpoint was sent; no answer recorded yet. Do not
   mark this mastered from the installation, model logs or frame-grid inspection.
+  A combined checkpoint now asks what to keep, capture and release when a new
+  episode has an attractive sliding/rotating name card but lacks actual action
+  results. No answer has been received; no mastery inferred from the UI smoke.
 - [x] Full-video benchmark: after an initial answer that reused a trained-on test
   episode, the user identified the episode-specific inputs and then selected
   blinded complete-video comparison on new material, same source/listening level,

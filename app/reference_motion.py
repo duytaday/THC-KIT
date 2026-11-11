@@ -1,8 +1,25 @@
 """Prepare inspectable reference evidence; export only explicit, provenance-bound labels."""
-import argparse,copy,json,math
+import argparse,copy,json,math,re,subprocess
 from pathlib import Path
 from engine import media
 import speech,motion_specs,motion_learning
+
+
+def contact_sheet(source,out,start=0,end=8,sample_fps=4,width=180,columns=8,rows=4):
+    """Keep original source PTS. An fps filter relabels its selected pictures."""
+    if not 0<=start<end or not 0<sample_fps<=30:raise ValueError('Choose a positive source interval and 0–30 samples/s')
+    source=Path(source).resolve(strict=True);out=Path(out).resolve();out.parent.mkdir(parents=True,exist_ok=True)
+    font=str(Path(__file__).parent/'fonts/DejaVuSans-Bold.ttf').replace('\\','/').replace(':',r'\:')
+    selected=f"gte(t,{start})*lt(t,{end})*if(isnan(prev_selected_t),1,gt(floor((t-{start})*{sample_fps}+0.000001),floor((prev_selected_t-{start})*{sample_fps}+0.000001)))"
+    vf=f"select='{selected}',showinfo,scale={width}:-2,drawtext=fontfile='{font}':text='%{{pts\\:hms}}':fontsize=12:fontcolor=white:box=1:boxcolor=black@0.7:x=3:y=3,tile={columns}x{rows}:padding=2:margin=2"
+    args=['ffmpeg','-hide_banner','-loglevel','info','-nostdin','-y','-t',str(end),'-i',str(source),'-an','-vf',vf,'-frames:v','1',str(out)]
+    result=subprocess.run(args,capture_output=True,timeout=180,**media.launch_options());log=result.stderr.decode('utf-8',errors='replace')
+    if result.returncode:raise ValueError('Reference sheet failed: '+log[-1200:])
+    times=[float(t) for t in re.findall(r'\bpts_time:([-+\d.eE]+)',log)][:columns*rows]
+    if not times or any(not start-.00001<=t<end+.00001 for t in times):raise ValueError('Selected frame timestamps do not match the source interval')
+    record=dict(source=str(source),source_range=[start,end],sample_fps=sample_fps,source_pts_seconds=times,columns=columns,rows=rows,image_sha256=media.sha(out),filter=selected,note='Actual selected source PTS, not an fps-filter output clock. No listening or motion approval.')
+    media.write_json(out.with_suffix(out.suffix+'.json'),record)
+    return record
 
 
 def prepare(inventory,out,cache,include_host=None):
@@ -27,9 +44,7 @@ def prepare(inventory,out,cache,include_host=None):
             media.write_json(folder/'transcript.json',t);evidence.update(transcript_sha256=media.sha(folder/'transcript.json'),asr_device=t['device'],asr_compute=t['compute_type'])
         except ValueError as e:evidence['asr_error']=str(e)
         # A labelled 8s,4fps contact sheet is a visual aid, never a listening claim.
-        preview=min(8,duration);font=str(Path(__file__).parent/'fonts/DejaVuSans-Bold.ttf').replace('\\','/').replace(':',r'\:')
-        vf=f"fps=4,scale=180:-2,drawtext=fontfile='{font}':text='%{{pts\\:hms}}':fontsize=13:fontcolor=white:box=1:boxcolor=black@0.6:x=3:y=3,tile=8x4:padding=2:margin=2"
-        media.ff('-i',path,'-t',preview,'-an','-vf',vf,'-frames:v',1,folder/'opening.jpg')
+        contact_sheet(path,folder/'opening.jpg',end=min(8,duration))
         media.write_json(folder/'source.json',evidence);sources.append(evidence)
         media.write_json(out/'sources.json',sources)
         print(json.dumps(dict(source=i,total=len(records),split=evidence['proposed_split'],device=evidence.get('asr_device'),asr_error=evidence.get('asr_error')),ensure_ascii=False),flush=True)
