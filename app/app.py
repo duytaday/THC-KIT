@@ -133,6 +133,9 @@ class Handler(BaseHTTPRequestHandler):
             if p.startswith('/animations/'):
                 _,_,id_,kind=p.split('/');record=ws.data['animation_library'][id_]
                 return self.file(Path(record['folder'])/({'preview':'preview.mp4','template':'template.json'}[kind]))
+            if p.startswith('/openings/'):
+                _,_,id_,kind=p.split('/');record=ws.data.get('opening_auditions',{})[id_]
+                return self.file(Path(record['folder'])/{'host':'host.mp4','proof':'proof.mp4','receipt':'receipt.json'}[kind])
             if p.startswith('/generated/'):
                 _,_,run_id,index=p.split('/');run=ws.data['generative_runs'][run_id];output=run['receipt']['outputs'][int(index)]
                 return self.file(Path(run['folder'])/output['file'])
@@ -254,7 +257,7 @@ class Handler(BaseHTTPRequestHandler):
                                 raise ValueError("Upload was interrupted.")
                             f.write(block)
                             left -= len(block)
-                    return self.result({"id": ws.import_asset(tmp, name, kind,q.get('parent_source',[None])[0],q.get('collection',[''])[0])}, 201)
+                    return self.result({"id": ws.import_asset(tmp, name, kind,q.get('parent_source',[None])[0],q.get('collection',[''])[0],q.get('role',[None])[0],q.get('owners',[''])[0].split(',') if q.get('owners',[''])[0] else [])}, 201)
                 finally:
                     tmp.unlink(missing_ok=True)
             if not 0 <= n <= 2 * 1024**2:
@@ -280,6 +283,44 @@ class Handler(BaseHTTPRequestHandler):
             elif p == '/api/benchmarks/review':
                 import video_benchmark
                 return self.result(video_benchmark.save_review(ws,b['id'],b['review']))
+            elif p == '/api/creator/first-cut':
+                return self.result(ws.first_cut(b['ids'],b.get('niche'),b.get('story_format')))
+            elif p == '/api/creator/setup':
+                ws.speech_setup.start();return self.result(ws.speech_setup.snapshot())
+            elif p == '/api/creator/openings':
+                import openings
+                with ws.archive_lock:return self.result(openings.render(ws,b['id']))
+            elif p == '/api/creator/opening-choice':
+                with ws.lock:
+                    audition=ws.data.get('opening_auditions',{})[b['audition']];job=ws.data['jobs'][audition['job']];ws.artifacts._check_job(job)
+                    if job['revision']!=audition['receipt']['revision']:raise ValueError('Audition belongs to a previous revision; render the current opening again')
+                    if b['mode'] not in ('host_first','proof_first'):raise ValueError('Choose host-first or proof-first')
+                    ws.update([job['id']],dict(opening_mode=b['mode']))
+            elif p == '/api/creator/brief':
+                with ws.lock:
+                    job=ws.data['jobs'][b['id']];ws.artifacts._check_job(job)
+                    if job['revision']!=b['revision'] or not job.get('creator'):raise ValueError('Reopen the current first cut before changing its brief')
+                    if not isinstance(b.get('text'),str) or len(b['text'])>12000:raise ValueError('Use a brief of up to12000characters')
+                    job['creator']['brief_text']=b['text'];job.update(revision=job['revision']+1,status='Draft');ws.save()
+            elif p == '/api/creator/trim':
+                import math
+                with ws.lock:
+                    job=ws.data['jobs'][b['id']];ws.artifacts._check_job(job);length=ws.data['assets'][b['id']]['duration']
+                    if job['revision']!=b['revision'] or not job.get('creator'):raise ValueError('Reopen the current first cut')
+                    start,end=b['start'],b['end']
+                    if any(type(x) not in (int,float) or not math.isfinite(x) for x in (start,end)) or not 0<=start<end<=length+.034:raise ValueError('Keep an in-range interval')
+                    for word in job.get('transcript',{}).get('words',[]):
+                        if word['start']+.02<start<word['end']+.06 or word['start']-.06<end<word['end']-.02:raise ValueError('This cut may clip a word. Move it into the adjacent pause.')
+                    job['creator']['keep']=[[round(start*30)/30,round(end*30)/30]];job['creator']['manual_cut_locked']=True
+                    job.update(revision=job['revision']+1,status='Draft');ws.save()
+            elif p == '/api/creator/asset-label':
+                with ws.lock:
+                    asset=ws.data['assets'][b['id']]
+                    if asset['kind']!='reference' or not isinstance(b.get('description'),str) or len(b['description'])>1000:raise ValueError('Add a short label for the supplied footage')
+                    owners=b.get('owners',[])
+                    if not isinstance(owners,list) or any(k not in ws.data['jobs'] for k in owners):raise ValueError('Choose existing recordings for this footage')
+                    asset['description']=b['description'];asset['owner_jobs']=owners
+                    ws.save()
             elif p == '/api/transcribe':
                 import speech,copy
                 with ws.lock:

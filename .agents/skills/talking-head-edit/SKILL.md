@@ -4,6 +4,11 @@ description: Build and revise real-footage English or Vietnamese talking-head vi
 ---
 
 Work from the project root. Preserve the existing `$talking-head-edit` invocation.
+For recording-only intake and the optional local ASR/script-assisted creator path,
+read `docs/CREATOR-QUICKSTART.vi.md`. Start with Make first cut in the existing UI;
+uncertain retakes remain until auditioned. Supplied style references are not usable
+B-roll unless explicitly assigned. Use short opening auditions for editorial
+choices; neither the template render nor an ASR transcript proves the master ready.
 When choosing an additional video tool, use the pinned `claude-video-catalog`
 skill; catalog entries are discovery data, not installed or audited capabilities.
 For reusable production rules and hook boundaries, read

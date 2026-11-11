@@ -26,6 +26,9 @@ DEFAULT = dict(
     motion_profile='baseline',motion_intensity=.5,events=[],
     music_mode='off',music_track='calm',music_gain_db=-20,music_asset='',
     planner_mode='built_in',
+    niche='',story_format='auto',
+    brand_logo='',brand_from=0.,brand_to=0.,
+    opening_mode='current',
 )
 
 
@@ -44,7 +47,7 @@ def atomic(path, value):
 
 
 def configure_tools(root):
-    candidates = [HERE / "bin", HERE.parent / "bin", root / "bin"]
+    candidates = [root/'tools/ffmpeg-8.1.2/bin',root / "bin",HERE / "bin", HERE.parent / "bin"]
     if os.name == "nt":
         local = Path(os.environ.get("LOCALAPPDATA", "")) / "Microsoft/WinGet"
         candidates.extend(
@@ -53,7 +56,7 @@ def configure_tools(root):
                 *sorted((local / "Packages").glob("Gyan.FFmpeg*/*/bin"), reverse=True),
             ]
         )
-    for p in candidates:
+    for p in reversed(candidates):
         if p.is_dir() and str(p) not in os.environ.get("PATH", "").split(os.pathsep):
             os.environ["PATH"] = str(p) + os.pathsep + os.environ.get("PATH", "")
     return bool(shutil.which("ffmpeg") and shutil.which("ffprobe"))
@@ -87,6 +90,8 @@ class Workspace:
         self.artifacts=ArtifactStore(self)
         from generative import GenerativeStore
         self.generative=GenerativeStore(self)
+        import asr_setup
+        self.speech_setup=asr_setup.Setup(self.root)
 
     def save(self):
         atomic(self.doc, self.data)
@@ -106,6 +111,7 @@ class Workspace:
                 for version in artifact.get('versions',[]):version.pop('folder',None)
             for item in d.get('animation_library',{}).values():item.pop('folder',None)
             for item in d.get('benchmarks',{}).values():item.pop('folder',None)
+            for item in d.get('opening_auditions',{}).values():item.pop('folder',None)
             return {
                 **d,
                 "tools": self.tools,
@@ -113,11 +119,14 @@ class Workspace:
                 "installing": self.installing,
                 "platform": os.name,
                 "workers": 2,
+                "version":__import__('version').VERSION,
+                "speech_setup":self.speech_setup.snapshot(),
                 "data_folder": str(self.root),
                 "capabilities": {'local_renderer':self.tools,'openbot':{'cli_found':bool(shutil.which('openbot')),'connected':False},'mausbot':{'cli_found':bool(shutil.which('mausbot')),'connected':False},'trained_presets':False},
             }
 
-    def import_asset(self, path, name, kind, parent_source=None, collection=''):
+    def import_asset(self, path, name, kind, parent_source=None, collection='',source_role=None,owners=()):
+        if source_role not in (None,'broll','style_reference'):raise ValueError('Choose B-roll or style reference')
         with self.lock:
             if parent_source and (kind!='host' or parent_source not in self.data['jobs']):raise ValueError('Choose an existing source recording for a new take.')
             parent=copy.deepcopy(self.data['jobs'].get(parent_source)) if parent_source else None
@@ -186,6 +195,7 @@ class Workspace:
             "source_sha256": media.sha(fname),
             "created": clock(),
             "thumb": thumb.exists(),
+            "source_role":source_role,"owner_jobs":list(owners),
         }
         with self.lock:
             self.data["assets"][asset_id] = out
@@ -213,6 +223,16 @@ class Workspace:
         return asset_id
 
     def valid(self, j, opts):
+        import creator
+        if not isinstance(opts.get('niche',''),str) or len(opts.get('niche',''))>500:raise ValueError('Describe the niche in up to500characters')
+        if opts.get('story_format','auto') not in ('auto',*creator.FORMATS):raise ValueError('Choose an editorial recipe')
+        if opts.get('opening_mode','current') not in ('current','host_first','proof_first'):raise ValueError('Choose an available opening')
+        if opts.get('brand_logo'):
+            logo=self.data['assets'].get(opts['brand_logo'])
+            if not logo or logo['kind']!='graphic':raise ValueError('Choose an imported logo image')
+        for field in ('brand_from','brand_to'):
+            if type(opts.get(field,0)) not in (float,int) or not math.isfinite(opts.get(field,0)) or opts.get(field,0)<0:raise ValueError('Logo times must be nonnegative seconds')
+        if opts.get('brand_to',0) and opts['brand_to']<=opts.get('brand_from',0):raise ValueError('Logo end must follow its start')
         if opts.get('planner_mode','built_in') not in ('built_in','base','base_rag','fine_tuned'):raise ValueError('Choose an available decision planner.')
         if set(opts) - set(DEFAULT):
             raise ValueError("Unknown project setting.")
@@ -367,7 +387,7 @@ class Workspace:
                 if j.get('archived'):
                     skipped.append(self.data['assets'][j['id']]['name']);continue
                 try:
-                    if not j["settings"]["script"].strip():
+                    if not j["settings"]["script"].strip() and not j.get('creator_requested'):
                         raise ValueError("Add a script to render this recording.")
                     if j.get('script_issue'):raise ValueError(j['script_issue'])
                     self.valid(j, j["settings"])
@@ -393,6 +413,7 @@ class Workspace:
             self.save()
 
     def run(self, key):
+        started=time.monotonic()
         with self.lock:
             j = self.data["jobs"][key]
             if j["status"] != "Queued":
@@ -403,12 +424,35 @@ class Workspace:
             revision = j["revision"]
             assets = copy.deepcopy(self.data["assets"])
             host = assets[key]
+            previous=next((copy.deepcopy(e) for e in reversed(self.data['exports']) if e['job']==key),None)
         eid = ident()
         temp = self.root / "work" / eid
         temp.mkdir()
         try:
+            if host.get('source_sha256') and media.sha(host['path'])!=host['source_sha256']:raise ValueError('The original source file changed. Import it as a new take; prior timings were preserved.')
+            creator_context=None
+            if j.get('creator_requested'):
+                import creator
+                settings,creator_context=creator.prepare(self,key,settings,host,assets)
+            elif j.get('creator'):
+                import creator
+                creator_context=creator.refresh(j['creator'],j.get('transcript'),settings,host,assets,key)
+            refid=settings.get('style_ref')
+            reused_ref=bool(refid and assets[refid].get('analysis'))
+            if refid and media.sha(assets[refid]['path'])!=assets[refid].get('source_sha256'):raise ValueError('Style reference changed. Import the replacement; prior analysis and edits were preserved.')
+            if refid and not reused_ref:
+                self.stage(key,'Analyzing reference pacing locally')
+                assets[refid]['analysis']=self.analyze_reference(refid)
             plan, notes = planner.build(host, settings, assets)
+            if creator_context:
+                import creator
+                creator.apply(plan,creator_context,j.get('transcript'),settings['script'],host)
+                creator_context=copy.deepcopy(plan['creator']);notes['creator']=creator_context
+                with self.lock:j['creator']=copy.deepcopy(creator_context);self.save()
             with self.lock:self.artifacts.apply(key,plan)
+            if creator_context:
+                import openings
+                openings.apply(plan,settings,assets)
             import planner_policy
             notes['planner']=planner_policy.apply(self.root,host,settings,plan,assets)
             media.write_json(temp/'planner-receipt.json',notes['planner'])
@@ -417,10 +461,15 @@ class Workspace:
             shutil.copy2(HERE / "fonts/DejaVuSans-Bold.ttf", fonts)
             import qc_bridge
             qc_bridge.prepare_export(temp,host,settings,plan)
+            qc_bridge.preflight(temp)
             self.stage(key, "Encoding and checking playback")
-            edit.render(Path(host["path"]), plan, temp)
-            self.stage(key,'Reopening recipe and verifying export')
-            qc_bridge.verify_reproduction(temp,host,plan,edit.render)
+            import revision_cache
+            reused=bool(previous and revision_cache.reuse(previous['folder'],previous['sha256'],host['path'],plan,temp))
+            # The post-render six-gate checker fully decodes the exact master.
+            if not reused:edit.render(Path(host["path"]), plan, temp,verify_decode=False)
+            self.stage(key,'Verifying exact master and render dependencies')
+            qc_bridge.verify_dependencies(temp)
+            if os.environ.get('CUTROOM_VERIFY_REPRODUCTION')=='1':qc_bridge.verify_reproduction(temp,host,plan,edit.render)
             report = json.loads((temp / "edit-review.json").read_text(encoding="utf8"))
             report.update(notes)
             report["review_required"] = [
@@ -438,6 +487,7 @@ class Workspace:
             ref_ids = {q["asset"] for q in settings["inserts"]}
             if settings.get("style_ref"):
                 ref_ids.add(settings["style_ref"])
+            if settings.get('brand_logo'):ref_ids.add(settings['brand_logo'])
             sources = {aid: assets[aid]["name"] for aid in sorted(ref_ids)}
             media.write_json(
                 temp / "project.json",
@@ -453,13 +503,20 @@ class Workspace:
             )
             folder = self.root / "exports" / eid
             temp.rename(folder)
-            repeated=json.loads((folder/'repeatability.json').read_text(encoding='utf-8'))
-            repeated['rerender_path']=str(folder/'reopened/edit.mp4');media.write_json(folder/'repeatability.json',repeated)
+            if (folder/'repeatability.json').exists():
+                repeated=json.loads((folder/'repeatability.json').read_text(encoding='utf-8'));repeated['rerender_path']=str(folder/'reopened/edit.mp4');media.write_json(folder/'repeatability.json',repeated)
             self.stage(key,'Running six-gate QC')
             kit_report=qc_bridge.check(folder)
+            report['verified']['full_decode']=any(c.get('id')=='full_decode' and c.get('status')=='PASS' for c in kit_report.get('gates',{}).get('F',{}).get('checks',[]))
             report['kit_qc']={k:kit_report.get(k) for k in ('status','gates','issues','pending','measurements')}
             media.write_json(folder/'edit-review.json',report)
             with self.lock:
+                report['performance']=dict(elapsed_seconds=round(time.monotonic()-started,3),clip_seconds=host['duration'],
+                    reused_transcript=bool(creator_context and creator_context.get('reused_transcript')),
+                    reused_encoded_tail=reused,
+                    reused_reference_analysis=reused_ref,disk_bytes=sum(f.stat().st_size for f in folder.rglob('*') if f.is_file()),
+                    automatic_second_render=False if os.environ.get('CUTROOM_VERIFY_REPRODUCTION')!='1' else True)
+                media.write_json(folder/'edit-review.json',report)
                 self.data["exports"].append(
                     {
                         "id": eid,
@@ -490,6 +547,31 @@ class Workspace:
         finally:
             if temp.exists():
                 shutil.rmtree(temp, ignore_errors=True)
+
+    def first_cut(self,ids,niche=None,story_format=None):
+        with self.lock:
+            jobs=[self.data['jobs'][key] for key in dict.fromkeys(ids)]
+            if not jobs:raise ValueError('Add and select a recording first')
+            missing=[];ready=[];prepared=[]
+            for j in jobs:
+                if j['status'] in ACTIVE:continue
+                updated=copy.deepcopy(j['settings'])
+                if niche is not None:updated['niche']=niche
+                if story_format is not None:updated['story_format']=story_format
+                self.valid(j,updated)
+                prepared.append((j,updated))
+            for j,updated in prepared:
+                if self.speech_setup.snapshot()['status']!='READY' and not updated['script'].strip():
+                    j.update(status='Needs input',stage='Set up local captions or attach this recording’s TXT/SRT');missing.append(j['id']);continue
+                if updated!=j['settings']:j.update(settings=updated,revision=j['revision']+1,status='Draft')
+                if not j.get('creator'):
+                    j['creator_requested']=True
+                    j['creator_preserve_script']=any(e['job']==j['id'] for e in self.data['exports']) or any(r['job']==j['id'] and (r.get('inserted') or r.get('locked')) for r in self.data.get('artifacts',{}).values())
+                ready.append(j['id'])
+            self.save()
+        result=self.queue(ready) if ready else dict(queued=0,skipped=[])
+        if missing:result.update(setup_required=True,speech_setup=self.speech_setup.snapshot(),needs_script_or_setup=missing)
+        return result
 
     def match(self, ids):
         count = 0
@@ -581,36 +663,18 @@ class Workspace:
         with self.lock:
             if self.installing:
                 return
-            if not shutil.which("winget"):
-                raise ValueError(
-                    "Windows Package Manager is unavailable. Install FFmpeg manually and restart Cutroom."
-                )
             self.installing = True
-            self.setup = "Installing FFmpeg with Windows Package Manager…"
+            self.setup = "Downloading pinned FFmpeg8.1.2 (~104MB) into this workspace…"
 
         def action():
             try:
-                r = subprocess.run(
-                    [
-                        "winget",
-                        "install",
-                        "--id",
-                        "Gyan.FFmpeg.Essentials",
-                        "--exact",
-                        "--source",
-                        "winget",
-                        "--accept-source-agreements",
-                        "--accept-package-agreements",
-                    ],
-                    capture_output=True,
-                    timeout=900,
-                    **media.launch_options(),
-                )
+                import encoder_setup
+                encoder_setup.install(self.root,lambda message:setattr(self,'setup',message))
                 self.tools = configure_tools(self.root)
                 self.setup = (
                     "FFmpeg is ready."
                     if self.tools
-                    else "Installation did not finish. Restart Cutroom or follow the manual setup in START_HERE.txt."
+                    else "Installation did not finish. See START_HERE.md for manual local setup."
                 )
             except Exception as exc:
                 self.setup = str(exc)

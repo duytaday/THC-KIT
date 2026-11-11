@@ -4,6 +4,7 @@ from pathlib import Path
 
 
 def transcribe(request):
+    if request.get('site'):sys.path.insert(0,request['site'])
     dll=None
     if os.name=='nt':
         try:
@@ -17,7 +18,8 @@ def transcribe(request):
     if decoded.returncode:raise ValueError('Audio decode failed: '+decoded.stderr.decode(errors='replace')[-700:])
     audio=np.frombuffer(decoded.stdout,dtype=np.int16).astype(np.float32)/32768
     attempts=[];started=time.monotonic();model_name=request.get('model','small')
-    for device,compute in [('cuda','float16'),('cpu','int8')]:
+    devices=[('cpu','int8')] if request.get('device')=='cpu' else [('cuda','float16'),('cpu','int8')]
+    for device,compute in devices:
         try:
             model=WhisperModel(model_name,device=device,compute_type=compute,download_root=request['model_cache'])
             language=request.get('language','vi')
@@ -29,7 +31,7 @@ def transcribe(request):
                 words.extend(dict(start=w.start,end=w.end,text=w.word.strip(),probability=w.probability) for w in segment.words or [])
             if not words:raise ValueError('No speech words recognized; inspect source audio')
             return dict(schema_version=1,language=info.language,words=words,segments=rows,device=device,compute_type=compute,
-                model=model_name,terminology_prompt=request.get('initial_prompt'),attempts=attempts,runtime_seconds=time.monotonic()-started,listening_review='UNVERIFIED')
+                model=model_name,language_probability=info.language_probability,terminology_prompt=request.get('initial_prompt'),attempts=attempts,runtime_seconds=time.monotonic()-started,listening_review='UNVERIFIED')
         except Exception as e:
             attempts.append(dict(device=device,error=str(e)[-700:]))
             if device=='cpu':raise RuntimeError('ASR failed: '+json.dumps(attempts,ensure_ascii=False)) from e

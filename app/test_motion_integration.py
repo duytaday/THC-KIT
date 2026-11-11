@@ -103,6 +103,7 @@ class TranscriptAnchorTests(unittest.TestCase):
         import types
         calls=[]
         def worker(*args,**kwargs):
+            if 'input' not in kwargs:return types.SimpleNamespace(returncode=0,stdout='{"faster-whisper":"fixture-version"}',stderr='')
             request=json.loads(kwargs['input']);calls.append(request)
             return types.SimpleNamespace(returncode=0,stdout=json.dumps(dict(words=[dict(start=0,end=1,text='Bài mới.')],device='cpu')),stderr='')
         with tempfile.TemporaryDirectory() as d,patch('speech.subprocess.run',side_effect=worker):

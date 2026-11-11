@@ -53,6 +53,7 @@
           </button>
         </div>
         <div id="setupBanner" class="notice hidden"></div>
+        <div id="speechBanner" class="notice hidden" role="status"></div>
         <div id="importState" role="status" class="notice hidden"></div>
         <div class="layout">
           <div class="leftcol">
@@ -93,21 +94,21 @@
                   >Download selected edits</a
                 ><button id="queue" class="primary" disabled>
                   Render selected
-                </button>
+                </button><button id="makeFirstCut" class="primary" disabled>Make first cut</button>
               </div>
             </section>
             <section class="card">
               <div class="cardhead">
                 <div>
                   <h2>
-                    Reference footage <span class="count" id="refCount">0</span>
+                    B-roll &amp; style library <span class="count" id="refCount">0</span>
                   </h2>
                   <small
                     >Share a style guide or cutaway across your
                     recordings.</small
                   >
                 </div>
-                <button id="addRef" class="soft">＋ Add footage</button>
+                <div><button id="addBroll" class="soft">＋ Usable B-roll</button><button id="addStyleReference" class="soft">＋ Style reference</button><button id="addRef" class="textbtn">Other footage</button></div>
               </div>
               <div id="refs" class="refs"></div>
               <button type="button" id="addGraphic" class="textbtn">＋ Add screenshot / logo</button><small id="graphicCount"></small>
@@ -144,6 +145,7 @@
                 ><button type="button" data-panel="inserts">Cutaways</button>
               </div>
               <div data-body="script">
+                <div id="creatorPanel"></div>
                 <div class="fieldhead">
                   <label for="script">Spoken script</label
                   ><button type="button" id="importScript" class="textbtn">
@@ -170,6 +172,7 @@
                 <details class="generative-panel"><summary>Optional lab · AI illustrations · outside V1</summary><p>Private Kaggle LoRA outputs are experimental illustrations. The core editor uses your real recording and voice. These outputs cannot replace real software proof.</p><button type="button" id="importGenerative" class="soft">Import trained run / previews</button><button type="button" id="generateIllustration" class="soft">Generate illustration on Kaggle</button><div id="generativeRuns"></div><div id="generativeJobs"></div></details>
               </div>
               <div data-body="look" class="hidden">
+                <h3>Branding</h3><label>Logo on presenter shots<select id="brand_logo"><option value="">No logo</option></select></label><div class="scene-controls"><label>From source seconds<input id="brand_from" type="number" min="0" step="any" value="0"></label><label>Through source seconds · 0 = entire take<input id="brand_to" type="number" min="0" step="any" value="0"></label></div><small>Original image, top-left; hidden during cutaways and native scenes so it cannot cover their proof. Review the frame on a phone.</small>
                 <div class="style-samples" aria-label="Built-in caption presets">
                   <button type="button" data-style="clean" class="style-sample"><span class="sample-text">Biến ý tưởng thành video</span><strong>Clean</strong><small>Built-in · phrase captions</small></button>
                   <button type="button" data-style="focus" class="style-sample"><span class="sample-text">Biến <mark>ý tưởng</mark> thành video</span><strong>Focus</strong><small>Built-in · word emphasis</small></button>
@@ -280,7 +283,7 @@
       accept="video/*,.mkv,.m4v,.mov"
       multiple
       hidden
-    /><input type="file" id="scriptInput" accept=".txt,.srt" multiple hidden />
+    /><input type="file" id="brollInput" accept="video/*,.mkv,.mov" multiple hidden><input type="file" id="styleReferenceInput" accept="video/*,.mkv,.mov" multiple hidden><input type="file" id="creatorScriptInput" accept=".txt,.srt" hidden><input type="file" id="scriptInput" accept=".txt,.srt" multiple hidden />
     <input type="file" id="musicInput" accept=".wav,.mp3,.m4a,.flac,.ogg" hidden>
     <input type="file" id="graphicInput" accept=".png,.jpg,.jpeg" multiple hidden>
     <input type="file" id="generativePackageInput" accept=".zip" hidden>

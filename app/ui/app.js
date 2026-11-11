@@ -26,7 +26,7 @@ let state = {},
   versionKey = "",
   waiting = false;
 let unresolvedScripts=[], inspectorOpen=true, manualEvents=[],pendingTakeParent='';
-const extraSettings=['motion_profile','motion_intensity','music_mode','music_track','music_gain_db','music_asset','planner_mode'];
+const extraSettings=['motion_profile','motion_intensity','music_mode','music_track','music_gain_db','music_asset','planner_mode','brand_logo','brand_from','brand_to'];
 const locked = (j) => ["Rendering", "Queued"].includes(j.status);
 const notify = (s) => {
   const error=el('dialogError');if(el('modal')?.open&&error){error.textContent=s;error.classList.remove('hidden');}
@@ -325,6 +325,9 @@ function drawForm() {
   const ids = selectedIds();
   const single = ids.length === 1;
   const active = ids.some((id) => locked(state.jobs[id]));
+  el('makeFirstCut').disabled=!ids.length||active;
+  drawCreator(ids);
+  if(ids.length===1&&state.jobs[ids[0]].creator&&!el('openingAuditions'))el('creatorPanel').insertAdjacentHTML('beforeend',`<div id="openingAuditions"><button class="soft" type="button" data-audition-openings="${ids[0]}">Compare 4-second openings</button><small>Host-first / assigned result-first. Same master audio; body stays fixed. Requires a rendered current cut and real result footage.</small></div>`);
   el("target").textContent = single
     ? 'Editing '+state.assets[ids[0]].name
     : ids.length
@@ -352,6 +355,7 @@ function drawForm() {
     },
   );
   el('music_asset').innerHTML='<option value="">Choose a cleared track…</option>'+Object.values(state.assets).filter(a=>a.kind==='music').map(a=>`<option value="${a.id}">${esc(a.name)}</option>`).join('');
+  el('brand_logo').innerHTML='<option value="">No logo</option>'+Object.values(state.assets).filter(a=>a.kind==='graphic').map(a=>`<option value="${a.id}">${esc(a.name)}</option>`).join('');
   extraSettings.forEach(k=>{el(k).value=first[k]??({motion_profile:'baseline',motion_intensity:.5,music_mode:'off',music_track:'calm',music_gain_db:-20,music_asset:'',planner_mode:'built_in'}[k]);});
   const planner=state.jobs[ids[0]].planner_receipt;el('plannerStatus').textContent=planner?(planner.origin+' · '+planner.model_version+' · '+(planner.weights_loaded?'weights actually loaded':'no model weights loaded')+(planner.fallback?' · '+planner.fallback:'')):'Built-in rules · no model weights loaded. Pacing references do not automatically enter training.';
   const mixed = (k) =>
@@ -399,6 +403,16 @@ function drawForm() {
   showPanel(activePanel);
   drawFraming();
 }
+function drawCreator(ids){
+ const panel=el('creatorPanel');if(!panel||panel.dataset.jobid===ids[0]&&panel.contains(document.activeElement))return;panel.dataset.jobid=ids[0]||'';
+ if(ids.length!==1){panel.innerHTML='';return;}
+ const id=ids[0],j=state.jobs[id],c=j.creator,files=refs().filter(a=>(a.owner_jobs||[]).includes(id));
+ panel.innerHTML=`<details class="creator-files"><summary>Files for this recording</summary><p>Recording: ${esc(state.assets[id].name)}</p><p>Script: ${j.settings.script.trim()?'attached / editable below':'optional — local captions can read the recording'}</p><p>B-roll: ${files.filter(a=>a.source_role==='broll').map(a=>esc(a.name)).join(', ')||'none assigned'}</p><p>Style reference: ${esc(state.assets[j.settings.style_ref]?.name||'none')}</p><button type="button" id="attachCreatorScript" class="textbtn">Attach a prepared TXT / SRT</button></details>`;
+ if(!c){panel.innerHTML+='<p class="notice">Make first cut creates a presenter-only candidate when no usable B-roll is assigned. Your original remains intact.</p>';return;}
+ if(c.caption_timing_fallback_ranges?.length)panel.innerHTML+=`<p class="notice">${c.caption_timing_fallback_ranges.length} phrase windows use estimated timing because word timestamps were uncertain. Listen and retime those ranges before release.</p>`;
+ const text=c.brief_text||[['Viewer',c.brief.viewer],['Takeaway',c.brief.takeaway],['Language',c.brief.spoken_language],['Opening quote',c.brief.hook?.quote],['Supporting shot',c.brief.supporting_moment],['Ending',c.brief.ending],['Story recipe',c.brief.format_label],['Missing proof',c.brief.format_status]].map(([k,v])=>k+': '+(v||'not assigned')).join('\n');
+ panel.innerHTML+=`<details open><summary>Brief &amp; uncertain moments</summary><p>${esc(c.timing)} · ${esc(c.take_selection)}</p>${c.warning?`<p class="notice">${esc(c.warning)}</p>`:''}<label>Editable brief<textarea id="creatorBrief" rows="7">${esc(text)}</textarea></label><button type="button" class="soft" data-save-creator-brief="${id}">Save brief</button><p>Openings are editorial proposals. Recorded words and proof stay authoritative.</p>${c.hooks.map(h=>`<p><strong>${esc(h.kind.replaceAll('_',' '))}</strong>: ${esc(h.quote||'pickup required')} · ${esc(h.reason)}</p>`).join('')}<h3>Check these passages first</h3>${c.uncertain.map(m=>`<p>${time(m.source_range[0])}–${time(m.source_range[1])}: ${esc(m.reason)} <button type="button" class="textbtn" data-preview-passage="${id}" data-from="${m.source_range[0]}" data-to="${m.source_range[1]}">Play source passage</button></p>`).join('')||'<p>No low-confidence recognition flagged. This still needs actual listening.</p>'}<details><summary>Trim ends / restore original take</summary><p>Source time in seconds. Word-boundary guard applies; listen across the cut.</p><label>Keep from<input id="creatorKeepStart" type="number" min="0" step="any" value="${c.keep[0][0]}"></label><label>Keep through<input id="creatorKeepEnd" type="number" min="0" step="any" value="${c.keep.at(-1)[1]}"></label><button class="soft" type="button" data-creator-trim="${id}">Save source cut</button><button class="textbtn" type="button" data-restore-take="${id}">Restore entire take</button></details><h3>Suggested B-roll</h3>${(c.broll_suggestions||[]).map((q,i)=>`<p>${esc(state.assets[q.asset]?.name)} · ${time(q.at)} · ${esc(q.reason)} <button type="button" class="textbtn" data-accept-broll="${id}" data-suggestion="${i}">Assign after checking</button></p>`).join('')||'<p>No confident creator-label match. Presenter retained; label supplied B-roll or place it manually in Cutaways.</p>'}</details>`;
+}
 function anchorControls(r){
  const coords=(label,key,values,names)=>`<div class="roi-inputs">${names.map((name,j)=>`<label>${label} ${name}<input type="number" min="0" data-anchor-array="${key}" data-coordinate="${j}" value="${values?.[j]??''}"></label>`).join('')}</div>`;
  return `<details class="anchor-controls"><summary>Verified target, contact and result</summary><small>Use source seconds and pixels. Leave unobserved anchors blank.</small>${['target','contact','result'].map(k=>`<label>${k==='target'?'Control recognizable':k==='contact'?'Actual contact':'Success visible'} (source s)<input type="number" min="0" step="any" data-anchor="${k}" value="${r.anchors?.[k]??''}"></label>`).join('')}${coords('Control','roi_source',r.anchors?.roi_source,['x','y','width','height'])}${coords('Success','result_roi_source',r.anchors?.result_roi_source,['x','y','width','height'])}${coords('Contact point','contact_point_source',r.anchors?.contact_point_source,['x','y'])}<details><summary>Source crop · optional</summary><small>Original source pixels. Keep important details in view.</small>${coords('Crop','crop',r.crop,['width','height','x','y'])}</details></details>`;
@@ -418,6 +432,8 @@ function showReferenceAnalysis(id,result){
  dialog('Reference profile · measured candidates',`<p>${esc(state.assets[id].name)} · ${esc(result.analysis)} · ${result.sample_seconds.toFixed(1)}s sampled</p><p>${esc(result.profile.id)} · ${esc(result.profile.origin)} · no trained model</p><p>Music and SFX: ${esc(result.audio.status)} · ${esc(result.audio.reason)}</p>${result.observations.map((o,i)=>`<div class="observation"><strong>${o.source_range.map(t=>Number(t).toFixed(2)).join('–')}s</strong><p>${esc(o.observation)}</p><small>${esc(o.status)} · confidence ${o.confidence} · ${esc(o.limitations||'')}</small><button class="textbtn" data-edit-observation="${i}" data-ref-id="${id}">Correct observation</button></div>`).join('')}<button class="soft" data-full-analysis="${id}">Analyze entire reference</button><small>Style references contribute timing rules and observations; their pictures, voice and music are not copied.</small>`);
 }
 function draw() {
+  const speech=state.speech_setup||{};el('speechBanner').classList.toggle('hidden',speech.status==='READY'||!speech.status);
+  el('speechBanner').innerHTML=`<span>${esc(speech.stage||'')}</span>${speech.status!=='INSTALLING'?'<button type="button" id="setupLocalCaptions" class="soft">Set up local captions</button>':''}`;
   el('graphicCount').textContent=Object.values(state.assets||{}).filter(a=>a.kind==='graphic').length+' local images available for original scenes';
   drawList();
   drawForm();
@@ -440,7 +456,7 @@ function draw() {
           a.height +
           '</div></div><button class="textbtn" data-play="' +
           a.id +
-          `">Preview</button><div class="ref-actions"><button class="textbtn" data-analyze="${a.id}">Reference profile</button><button class="textbtn" data-pacing="${a.id}">Use for pacing</button><button class="textbtn" data-show-reference="${a.id}">Show in video</button><button class="textbtn" data-training-intake="${a.id}">Include in training</button></div></div>`,
+          `">Preview</button><div class="ref-actions"><small>${esc(a.source_role==='style_reference'?'Style only · not inserted automatically':a.source_role==='broll'?'Usable B-roll':'Library footage · explicit assignment required')}</small><button class="textbtn" data-describe-footage="${a.id}">Label / assign to recording</button><button class="textbtn" data-analyze="${a.id}">Reference profile</button><button class="textbtn" data-pacing="${a.id}">Use for pacing</button><button class="textbtn" data-show-reference="${a.id}">Show in video</button><button class="textbtn" data-training-intake="${a.id}">Include in training</button></div></div>`,
       )
       .join("") ||
     '<div class="simple-empty">Added footage will be available to every recording in this batch.</div>';
@@ -524,14 +540,14 @@ async function refresh() {
 async function save() {
   if (!touched.size) return;
   const changes = {};
-  for (const k of touched) changes[k] = k === "inserts" ? inserts : k==='events'?manualEvents:['motion_intensity','music_gain_db'].includes(k)?Number(el(k).value):el(k).value;
+  for (const k of touched) changes[k] = k === "inserts" ? inserts : k==='events'?manualEvents:['motion_intensity','music_gain_db','brand_from','brand_to'].includes(k)?Number(el(k).value):el(k).value;
   await req("/api/update", { ids: selectedIds(), changes });
   touched.clear();
   versionKey = "";
   await refresh();
   notify("Edit settings saved");
 }
-async function upload(files, kind, parentSource='') {
+async function upload(files, kind, parentSource='',role='') {
   if (!files.length) return;
   if (importing) throw Error("Wait for the current import to finish.");
   if (!allowChange()) return;
@@ -545,7 +561,7 @@ async function upload(files, kind, parentSource='') {
         "Importing " + (i + 1) + " of " + files.length + " · " + f.name;
       try {
         const res = await req(
-          "/api/import?kind=" + kind + "&name=" + encodeURIComponent(f.name)+(kind==='host'?'&collection='+encodeURIComponent(el('sourceCollection').value)+(parentSource?'&parent_source='+encodeURIComponent(parentSource):''):''),
+          "/api/import?kind=" + kind + "&name=" + encodeURIComponent(f.name)+(kind==='host'?'&collection='+encodeURIComponent(el('sourceCollection').value)+(parentSource?'&parent_source='+encodeURIComponent(parentSource):''):'')+(role?'&role='+encodeURIComponent(role)+'&owners='+encodeURIComponent(selectedIds().join(',')):''),
           f,
           true,
         );
@@ -563,6 +579,7 @@ async function upload(files, kind, parentSource='') {
     }
     versionKey = "";
     await refresh();
+    if(kind==='reference'&&role==='style_reference'&&ids.length&&selectedIds().length){await req('/api/update',{ids:selectedIds(),changes:{style_ref:ids[0]}});versionKey='';await refresh();}
     if(kind==='music'&&ids.length){el('modal').close();el('music_asset').value=ids[0];el('music_mode').value='my_track';setDirty('music_asset');setDirty('music_mode');showPanel('look');}
     if (errors.length)
       dialog("Import results", "<p>" + esc(errors.join(" · ")) + "</p>");
@@ -599,7 +616,7 @@ function setup() {
       ) +
       '</p><div class="dialogactions">' +
       (!state.tools && state.platform === "nt"
-        ? '<button id="install" class="primary">Install FFmpeg with WinGet</button>'
+        ? '<button id="install" class="primary">Download local FFmpeg (~104MB)</button>'
         : "") +
       '<button id="recheck" class="soft">Check again</button></div><h3>Local files</h3><p>Recordings, scripts and exports are stored on this computer. Closing the tab leaves active renders running.</p><div class="dialogactions"><button id="quit" class="soft">Quit Talking Head Cutroom</button></div>',
   );
@@ -625,6 +642,28 @@ document.addEventListener(
     if(b.dataset.locateSource){el('sourceSearch').value='';el('sourceCollection').value='';el('sourceVisibility').value=state.jobs[b.dataset.locateSource].archived?'archived':'active';tab('workspace');changeSelection([b.dataset.locateSource]);return;}
     if(b.dataset.newTake){pendingTakeParent=b.dataset.newTake;el('hostInput').multiple=false;el('hostInput').click();el('modal').close();notify('New take keeps the original and prior cuts. Add this take’s own script and timing.');return;}
     if(b.dataset.reveal){await req('/api/reveal',{kind:b.dataset.reveal,id:b.dataset.localId});return;}
+    if(b.id==='makeFirstCut'){
+      await save();const j=state.jobs[selectedIds()[0]],mixedNiche=selectedIds().some(id=>state.jobs[id].settings.niche!==j.settings.niche),mixedFormat=selectedIds().some(id=>state.jobs[id].settings.story_format!==j.settings.story_format),niche=mixedNiche?'':j.settings.niche||'',format=mixedFormat?'':j.settings.story_format||'auto';
+      dialog('Make first cut',`<p>Use the real recorded voice. Prepared scripts, B-roll and style references are optional. Ambiguous takes remain for review. Unchanged fields keep each recording’s own choices.</p><label>Your niche · optional<input id="creatorNiche" maxlength="500" data-original="${esc(niche)}" value="${esc(niche)}" placeholder="e.g. retail, hospitality, WordPress tutorials…"></label><label>Story recipe<select id="creatorFormat" data-original="${esc(format)}">${[...(mixedFormat?[['','Keep each recording’s recipe']]:[]),['auto','Choose from available evidence'],['result-first','Result first'],['mistake-fix','Mistake → fix'],['before-after','Before / after'],['a-b','Two options'],['myth-check','Check a belief'],['checklist','Checklist'],['viewer-question','Answer a viewer'],['challenge','Challenge'],['teardown','Teardown'],['mini-case','Mini case']].map(([id,label])=>`<option value="${id}" ${format===id?'selected':''}>${label}</option>`).join('')}</select></label><p>A recipe requiring missing proof keeps the presenter and names the pickup. Visual style stays independent.</p><button id="startFirstCut" class="primary" type="button">Make reviewable cut</button>`);return;
+    }
+    if(b.id==='startFirstCut'){
+      b.disabled=true;try{const r=await req('/api/creator/first-cut',{ids:selectedIds(),niche:el('creatorNiche').value===el('creatorNiche').dataset.original?undefined:el('creatorNiche').value,story_format:el('creatorFormat').value===el('creatorFormat').dataset.original?undefined:el('creatorFormat').value});
+       if(r.setup_required){dialog('Local captions · first use',`<p>${esc(r.speech_setup.download)}</p><p>Destination: ${esc(r.speech_setup.destination)}</p><p>Only model/dependency files are downloaded. Your recording stays local. Future runs use the cache offline.</p><button type="button" id="setupLocalCaptions" class="primary">Download local captions</button><button type="button" id="attachCreatorScript" class="soft">Use a prepared TXT / SRT instead</button>`);}
+       else{el('modal').close();versionKey='';await refresh();notify(`First cut queued: ${r.queued}. Uncertain words and proof stay pending.`);}
+      }finally{b.disabled=false;}return;
+    }
+    if(b.id==='setupLocalCaptions'){await req('/api/creator/setup',{});el('modal').close();await refresh();notify('Local captions setup started. Progress appears above the recordings.');return;}
+    if(b.id==='attachCreatorScript'){if(selectedIds().length!==1)throw Error('Select one recording to attach its prepared script.');el('creatorScriptInput').click();return;}
+    if(b.dataset.saveCreatorBrief){const id=b.dataset.saveCreatorBrief;await req('/api/creator/brief',{id,revision:state.jobs[id].revision,text:el('creatorBrief').value});versionKey='';await refresh();notify('Brief saved; render a new cut for review.');return;}
+    if(b.dataset.auditionOpenings){b.disabled=true;try{const r=await req('/api/creator/openings',{id:b.dataset.auditionOpenings});dialog('Opening audition · same audio',`<p>Only ${r.duration}s rendered. Original narration and body are fixed. Editorial choice; audience performance is not established.</p><div class="review-grid">${[['host','Host first','host_first'],['proof','Assigned result first','proof_first']].map(([key,label,mode])=>`<section><h3>${label}</h3><video controls width="360" src="/openings/${r.id}/${key}"></video><button class="soft" data-opening-choice="${mode}" data-audition="${r.id}">Choose ${label.toLowerCase()}</button></section>`).join('')}</div><a href="/openings/${r.id}/receipt" download>Source timecodes &amp; hashes</a><p>Check whether this actual result supports the spoken promise and is readable. These previews do not approve the full master.</p>`);}finally{b.disabled=false;}return;}
+    if(b.dataset.openingChoice){await req('/api/creator/opening-choice',{audition:b.dataset.audition,mode:b.dataset.openingChoice});el('modal').close();versionKey='';await refresh();notify('Opening saved. Render a new version; original narration and old cuts are kept.');return;}
+    if(b.dataset.previewPassage){const id=b.dataset.previewPassage;playsource(id);const video=el('dialogBody').querySelector('video'),start=Number(b.dataset.from),end=Number(b.dataset.to);video.addEventListener('loadedmetadata',()=>{video.currentTime=start;},{once:true});video.addEventListener('timeupdate',()=>{if(video.currentTime>end)video.pause();});return;}
+    if(b.dataset.creatorTrim||b.dataset.restoreTake){const id=b.dataset.creatorTrim||b.dataset.restoreTake;await req('/api/creator/trim',{id,revision:state.jobs[id].revision,start:b.dataset.restoreTake?0:Number(el('creatorKeepStart').value),end:b.dataset.restoreTake?state.assets[id].duration:Number(el('creatorKeepEnd').value)});versionKey='';await refresh();notify('Source cut saved. Prior cuts remain; check meaning and joins on the next export.');return;}
+    if(b.dataset.acceptBroll){const id=b.dataset.acceptBroll,q=state.jobs[id].creator.broll_suggestions[Number(b.dataset.suggestion)];await req('/api/update',{ids:[id],changes:{inserts:[...state.jobs[id].settings.inserts,{id:crypto.randomUUID(),asset:q.asset,at:q.at,offset:q.offset,duration:q.duration,cue:'',reason:q.reason}]}});versionKey='';await refresh();return;}
+    if(b.id==='addBroll'){el('brollInput').click();return;}
+    if(b.id==='addStyleReference'){el('styleReferenceInput').click();return;}
+    if(b.dataset.describeFootage){const id=b.dataset.describeFootage,a=state.assets[id];dialog('Describe usable footage',`<p>${esc(a.name)} · tags help match ordinary filenames; no action/result is inferred from a filename alone.</p><textarea id="footageDescription" rows="4">${esc(a.description||'')}</textarea><fieldset><legend>Belongs to these recordings</legend>${Object.keys(state.jobs).map(k=>`<label><input type="checkbox" data-footage-owner="${k}" ${(a.owner_jobs?.includes(k)||!a.owner_jobs?.length&&selectedIds().includes(k))?'checked':''}>${esc(sourceName(k))}</label>`).join('')}</fieldset><button type="button" class="primary" data-save-footage-label="${id}">Save label & assignment</button>`);return;}
+    if(b.dataset.saveFootageLabel){await req('/api/creator/asset-label',{id:b.dataset.saveFootageLabel,description:el('footageDescription').value,owners:all('[data-footage-owner]:checked').map(x=>x.dataset.footageOwner)});el('modal').close();await refresh();return;}
     if(b.id==='addGraphic'){el('graphicInput').click();return;}
     if(b.id==='generateArtifacts'){await save();dialog('Generate intro & demos',`<p>Use each recording’s own script. A script alone does not prove these words were recorded.</p><label>Animation planner<select id="animationMode"><option value="">Current native rules</option><option value="rules">Editable scene specs · rules baseline</option><option value="base_rag">Base model + frozen train-only RAG · local runtime required</option><option value="fine_tuned">Fine-tuned spec adapter + same RAG · experimental</option></select></label><label>Animation style<select id="animationStyle"><option value="balanced">Balanced · clear explanation</option><option value="maverick_fast">Maverick · fast emphasis</option></select></label><label><input type="checkbox" id="sceneSpokenConfirmed"> I have checked that the script matches the recorded words.</label>${designFields()}${selectedIds().length===1?evidenceFields(null):'<p>For a batch, proof remains unassigned until you attach it to the intended scene. Shared pacing is preserved.</p>'}<button type="button" class="primary" id="confirmGenerateArtifacts">Generate storyboard & previews</button>`);return;}
     if(b.id==='confirmGenerateArtifacts'){b.disabled=true;b.textContent='Generating original scenes…';try{await req('/api/artifacts/generate',{ids:selectedIds(),evidence:readSceneEvidence(),spoken_confirmed:el('sceneSpokenConfirmed').checked,design:readSceneDesign(),animation_mode:el('animationMode').value||null,animation_style:el('animationStyle').value});el('modal').close();versionKey='';await refresh();showPanel('script');notify('Storyboard and independent scene previews created. Review the original quote and any pickups.');}finally{b.disabled=false;}return;}
@@ -927,6 +966,7 @@ const poll = setInterval(async () => {
     waiting ||
     (!Object.values(state.jobs).some(locked) &&
       !state.installing &&
+      state.speech_setup?.status!=='INSTALLING' &&
       !el("setupBanner").offsetHeight)
   )
     return;
@@ -944,6 +984,8 @@ document.addEventListener('change',e=>{if(e.target.id==='audioAudition'&&e.targe
 const libraryValues={sourceSearch:'',sourceCollection:'',sourceVisibility:'active'};
 for(const id of Object.keys(libraryValues))el(id).addEventListener(id==='sourceSearch'?'input':'change',()=>{if(!allowChange()){el(id).value=libraryValues[id];return;}libraryValues[id]=el(id).value;touched.clear();selected.clear();versionKey='';draw();});
 for(const id of ['exportSource','exportHistory'])el(id).addEventListener('change',drawExports);
+for(const [id,role] of [['brollInput','broll'],['styleReferenceInput','style_reference']])el(id).addEventListener('change',guard(async e=>{const files=[...e.target.files];e.target.value='';await upload(files,'reference','',role);}));
+el('creatorScriptInput').addEventListener('change',guard(async e=>{const f=e.target.files[0];e.target.value='';if(!f)return;if(selectedIds().length!==1)throw Error('Choose one recording for this script.');const bytes=new Uint8Array(await f.arrayBuffer()),encoding=bytes[0]===255&&bytes[1]===254?'utf-16le':'utf-8',text=new TextDecoder(encoding).decode(bytes).replace(/^\uFEFF/,'');await req('/api/update',{ids:selectedIds(),changes:{script:text}});el('modal').close();versionKey='';await refresh();notify('Prepared script attached to this recording. Actual speech remains authoritative.');}));
 el('generativePackageInput').addEventListener('change',guard(async e=>{const file=e.target.files[0];e.target.value='';if(!file)return;const kernel=el('generativeKernel')?.value||'';await req('/api/generative-package?kernel='+encodeURIComponent(kernel),file,true);el('modal').close();await refresh();notify('Generative result imported; no production approval or planner activation implied.');}));
 el('motionPackageInput').addEventListener('change',guard(async e=>{const file=e.target.files[0];e.target.value='';if(!file)return;await req('/api/motion-package',file,true);await refresh();notify('Spec adapter imported. Existing scenes and planner modes were preserved.');}));
 document.addEventListener('change',e=>{if(e.target.id==='generatedPassage')el('generatedAt').value=e.target.selectedOptions[0].dataset.start;});

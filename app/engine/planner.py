@@ -82,7 +82,7 @@ def match_references(host, settings, assets):
     tokens = [word_key(w[2]) for w in spoken]
     candidates = []
     for asset in assets.values():
-        if asset["kind"] != "reference" or asset["id"] == settings.get("style_ref"):
+        if asset["kind"] != "reference" or asset["id"] == settings.get("style_ref") or asset.get('source_role')=='style_reference':
             continue
         title = re.sub(r"^\s*(?:\d+[\s._-]+|cue[\s_-]+)", "", Path(asset["name"]).stem, flags=re.I)
         words = re.findall(r"[^\W_]+", title, flags=re.UNICODE)
@@ -197,7 +197,8 @@ def build(host, settings, assets):
     groups, timing = script_groups(settings["script"], length, source)
     style = settings["style"]
     refid = settings.get("style_ref", "")
-    pace = reference_hold(assets[refid]["path"], assets[refid]["duration"]) if refid else None
+    cached=assets.get(refid,{}).get('analysis')
+    pace = copy.deepcopy(cached) if cached and cached.get('source_sha256')==assets[refid].get('source_sha256') else reference_hold(assets[refid]["path"], assets[refid]["duration"]) if refid else None
     page_size = 3 if style == "focus" else 4
     if pace:
         page_size = 2 if pace["median_hold"] < 1.6 else 3 if pace["median_hold"] < 3 else 4
@@ -211,6 +212,11 @@ def build(host, settings, assets):
         "punches": [],
     }
     plan["insert_sound"] = settings.get("insert_sound", "none")
+    if settings.get('brand_logo'):
+        logo=assets[settings['brand_logo']];scale=min(460/logo['width'],240/logo['height'])
+        plan['branding']=dict(file=logo['path'],asset=logo['id'],source_start=settings.get('brand_from',0),source_end=settings.get('brand_to') or length,
+                              width=round(logo['width']*scale),height=round(logo['height']*scale),x=32,y=32,
+                              treatment='Presenter shots only; suppressed over assigned cutaways/native scenes to protect proof and labels.')
     spoken = [w for group in groups for w in group]
     tokens = [word_key(w[2]) for w in spoken]
     for insert in settings["inserts"]:

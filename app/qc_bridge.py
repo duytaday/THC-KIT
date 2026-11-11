@@ -4,32 +4,46 @@ from pathlib import Path
 TOOLS=Path(__file__).resolve().parents[1]/'talking-head-qc/tools'
 sys.path.insert(0,str(TOOLS))
 from qc_profile import prepare
-from qc_hook import inspect_and_save,release_receipt
+from qc_hook import inspect_and_save,release_receipt,preflight
 from qc_gates import sha
 
-SKILL=Path(os.environ.get('CUTROOM_QC_SKILL',Path.home()/'.agents/skills/ffmpeg-skill'))
+BUNDLED=Path(__file__).resolve().parents[1]/'third_party/ffmpeg-skill'
+SKILL=Path(os.environ.get('CUTROOM_QC_SKILL',BUNDLED if BUNDLED.is_dir() else Path.home()/'.agents/skills/ffmpeg-skill'))
 def write(p,data):p.write_text(json.dumps(data,ensure_ascii=False,indent=2),encoding='utf-8')
 
 def prepare_export(folder,host,settings,plan):
-    duration=round(host['duration']*30)/30
+    keep=plan.get('keep') or [[0,host['duration']]];clock=[];duration=0
+    for a,b in keep:
+        a,b=round(a*30)/30,round(b*30)/30;clock.append([a,b,duration]);duration+=b-a
+    def mapped(a,b):
+        for left,right,offset in clock:
+            if left-.00001<=a<b<=right+.017:return [offset+a-left,offset+b-left]
+        raise ValueError('A trim crosses a required visual span; reassign that insert before export')
     (folder/'brief.md').write_text('Cutroom recorded-presenter edit. Preserve narration and meaning. Apply the selected caption treatment and framing, show each assigned cutaway with readable results, and preserve any spoken CTA.\n\nSpoken script supplied by creator:\n'+settings['script'],encoding='utf-8')
     write(folder/'delivery.json',dict(platform='youtube',width=1080,height=1920,min_seconds=max(.01,duration-.05),max_seconds=duration+.05,caption_mode='burned_in_and_sidecar',language='vi',required_beats=['presenter']+[f'cutaway-{i}' for i,_ in enumerate(plan['proof'])]))
-    beats=[dict(id='presenter',source=host['path'],source_start=0,source_end=host['duration'],output_start=0,output_end=duration)]
-    for i,q in enumerate(plan['proof']):beats.append(dict(id=f'cutaway-{i}',source=q['file'],source_start=q['source_start'],source_end=q['source_start']+q['end']-q['start'],output_start=q['start'],output_end=q['end']))
+    beats=[dict(id='presenter' if i==0 else 'presenter-'+str(i),source=host['path'],source_start=a,source_end=b,output_start=o,output_end=o+b-a) for i,(a,b,o) in enumerate(clock)]
+    for i,q in enumerate(plan['proof']):
+        x,y=mapped(q['start'],q['end']);beats.append(dict(id=f'cutaway-{i}',source=q['file'],source_start=q['source_start'],source_end=q['source_start']+q['end']-q['start'],output_start=x,output_end=y))
     write(folder/'timeline.json',dict(expected_frames=round(duration*30),beats=beats,settings=copy.deepcopy(settings)))
+    if plan.get('creator'):
+        timeline=json.loads((folder/'timeline.json').read_text(encoding='utf-8'));timeline['speech_beats']=plan['creator']['beats'];timeline['source_edit_map']=plan['creator']['keep'];write(folder/'timeline.json',timeline)
+        (folder/'creator-brief.md').write_text(plan['creator'].get('brief_text') or '\n'.join(f'{k}: {v}' for k,v in plan['creator']['brief'].items()),encoding='utf-8')
     from engine.enhance import events_for,sound_asset
     dependencies={Path(__file__).parent/'engine'/name for name in ('edit.py','media.py','enhance.py','cues.py','layouts.py','planner.py')}
     dependencies.add(Path(__file__).parent/'fonts/DejaVuSans-Bold.ttf')
     if plan.get('motion_specs'):
         dependencies.update(Path(__file__).parent/name for name in ('motion_specs.py','motion_render.py','motion_hooks.py'))
     dependencies.update(Path(q['file']) for q in plan['proof'])
-    for e in events_for(plan,[[0,host['duration'],0]]):
+    # Runtime changes invalidate cached frames just like changed source code.
+    dependencies.update(Path(p).resolve() for name in ('ffmpeg','ffprobe') if (p:=shutil.which(name)))
+    if plan.get('branding'):dependencies.add(Path(plan['branding']['file']))
+    for e in events_for(plan,clock):
         if not e['sound'].get('muted') and e['sound'].get('id'):dependencies.add(sound_asset(e['sound'])[0])
     if plan.get('music',{}).get('mode','off')!='off':dependencies.add(Path(plan['music'].get('path') or Path(__file__).parent/'music'/(plan['music'].get('track','calm')+'.wav')))
     write(folder/'render-project.json',dict(source=host['path'],source_sha256=sha(host['path']),plan=copy.deepcopy(plan),renderer=str(Path(__file__).parent/'engine/edit.py'),renderer_sha256=sha(Path(__file__).parent/'engine/edit.py'),dependencies=[dict(path=str(p),sha256=sha(p)) for p in sorted(dependencies)]))
     profile=prepare(folder,expected_frames=round(duration*30))
     profile['project_hashes']={'render-project.json':sha(folder/'render-project.json')}
-    profile['demonstrations']=[dict(id=f'cutaway-{i}',claim='Original/generated/reference explanatory illustration; not real product-action proof. Verify its correspondence to the spoken idea.' if q.get('artifact_kind') in ('process','list','generated_video','reference_excerpt') else 'Creator-assigned demonstration must show target, action and readable result.',source_asset=q['file'],source_sha256=sha(q['file']),source_range=[q['source_start'],q['source_start']+q['end']-q['start']],master_range=[q['start'],q['end']]) for i,q in enumerate(plan['proof']) if q.get('artifact_type')!='introduction']
+    profile['demonstrations']=[dict(id=f'cutaway-{i}',claim='Original/generated/reference explanatory illustration; not real product-action proof. Verify its correspondence to the spoken idea.' if q.get('artifact_kind') in ('process','list','generated_video','reference_excerpt') else 'Creator-assigned demonstration must show target, action and readable result.',source_asset=q['file'],source_sha256=sha(q['file']),source_range=[q['source_start'],q['source_start']+q['end']-q['start']],master_range=mapped(q['start'],q['end'])) for i,q in enumerate(plan['proof']) if q.get('artifact_type')!='introduction']
     import re
     if re.search(r'\b(5|năm)\s+repo',settings['script'],re.I):
         from storyboard import REPOS
@@ -40,14 +54,14 @@ def prepare_export(folder,host,settings,plan):
         for repo in promised:
             candidates=[q for q in plan['proof'] if q.get('artifact_type')!='introduction' and q.get('artifact_kind') not in ('process','list','generated_video','reference_excerpt') and re.search(r'(?<!\w)'+re.escape(repo.split()[0])+r'(?!\w)',q.get('source_name',''),re.I)]
             for i,q in enumerate(candidates or [None]):
-                profile['demonstrations'].append(dict(id='promised-'+repo.replace(' ','-')+'-'+str(i),repo_name=repo,claim='Verify this named repository’s own promised demo; a generic animation is not product proof.',source_asset=q['file'] if q else '',source_sha256=sha(q['file']) if q else '0'*64,source_range=[q['source_start'],q['source_start']+q['end']-q['start']] if q else None,master_range=[q['start'],q['end']] if q else [0,duration]))
+                profile['demonstrations'].append(dict(id='promised-'+repo.replace(' ','-')+'-'+str(i),repo_name=repo,claim='Verify this named repository’s own promised demo; a generic animation is not product proof.',source_asset=q['file'] if q else '',source_sha256=sha(q['file']) if q else '0'*64,source_range=[q['source_start'],q['source_start']+q['end']-q['start']] if q else None,master_range=mapped(q['start'],q['end']) if q else [0,duration]))
     profile['gates']['B']['evidence_ids']=[d['id'] for d in profile['demonstrations']] or ['presenter_visuals']
     profile['evidence_ranges']={d['id']:d['master_range'] for d in profile['demonstrations']}
     fx=settings.get('insert_sound','none')
     if fx!='none':
         sounds=Path(__file__).parent/'sounds';peak=json.loads((sounds/'peaks.json').read_text())[fx]['peak_sample']/48000;stem=sounds/(fx+'.wav')
         profile['motion_cues']=[dict(id=f'insert-{i}',frame_locked=True,visual_frame=round(q['start']*30),stem_path=str(stem),stem_sha256=sha(stem),stem_master_offset_seconds=round(q['start']*30)/30-peak,window_seconds=.1) for i,q in enumerate(plan['proof'])]
-    events=events_for(plan,[[0,host['duration'],0]])
+    events=events_for(plan,clock)
     profile['motion_cues']=[]
     for e in events:
         sound=e['sound']
@@ -65,6 +79,15 @@ def verify_reproduction(folder,host,plan,render):
     render(Path(host['path']),copy.deepcopy(plan),rerun)
     output=rerun/'edit.mp4'
     write(folder/'repeatability.json',dict(master_sha256=sha(folder/'edit.mp4'),project_sha256=sha(folder/'render-project.json'),rerender_path=str(output),rerender_sha256=sha(output)))
+
+
+def verify_dependencies(folder):
+    project=json.loads((folder/'render-project.json').read_text(encoding='utf-8'))
+    if sha(project['source'])!=project['source_sha256']:raise ValueError('Source changed during render; the prior export was preserved')
+    for item in project.get('dependencies',[]):
+        if sha(item['path'])!=item['sha256']:raise ValueError('A render dependency changed during the job: '+item['path'])
+    write(folder/'dependency-check.json',dict(project_sha256=sha(folder/'render-project.json'),dependencies_verified=True,
+          second_render_requested=False,note='Exact master decode/QC still runs. Full recipe rerender is an explicit reproducibility test.'))
 
 def check(folder):return inspect_and_save(folder,SKILL)
 

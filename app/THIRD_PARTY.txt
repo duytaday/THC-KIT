@@ -1,4 +1,4 @@
-Cutroom 0.1 preview component notes
+Talking Head Cutroom internal candidate component notes
 
 The render pipeline builds on the talking-head adaptation distributed in the owner's MoneyPrinterTurbo-Talking-Head starter. This archive includes the adapted editor modules it uses. It does not bundle the entire upstream application. Before public redistribution of this preview or its derivative, confirm the owner's distribution grant for the starter and chosen product terms. This is a development handoff.
 
@@ -17,6 +17,12 @@ Source: https://dejavu-fonts.github.io/
 The click, slide and chime WAV files are synthesized sounds from the owner's earlier animation and SFX project. No third-party song or audio recording is included. The examples are synthetic process-verification footage and narration.
 
 FFmpeg and FFprobe are installed separately or provided by the user. The app invokes them as external processes. Compatible Windows Essentials builds: https://www.gyan.dev/ffmpeg/builds/
+
+The internal Windows release includes a subset of ffmpeg-skill3.2.3 by kajisho5 (MIT): the delivery checker and shared library only. Original source https://github.com/kajisho5/ffmpeg-skill; see third_party/ffmpeg-skill/LICENSE and version-manifest.json for the copied file hashes. It does not include FFmpeg binaries or optional ASR/model weights.
+
+The optional first-use local transcription installer downloads faster-whisper1.2.1 and its dependency wheels from PyPI and the multilingual small model from Systran/faster-whisper-small on Hugging Face. These are not in the core archive. Actual wheel versions/licenses and model revision/hashes are recorded under workspace/asr after installation. No recording is uploaded. Review their individual terms before redistributing installed dependencies.
+
+Example/Technical example.mp4 is newly generated test imagery and a sine test signal with source-generated SRT, not a real presenter, software demonstration or licensed reference excerpt. It may be redistributed with this kit. It does not resolve the separate starter distribution grant above.
 
 Optional video skill adapters (installed separately; not embedded in the EXE):
 - artemnovitckii/claude-editing-skills, commit beff6b868a8c1bdfad8661bd8a298497e75568a3, MIT code by Artem Novitckii. Keep its LICENSE and font OFL notices with the upstream checkout. Its third-party photographs, sample footage and showcase previews are excluded from that software license and are not packaged here.

@@ -1,5 +1,12 @@
 # Talking Head Cutroom local development handoff
 
+Creator path: add a recording → **Make first cut**. Optional TXT/SRT, usable
+B-roll, style reference and free-text niche stay separate. Local ASR is a first-use
+download or supplied-script fallback; uncertain takes remain intact for review.
+See `docs/CREATOR-QUICKSTART.vi.md` and `app/build_release.py --help` for the
+versioned internal Windows candidate. The starter distribution grant remains
+unresolved; this is not a public release or an editorial READY certificate.
+
 Real-footage orchestration uses the existing `$talking-head-edit` repo skill.
 Full-export benchmarking is in Exports → Benchmark full videos. See
 `docs/FULL-VIDEO-BENCHMARK.vi.md` for the frozen protocol, blind review, quiz,

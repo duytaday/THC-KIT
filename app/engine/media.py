@@ -166,7 +166,7 @@ def preview_audio(source, target):
                 purpose='scene_preview_original_level',gain_db=gain,master_loudness_verified=False)
 
 
-def verify_av(path, expected=None, fps=30):
+def verify_av(path, expected=None, fps=30, *, decode=True):
     v, a = stream(path, "video"), stream(path, "audio")
     from fractions import Fraction
 
@@ -187,13 +187,14 @@ def verify_av(path, expected=None, fps=30):
         raise ValueError("Output audio and video durations do not agree.")
     if expected is not None and abs(duration(v) - expected) > tolerance:
         raise ValueError("Unexpected rendered duration.")
-    ff("-xerror", "-i", path, "-map", "0:v:0", "-map", "0:a:0", "-f", "null", "-")
+    if decode:ff("-xerror", "-i", path, "-map", "0:v:0", "-map", "0:a:0", "-f", "null", "-")
     return {
         "file": path.name,
         "frames": int(v["nb_frames"]),
         "video_s": duration(v),
         "audio_s": duration(a),
         "sha256": sha(path),
+        "full_decode":decode,
     }
 
 

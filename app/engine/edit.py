@@ -29,7 +29,15 @@ def event(start, end, style, body):
     return f"Dialogue: 0,{timestamp(start)},{timestamp(end)},{style},,0,0,0,,{body}"
 
 
-def render(source, plan, out, *, scene_preview=False):
+def caption_y(plan,start,end,preferred):
+    boxes=[q['anchors'][key] for q in plan.get('proof',[]) if q['start']<end and q['end']>start
+           for key in ('roi','result_roi','contact_roi') if q.get('anchors',{}).get(key)]
+    for y in dict.fromkeys((preferred,390 if preferred>900 else 1500)):
+        if not any(x<1020 and x+w>60 and top<y+85 and top+h>y-85 for x,top,w,h in boxes):return y
+    raise ValueError('Captions overlap the supplied target/result at both positions. Adjust the source crop or insert before exporting.')
+
+
+def render(source, plan, out, *, scene_preview=False, verify_decode=True, prefix_seconds=None):
     out=out.resolve()
     source = source.resolve(strict=True)
     input_seconds = duration(stream(source, "video"))
@@ -92,6 +100,7 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
             raise ValueError("Use 1 to 4 spoken words per caption page")
         words = [literal(word) for _, _, word in page]
         page_start, page_end = interval(page[0][0], page[-1][1])
+        page_position=caption_y(plan,page[0][0],page[-1][1],1536 if mode=='reel' else position)
         subtitles.extend(
             [
                 str(len(subtitles) // 4 + 1),
@@ -108,9 +117,9 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
             display = [for_ass(w) for w in words]
             display[i] = r"{\c&H23A6F5&}" + display[i] + r"{\c&HFFFFFF&}"
             if mode == "reel":
-                body = r"{\pos(540,1536)}" + words[i].upper()
+                body = r"{\pos(540,"+str(page_position)+")}" + words[i].upper()
             else:
-                prefix = r"{\pos(540," + str(position) + ")}"
+                prefix = r"{\pos(540," + str(page_position) + ")}"
                 if clean:
                     if i:
                         continue
@@ -210,10 +219,30 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
     resolved_events=enhance.events_for(plan,clock)
     picture=enhance.visuals(graph,picture,plan,resolved_events,out,total,args)
     audio = "speech"
-    graph.append(f"[{picture}]ass=captions.ass:fontsdir=fonts[final]")
+    graph.append(f"[{picture}]ass=captions.ass:fontsdir=fonts[captioned]")
+    brand=plan.get('branding')
+    if brand:
+        ranges=[]
+        for left,right,offset in clock:
+            a,b=max(left,brand['source_start']),min(right,brand['source_end'])
+            if a<b:ranges.append((offset+a-left,offset+b-left))
+        if not ranges:raise ValueError('Logo interval was removed; reassign its source times')
+        enabled='('+ '+'.join(f'gte(t,{a})*lt(t,{b})' for a,b in ranges)+')'
+        for span in [*plan.get('proof',[]),*plan.get('motion_specs',[])]:
+            a,b=interval(span.get('start',span.get('source_start')),span.get('end',span.get('source_end')))
+            enabled+=f'*not(gte(t,{a})*lt(t,{b}))'
+        index=sum(1 for a in args if a=='-i');args.extend(['-loop','1','-framerate','30','-i',brand['file']])
+        graph.append(f"[{index}:v]scale={brand['width']}:{brand['height']},format=rgba[logo]")
+        graph.append(f"[captioned][logo]overlay=x={brand['x']}:y={brand['y']}:shortest=1:enable='{enabled}'[final]")
+    else:graph.append('[captioned]null[final]')
     (out / "filters.txt").write_text(";\n".join(graph), encoding="utf-8")
     target = out / "edit.mp4"
     intermediate = out / "picture-and-voice.mov"
+    limit=[]
+    render_seconds=total
+    if prefix_seconds is not None:
+        if not 0<float(prefix_seconds)<total:raise ValueError('Prefix must end inside the full timeline')
+        render_seconds=round(float(prefix_seconds)*FPS)/FPS;limit=['-t',render_seconds]
     ff(
         *args,
         "-filter_complex_threads",
@@ -234,10 +263,11 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
         "pcm_s24le",
         "-ar",
         "48000",
+        *limit,
         intermediate,
         cwd=out,
     )
-    levels = enhance.mix(intermediate,target,plan,resolved_events,out,total,scene_preview=scene_preview)
+    levels = enhance.mix(intermediate,target,plan,[e for e in resolved_events if e['master_frame']<round(render_seconds*FPS)],out,render_seconds,scene_preview=scene_preview)
     intermediate.unlink()
     write_json(
         out / "edit-review.json",
@@ -248,6 +278,6 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
             "scene_preview": scene_preview,
             "video_encoding": json.loads((out/'ffmpeg-encode.jsonl').read_text(encoding='utf-8').splitlines()[-1]) if (out/'ffmpeg-encode.jsonl').exists() else None,
             "time_map_source_in_out_master_in": clock,
-            "verified": verify_av(target, total, FPS),
+            "verified": verify_av(target, render_seconds, FPS,decode=verify_decode),
         },
     )
