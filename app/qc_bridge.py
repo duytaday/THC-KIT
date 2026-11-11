@@ -20,6 +20,8 @@ def prepare_export(folder,host,settings,plan):
     from engine.enhance import events_for,sound_asset
     dependencies={Path(__file__).parent/'engine'/name for name in ('edit.py','media.py','enhance.py','cues.py','layouts.py','planner.py')}
     dependencies.add(Path(__file__).parent/'fonts/DejaVuSans-Bold.ttf')
+    if plan.get('motion_specs'):
+        dependencies.update(Path(__file__).parent/name for name in ('motion_specs.py','motion_render.py','motion_hooks.py'))
     dependencies.update(Path(q['file']) for q in plan['proof'])
     for e in events_for(plan,[[0,host['duration'],0]]):
         if not e['sound'].get('muted') and e['sound'].get('id'):dependencies.add(sound_asset(e['sound'])[0])

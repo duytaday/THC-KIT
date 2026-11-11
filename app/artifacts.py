@@ -18,6 +18,9 @@ def title_filter(folder,text,y=150,size=64,name='title.txt',intensity=.5,settle_
     return f"drawtext=fontfile=fonts/DejaVuSans-Bold.ttf:textfile={name}:fontsize={size}:fontcolor=0x18382b:line_spacing=18:x=(w-text_w)/2:y='{y}+{movement}*max(0,1-t/{settle_frames/30})':alpha='min(1,t/0.12)'"
 
 def render(plan,folder,host,assets):
+    if plan.get('kind')=='animation_spec':
+        import motion_render
+        return motion_render.preview(plan,folder,host,assets)
     folder=Path(folder).resolve();folder.mkdir(parents=True,exist_ok=False);shutil.copytree(Path(__file__).parent/'fonts',folder/'fonts')
     duration=float(plan['duration'])
     if not math.isfinite(duration) or not .5<=duration<=30:raise ValueError('Scene duration must be0.5–30seconds.')

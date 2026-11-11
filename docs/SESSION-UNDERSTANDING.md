@@ -1,5 +1,10 @@
 # Session understanding
 
+- [ ] Reusable production contract: user intends rules/workflow/hooks for future
+  episodes. Confirm the distinction between shared branding/style defaults and
+  episode-specific narration/proof/locked decisions; implementation tests alone
+  do not demonstrate human understanding.
+
 - [x] Shared branding can remain consistent while edit style, animation and demo
   choices change. Per-recording scripts and proof remain independent.
 - [x] User distinguished an illustrative-script preview from a voice-aligned

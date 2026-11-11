@@ -4,6 +4,9 @@ description: Build and revise real-footage English or Vietnamese talking-head vi
 ---
 
 Work from the project root. Preserve the existing `$talking-head-edit` invocation.
+For reusable production rules and hook boundaries, read
+`docs/TALKING-HEAD-PRODUCTION-CONTRACT.vi.md`. Apply it per episode; never copy a
+previous episode's source paths, promises or demo timecodes into a new job.
 For the Cutroom workflow, read [references/real-footage-workflow.md](references/real-footage-workflow.md)
 first. It covers three hooks, source-linked audiovisual planning, the normal UI,
 two buyer acceptance cases and reproduction from a clean checkout. Read

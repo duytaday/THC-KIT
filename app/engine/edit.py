@@ -35,6 +35,9 @@ def render(source, plan, out):
     input_seconds = duration(stream(source, "video"))
     stream(source, "audio")
     spans = plan.get("keep") or [[0, input_seconds]]
+    if plan.get('motion_specs'):
+        import motion_hooks
+        motion_hooks.before_render(plan,input_seconds,FPS)
     graph, clock = [], []
     total = 0.0
     for i, (start, end) in enumerate(spans):
@@ -69,6 +72,7 @@ Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour,
 Style: Cue,DejaVu Sans,64,&H00FFFFFF,&H00FFFFFF,&H00121010,&H60000000,-1,0,0,0,100,100,0,0,1,4,1,5,90,90,0,1
 Style: Title,DejaVu Sans,68,&H00FFFFFF,&H00FFFFFF,&H00121010,&H60000000,-1,0,0,0,100,100,0,0,1,5,1,5,90,90,0,1
 Style: Badge,DejaVu Sans,58,&H00FFFFFF,&H00FFFFFF,&H00BA0021,&H00BA0021,-1,0,0,0,100,100,0,0,3,14,0,5,90,90,0,1
+Style: Motion,DejaVu Sans,54,&H00FFFFFF,&H00FFFFFF,&H00101010,&H00101010,-1,0,0,0,100,100,0,0,1,0,0,8,0,0,0,1
 [Events]
 Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
 """
@@ -137,7 +141,17 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
         title = for_ass(literal(punch["title"]))
         pop = r"{\pos(540,422)\fscx85\fscy85\t(0,140,\fscx104\fscy104)\t(140,240,\fscx100\fscy100)}"
         lines.append(event(start, end, "Title", pop + title))
+    if plan.get('motion_specs'):
+        lines=[line.replace('Dialogue: 0,','Dialogue: 10,',1) for line in lines]
     (out / "captions.ass").write_text(ass + "\n".join(lines) + "\n", encoding="utf-8-sig")
+    if plan.get('motion_specs'):
+        import motion_render
+        receipts=[]
+        for scene in plan['motion_specs']:
+            start,end=interval(scene['source_start'],scene['source_end'])
+            if abs((end-start)*FPS-scene['context']['frames'])>1:raise ValueError('Trim changed an animation span; reassign its source cues before render.')
+            receipts.append(motion_render.append_ass(out/'captions.ass',scene,round(start*FPS)))
+        write_json(out/'motion-render-receipt.json',receipts)
     z = "1" + "".join("+0.08*" + p for p in pulses)
     fit = (
         "scale=1080:1920:force_original_aspect_ratio=decrease,pad=1080:1920:(ow-iw)/2:(oh-ih)/2"
