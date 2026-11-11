@@ -121,7 +121,23 @@ không tuyên bố chất lượng B-roll tốt hơn từ loss giảm. Lưu sour
 để audit; không xóa watermark rồi coi là asset đã được duyệt.
 
 Một lượt kiểm animation3thẻ riêng dùng prompt thực nghiệm cũ/seed3408, cùng
-model và settings, đã được gửi qua UI để kiểm đúng nhóm minh họa vừa học.
-Kết quả và giới hạn được ghi vào artifact riêng sau khi job hoàn tất.
+model và settings, đã hoàn tất qua UI: kernel
+`duytruyenthong/talking-head-cutroom-generate-bd70bed7efcd`,379,847s.
+Worker mới xác nhận đúng adapter8c0af… và active `talking-head-style`;
+cả baseline/candidate720×480/17frames đã hash và full-decode.
+
+Baseline SHA `3fb2a71ea7bc2d3267b8f7617191f4277a70584b9858bfa3a7decc556e41f4f1`.
+Candidate SHA `b4c04a93fc4fe4928565d110375076e576294b883bda84db31a7036d338a3d50`.
+Đã xem cả17frame của candidate: chủ yếu hai thẻ lime; cuối mới xuất hiện thêm
+hình chồng nhau, chưa xếp ngay hàng, không có phần ultramarine như prompt.
+Tại1,75–2,00s vị trí vẫn đổi, chưa có đoạn kết đứng yên. **REVISE**, không
+chèn vào tập. Một prompt/seed không đo được tổng quát hóa; không gọi loss giảm
+là animation chuyên nghiệp hơn. Training/load/decoding đều pass nhưng chất
+lượng tài sản sinh còn thiếu. Native preset bật được là phần đã có kết quả
+render cụ thể; generative model tiếp tục ở lab riêng.
+
+Tất cả job của lượt này đã COMPLETE. EXE development v010 đang mở workspace
+gồm13exports/7sources; bản cũ và checkpoint cha được giữ. Không có lượt
+training hoặc inference mới đang chờ ở cuối lần bàn giao này.
 
 Cách nạp model-level LoRA tham khảo [Diffusers PEFT loader](https://huggingface.co/docs/diffusers/api/loaders/peft).
