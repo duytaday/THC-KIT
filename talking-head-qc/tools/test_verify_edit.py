@@ -14,6 +14,15 @@ import verify_edit as gate
 
 
 class ReleaseTests(unittest.TestCase):
+    def test_external_script_sibling_import_in_isolated_python(self):
+        with tempfile.TemporaryDirectory() as d:
+            root=Path(d)/'thư mục';root.mkdir()
+            (root/'sibling_qc_fixture.py').write_text("VALUE='verified sibling'",encoding='utf-8')
+            script=root/'checker.py';script.write_text('import json,sys;from sibling_qc_fixture import VALUE;print(json.dumps([VALUE,sys.argv[0],sys.argv[1]],ensure_ascii=False))',encoding='utf-8')
+            command=gate.script_command(script,'đã xuất');command.insert(1,'-I')
+            result=gate.run(command);self.assertEqual(result.returncode,0,result.stderr)
+            self.assertEqual(json.loads(result.stdout),['verified sibling',str(script),'đã xuất'])
+
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory()
         self.addCleanup(self.temp.cleanup)

@@ -11,6 +11,13 @@ observed controls/results/captions or falls back to full demo. The optional lab
 imports private Kaggle generative receipts; configure `CUTROOM_KAGGLE_CLI` or put
 the CLI on PATH. Core editing needs neither Kaggle nor those model libraries.
 
+`Reference badges` is an original motion preset with a gentle slide and a static
+badge when intensity is zero. It is independent of the optional generative model.
+Its parameters/reference observations are frozen in the recipe. See
+`docs/REFERENCE-REFRESH-RESULTS.vi.md` for actual training continuation and native
+runtime tests. The generative trainer accepts `--resume-sha256` and refuses an
+absent or changed parent rather than silently training from the base model.
+
 Python3.11+ and FFmpeg/ffprobe on PATH. The built-in app uses the Python standard
 library and included fonts/audio; Playwright and model libraries are test/training
 dependencies only. The final QC bridge also needs the upstream ffmpeg-skill scripts

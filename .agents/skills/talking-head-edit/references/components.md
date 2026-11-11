@@ -51,3 +51,9 @@ render được không làm toàn tập READY. Split02, transition slide/zoom-bl
 PiP rounded-corner và inset10 là backlog; dùng full demo/cut trước. Không tạo
 biến thể riêng từng tập rồi gọi là tái sử dụng. Khoá override theo scene; batch
 chỉ chạm các trường editor chọn, không reset scene/script/cue khác.
+
+Preset `reference_badges` dùng speaker/keyword/chapter events hiện có cho badge
+gốc#2100BA, font58px, slide≤32px/settle≤280ms/fade≤90ms theo intensity. Intensity0
+giữ badge tĩnh. Reference chỉ cung cấp quan sát hierarchy/bố cục; easing là thử
+nghiệm của kit. Giữ event text/anchors/sound overrides, không tự thêm claim hoặc
+identity từ reference. Đây là preset theo luật, tách với LoRA sinh minh họa.

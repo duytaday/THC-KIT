@@ -5,6 +5,14 @@ from engine import media
 import generative,generative_train
 
 class GenerativeTests(unittest.TestCase):
+    def test_resume_requires_correct_parent_receipt_and_hash(self):
+        with tempfile.TemporaryDirectory() as d:
+            p=Path(d);(p/'adapter').mkdir();w=p/'adapter/pytorch_lora_weights.safetensors';w.write_bytes(b'explicit unit fixture')
+            h=media.sha(w)
+            with self.assertRaisesRegex(ValueError,'No completed'):generative_train.resume_adapter(p,h)
+            (p/'provenance.json').write_text(json.dumps(dict(status='COMPLETE',task='video_diffusion_lora',base_revision=generative_train.REVISION,adapter_files={w.name:h},actual_optimizer_steps=32)))
+            found,data=generative_train.resume_adapter(p,h);self.assertEqual(found,w);self.assertEqual(data['actual_optimizer_steps'],32)
+            with self.assertRaises(ValueError):generative_train.resume_adapter(p,'0'*64)
     def test_selector_adapter_is_not_a_video_generator(self):
         with tempfile.TemporaryDirectory() as d:
             p=Path(d);(p/'provenance.json').write_text(json.dumps(dict(status='COMPLETE',task='editorial_selector')))

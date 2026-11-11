@@ -54,6 +54,13 @@ def run(args):
     return subprocess.run(args, capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=1800)
 
 
+def script_command(script, *arguments):
+    # Embedded Windows Python's ._pth omits the launched script's directory.
+    # Add that directory explicitly so the unchanged upstream sibling imports work.
+    bootstrap = "import runpy,sys;from pathlib import Path;p=sys.argv.pop(1);sys.argv[0]=p;sys.path.insert(0,str(Path(p).resolve().parent));runpy.run_path(p,run_name='__main__')"
+    return [sys.executable, '-X', 'utf8', '-c', bootstrap, str(script), *map(str, arguments)]
+
+
 def check_beats(timeline, expected, duration):
     if not isinstance(expected, list) or not expected or not all(isinstance(k, str) and k.strip() for k in expected):
         raise ValueError("delivery.json needs a nonempty required_beats list")
@@ -142,8 +149,8 @@ def inspect(args):
         failures.append(str(e))
         cue_count = None
 
-    proc = run([sys.executable, str(args.skill_root / "scripts" / "check.py"), video,
-                "--platform", spec["platform"], "--content", "--json"])
+    proc = run(script_command(args.skill_root / "scripts" / "check.py", video,
+                "--platform", spec["platform"], "--content", "--json"))
     try:
         tech = json.loads(proc.stdout)
     except ValueError:

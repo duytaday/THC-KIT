@@ -68,6 +68,7 @@ ScaledBorderAndShadow: yes
 Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding
 Style: Cue,DejaVu Sans,64,&H00FFFFFF,&H00FFFFFF,&H00121010,&H60000000,-1,0,0,0,100,100,0,0,1,4,1,5,90,90,0,1
 Style: Title,DejaVu Sans,68,&H00FFFFFF,&H00FFFFFF,&H00121010,&H60000000,-1,0,0,0,100,100,0,0,1,5,1,5,90,90,0,1
+Style: Badge,DejaVu Sans,58,&H00FFFFFF,&H00FFFFFF,&H00BA0021,&H00BA0021,-1,0,0,0,100,100,0,0,3,14,0,5,90,90,0,1
 [Events]
 Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
 """

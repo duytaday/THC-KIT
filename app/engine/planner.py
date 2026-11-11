@@ -282,6 +282,8 @@ def build(host, settings, assets):
         q['layout_decision']=resolve(q,protected)
     plan['events']=suggest(settings,plan['proof'],pace)
     plan['motion_profile']=settings.get('motion_profile','baseline');plan['motion_intensity']=settings.get('motion_intensity',.5)
+    if plan['motion_profile']=='reference_badges':
+        plan['preset']=dict(id='reference_badges',version=1,trained=False,origin='Original branded implementation from selected reference-frame observations; not a learned model',parameters=dict(font='DejaVu Sans Bold',font_size=58,panel_color='#2100BA',max_slide_px=32,settle_ms_at_full_intensity=280,fade_ms_at_full_intensity=90,reduced_motion='Static badge retained at intensity0'),reference_evidence=[dict(sha256='b4e4ee1fd11990aa2752e961beed8d2115473144ae110515e8249c1e4a9117bf',source_seconds=10,observed='Hierarchy of compact label cards on diagram'),dict(sha256='40a972acb64d13d77bde17ad2e092d862fa15991ff9d69b723f6a6dd3469f5c2',source_seconds=1,observed='Lower third next to real presenter'),dict(sha256='11e218a227dff9edecb2b4f7724921745dba002e5b164dc0914583b73f4948de',source_seconds=1370.266667,observed='Badge and callout placed away from face')],timing_evidence='Slide/fade duration are house proposals rendered for this preset; not measured from still frames')
     plan['music']={'mode':settings.get('music_mode','off'),'track':settings.get('music_track','calm'),'gain_db':settings.get('music_gain_db',-20)}
     if settings.get('music_mode')=='my_track':
         track=assets.get(settings.get('music_asset'))

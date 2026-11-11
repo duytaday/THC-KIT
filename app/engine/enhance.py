@@ -19,7 +19,7 @@ def ass_time(t):
     c=round(t*100);return f'{c//360000}:{c//6000%60:02}:{c//100%60:02}.{c%100:02}'
 
 def visuals(graph,picture,plan,events,out,total,args):
-    if plan.get('motion_profile','baseline')=='baseline' or plan.get('motion_intensity',.5)==0:return picture
+    if plan.get('motion_profile','baseline')=='baseline' or (plan.get('motion_intensity',.5)==0 and plan.get('motion_profile')!='reference_badges'):return picture
     added=[]
     for i,e in enumerate(events):
         if e.get('visual_disabled'):continue
@@ -39,6 +39,13 @@ def visuals(graph,picture,plan,events,out,total,args):
             if len(text)>100 or text.count('\n')>1:raise ValueError('Cue '+e['id']+' label is too long; shorten it to two readable lines.')
             text=text.replace('\\','\\\\').replace('{','\\{').replace('}','\\}').replace('\n',r'\N')
             x,y=(roi[:2] if roi else [540,380]);fade=0 if plan.get('motion_profile')=='calm' else 120
+            if plan.get('motion_profile')=='reference_badges':
+                # Original branded badge; sampled references suggest hierarchy, not measured easing.
+                motion=max(0,min(1,float(strength)));dx=round(32*motion);settle=round(280*motion);fade=round(90*motion)
+                position=r'\move('+f'{x-dx},{y},{x},{y},0,{settle}'+')' if dx else r'\pos('+f'{x},{y}'+')'
+                body=r'{\an5'+position+r'\fs58\fad('+f'{fade},{fade}'+r')}'+text
+                added.append(f'Dialogue: 1,{ass_time(start)},{ass_time(end)},Badge,,0,0,0,,{body}')
+                continue
             body=r'{\an5\pos('+f'{x},{y}'+r')\fs60\fad('+f'{fade},{fade}'+r')}'+text
             added.append(f'Dialogue: 1,{ass_time(start)},{ass_time(end)},Title,,0,0,0,,{body}')
         elif kind=='comparison':
@@ -85,7 +92,7 @@ def arrange(track,out,total):
 def mix(source,target,plan,events,out,total):
     music=plan.get('music',{'mode':'off'});active=[e for e in events if not e['sound'].get('muted') and e['sound'].get('id')]
     media.ff('-i',source,'-map','0:a:0','-ar','48000','-ac','1','-c:a','pcm_s24le',out/'voice.wav')
-    cue_sheet=[];args=[];graph=[];labels=[]
+    cue_sheet=[];args=[];graph=[];labels=[];bus_samples=round(total*48000)
     for e in events:
         s=e['sound'];row=dict(id=e['id'],kind=e['kind'],source_anchor=e['anchor'],master_frame=e['master_frame'],master_seconds=e['master_frame']/30,start_frame=e['start_frame'],end_frame=e['end_frame'],reference_evidence=e.get('reference_evidence',[]),sound=s,listening='UNVERIFIED: no audio-capable reviewer has heard the full mix',route='intentionally_silent' if s.get('muted') or not s.get('id') else 'SFX bus')
         cue_sheet.append(row)
@@ -95,11 +102,12 @@ def mix(source,target,plan,events,out,total):
         shift=e['sample']+round(offset*1600)-(marker-left)
         label=f'fx{index}';gain=s.get('gain_db',-14)
         if not isinstance(gain,(int,float)) or not math.isfinite(gain) or not -60<=gain<=6:raise ValueError('Cue gain must be−60–6dB.')
-        graph.append(f'[{index}:a]aresample=48000,atrim=start_sample={left}:end_sample={right},asetpts=PTS-STARTPTS,atrim=start_sample={max(0,-shift)},asetpts=PTS-STARTPTS,volume={gain}dB,adelay={max(0,shift)}S:all=1[{label}]');labels.append(f'[{label}]')
+        graph.append(f'[{index}:a]aresample=48000,atrim=start_sample={left}:end_sample={right},asetpts=PTS-STARTPTS,atrim=start_sample={max(0,-shift)},asetpts=PTS-STARTPTS,volume={gain}dB,adelay={max(0,shift)}S:all=1,apad=whole_len={bus_samples},atrim=end_sample={bus_samples},asetnsamples=n=1024:p=1[{label}]');labels.append(f'[{label}]')
         row.update(marker_sample=marker,expected_offset_frames=offset,expected_peak_sample=e['sample']+round(offset*1600),isolated_asset_sha256=media.sha(path))
     if labels:
-        graph.append(''.join(labels)+f'amix=inputs={len(labels)}:normalize=0:duration=longest,apad,atrim=duration={total}[bus]');(out/'sfx-filters.txt').write_text(';'.join(graph))
-        media.ff(*args,'-filter_complex_script',out/'sfx-filters.txt','-map','[bus]','-ar','48000','-c:a','pcm_s24le',out/'sfx.wav')
+        # Finite aligned inputs avoid an EOF scheduling stall with long adelay tails.
+        graph.append(''.join(labels)+f'amix=inputs={len(labels)}:normalize=0:duration=longest,atrim=end_sample={bus_samples}[bus]');(out/'sfx-filters.txt').write_text(';'.join(graph))
+        media.ff(*args,'-filter_complex_threads','1','-filter_complex_script',out/'sfx-filters.txt','-map','[bus]','-ar','48000','-c:a','pcm_s24le',out/'sfx.wav')
     else:silence(out/'sfx.wav',total)
     if music.get('mode','off')!='off':
         track=Path(music.get('path') or ROOT/'music'/(music.get('track','calm')+'.wav'))

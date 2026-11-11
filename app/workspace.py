@@ -211,7 +211,7 @@ class Workspace:
         if opts.get('planner_mode','built_in') not in ('built_in','base','base_rag','fine_tuned'):raise ValueError('Choose an available decision planner.')
         if set(opts) - set(DEFAULT):
             raise ValueError("Unknown project setting.")
-        if opts['motion_profile'] not in ('baseline','reference','calm','focus'):raise ValueError('Choose an available built-in motion profile.')
+        if opts['motion_profile'] not in ('baseline','reference','calm','focus','reference_badges'):raise ValueError('Choose an available built-in motion profile.')
         if not isinstance(opts['motion_intensity'],(float,int)) or not math.isfinite(opts['motion_intensity']) or not 0<=opts['motion_intensity']<=1:raise ValueError('Motion intensity must be0–1.')
         if opts['music_mode'] not in ('off','auto','my_track'):raise ValueError('Choose Music Off, Choose automatically, or My track.')
         if opts['music_track'] not in ('calm','tutorial'):raise ValueError('Choose an available instrumental bed.')

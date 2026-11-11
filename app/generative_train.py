@@ -3,7 +3,7 @@
 Noise objective follows Hugging Face diffusers' Apache-2.0 CogVideoX example.
 No voice, actual product proof, paid endpoint or automatic production promotion.
 """
-import argparse,gc,hashlib,importlib.metadata,json,os,random,shutil,subprocess,time,traceback,zipfile
+import argparse,gc,hashlib,importlib.metadata,json,os,random,re,shutil,subprocess,time,traceback,zipfile
 from pathlib import Path
 
 MODEL='zai-org/CogVideoX-2b';REVISION='1137dacfc2c9c012bed6a0793f4ecf2ca8e7ba01'
@@ -35,13 +35,27 @@ def validate(root,work):
     if len({r['family'] for r in m['rows'] if r['role']=='train'})<3:raise ValueError('Need three source families for this narrow pilot.')
     return m
 
-def run(root,out,steps=32):
+def resume_adapter(root,expected):
+    if not re.fullmatch('[0-9a-f]{64}',expected):raise ValueError('Use the exact parent adapter SHA256.')
+    for path in sorted(Path(root).rglob('pytorch_lora_weights.safetensors')):
+        if sha(path)!=expected:continue
+        parent=path.parent.parent/'provenance.json'
+        if not parent.exists():continue
+        data=json.loads(parent.read_text(encoding='utf-8'))
+        if data.get('status')!='COMPLETE' or data.get('task')!='video_diffusion_lora' or data.get('base_revision')!=REVISION or data.get('adapter_files',{}).get(path.name)!=expected:continue
+        return path,data
+    raise ValueError('No completed hash-bound parent adapter found; refusing fresh training instead of resume.')
+
+
+def run(root,out,steps=32,resume_sha256=None):
     os.environ.update(HF_HOME=str(out.parent/'hf-cache'),HF_HUB_DISABLE_TELEMETRY='1',TOKENIZERS_PARALLELISM='false',WANDB_DISABLED='true')
     receipt=dict(schema_version=1,task='video_diffusion_lora',product='Talking Head Cutroom',base_model=MODEL,base_revision=REVISION,code_sha256=sha(__file__),status='RUNNING',stage='validate',actual_optimizer_steps=0,training_completed=False,weights_loaded_in_cutroom=False,production_eligible=False,paid_api_spend=0,compute_cost=None,full_audio_listening='not_applicable_silent_generated_clips')
     out.mkdir(parents=True,exist_ok=False)
     def stage(name):receipt['stage']=name;write(out/'provenance.json',receipt);print('STAGE',name,flush=True)
     try:
         m=validate(root,out);receipt.update(dataset_sha256=sha(root/'generative-dataset.json'),source_family_split=m['family_split'],evaluation_scope=m['evaluation_scope'],training_clips=sum(r['role']=='train' for r in m['rows']),development_clips=sum(r['role']!='train' for r in m['rows']),config=dict(seed=3407,frames=17,height=256,width=256,fps=8,lora_rank=8,lora_alpha=8,steps=steps,learning_rate=.0001,inference_steps=12,guidance_scale=6))
+        parent_path,parent_data=resume_adapter(Path('/kaggle/input'),resume_sha256) if resume_sha256 else (None,None)
+        if parent_path:receipt.update(parent_adapter_sha256=resume_sha256,parent_optimizer_steps=parent_data.get('cumulative_optimizer_steps',parent_data['actual_optimizer_steps']),resume_optimizer_state=False,resume_note='Continue learned weights; initialize a new optimizer for the refreshed dataset.')
         # Kaggle's current image bundles an old optional torchao that PEFT rejects.
         # This experiment uses ordinary fp16 Linear layers, not torchao quantization.
         try:torchao_version=importlib.metadata.version('torchao')
@@ -94,7 +108,13 @@ def run(root,out,steps=32):
         stage('load_diffusion_transformer')
         model=CogVideoXTransformer3DModel.from_pretrained(model_source,subfolder='transformer',torch_dtype=torch.float16,use_safetensors=True,**source_options).to(device);model.requires_grad_(False)
         if model.config.use_rotary_positional_embeddings:raise ValueError('Unexpected model architecture; inspect rotary geometry before training.')
-        model.add_adapter(LoraConfig(r=8,lora_alpha=8,init_lora_weights=True,target_modules=['to_q','to_k','to_v','to_out.0']))
+        if parent_path:
+            model.load_lora_adapter(str(parent_path.parent),weight_name=parent_path.name,adapter_name='default',prefix='transformer')
+            model.set_adapter('default')
+            for name,p in model.named_parameters():
+                if 'lora_' in name:p.requires_grad_(True)
+            receipt['parent_weights_loaded']=True
+        else:model.add_adapter(LoraConfig(r=8,lora_alpha=8,init_lora_weights=True,target_modules=['to_q','to_k','to_v','to_out.0']))
         for p in model.parameters():
             if p.requires_grad:p.data=p.data.float()
         initial={n:p.detach().cpu().clone() for n,p in model.named_parameters() if p.requires_grad};receipt['trainable_parameters']=sum(p.numel() for p in initial.values())
@@ -131,7 +151,7 @@ def run(root,out,steps=32):
             receipt['actual_optimizer_steps']+=1;losses.append(float(loss.detach().cpu()));receipt['losses']=losses
             if receipt['actual_optimizer_steps']%4==0:write(out/'provenance.json',receipt);print('OPTIMIZER_STEP',receipt['actual_optimizer_steps'],'LOSS',losses[-1],flush=True)
             if receipt['actual_optimizer_steps']%8==0:CogVideoXPipeline.save_lora_weights(str(out/f'checkpoint-{receipt["actual_optimizer_steps"]}'),transformer_lora_layers=get_peft_model_state_dict(model))
-        receipt.update(training_completed=True,training_wall_seconds=time.monotonic()-started,weight_update_l2=float(sum(((p.detach().cpu()-initial[n])**2).sum() for n,p in model.named_parameters() if p.requires_grad).sqrt()),peak_gpu_bytes=torch.cuda.max_memory_allocated(0))
+        receipt.update(training_completed=True,cumulative_optimizer_steps=receipt.get('parent_optimizer_steps',0)+receipt['actual_optimizer_steps'],training_wall_seconds=time.monotonic()-started,weight_update_l2=float(sum(((p.detach().cpu()-initial[n])**2).sum() for n,p in model.named_parameters() if p.requires_grad).sqrt()),peak_gpu_bytes=torch.cuda.max_memory_allocated(0))
         if receipt['weight_update_l2']<=0:raise ValueError('No actual adapter weight change.')
         CogVideoXPipeline.save_lora_weights(str(out/'adapter'),transformer_lora_layers=get_peft_model_state_dict(model));receipt['adapter_files']={p.name:sha(p) for p in (out/'adapter').iterdir() if p.is_file()};write(out/'provenance.json',receipt)
         model.eval()
@@ -146,10 +166,10 @@ def run(root,out,steps=32):
         receipt.update(status='FAILED',error=str(e));write(out/'provenance.json',receipt);(out/'failure.log').write_text(traceback.format_exc(),encoding='utf-8');raise
 
 if __name__=='__main__':
-    p=argparse.ArgumentParser();p.add_argument('--dataset',type=Path);p.add_argument('--out',type=Path,default=Path('/kaggle/working/talking-head-cutroom-generative'));p.add_argument('--steps',type=int,default=32);a=p.parse_args()
+    p=argparse.ArgumentParser();p.add_argument('--dataset',type=Path);p.add_argument('--out',type=Path,default=Path('/kaggle/working/talking-head-cutroom-generative'));p.add_argument('--steps',type=int,default=32);p.add_argument('--resume-sha256');a=p.parse_args()
     if a.dataset is None:
         roots=list(Path('/kaggle/input').rglob('generative-dataset.json'))
         if len(roots)!=1:raise ValueError('Attach exactly one private generative dataset.')
         a.dataset=roots[0].parent
     if not 1<=a.steps<=128:raise ValueError('Use a bounded pilot of1–128steps.')
-    run(a.dataset,a.out,a.steps)
+    run(a.dataset,a.out,a.steps,a.resume_sha256)

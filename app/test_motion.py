@@ -62,4 +62,17 @@ class RepeatedPhraseTests(unittest.TestCase):
         settings['inserts'][0].pop('occurrence')
         with self.assertRaisesRegex(ValueError,'occur once'):planner.build(assets['host'],settings,assets)
 
+class BadgeAccessibilityTests(unittest.TestCase):
+    def test_reduced_motion_keeps_the_information_visible(self):
+        from engine.enhance import visuals
+        for strength in (0,.6):
+            with tempfile.TemporaryDirectory() as d:
+                folder=Path(d);(folder/'captions.ass').write_text('',encoding='utf-8')
+                e=dict(kind='keyword',text='Việc làm Video AI',start_frame=3,end_frame=60,master_frame=3,strength=strength)
+                visuals([], 'face',dict(motion_profile='reference_badges',motion_intensity=strength),[e],folder,3,[])
+                ass=(folder/'captions.ass').read_text(encoding='utf-8')
+                self.assertIn('Việc làm Video AI',ass);self.assertIn(',Badge,',ass)
+                self.assertEqual(r'\move(' in ass,strength>0)
+
+
 if __name__=='__main__':unittest.main()
