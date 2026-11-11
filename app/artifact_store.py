@@ -65,7 +65,7 @@ class ArtifactStore:
                         plan.update(kind='before_after',intended_visual='Supplied before/after images with consistent fit; verify they show the claimed change.',enabled=True,status='STORYBOARD · NARRATION PICKUP')
                     plan['passage_ids']=[mapping.get(id_,id_) for id_ in plan['passage_ids']]
                     identity=plan['type']+'|'+'|'.join(plan['passage_ids'])+'|'+(plan['title'] if plan.get('claim','').startswith('Show this repository') else plan['kind'] if plan['type']=='demo' else '')
-                    if animation_mode:identity+='|animation:'+animation_mode
+                    if animation_mode:identity+='|animation:'+animation_mode+'|context:'+str(motion_storyboard.CONTEXT_VERSION)
                     if animation_style:identity+='|style:'+animation_style
                     existing=next((r for r in existing_records if r.get('story_key')==identity),None)
                     if existing:

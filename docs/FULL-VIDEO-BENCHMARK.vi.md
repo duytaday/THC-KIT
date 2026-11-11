@@ -88,6 +88,29 @@ phù hợp → Measure. Trang review dùng video360px, tên preset ẩn, thứ t
 reviewer nhập từng gate, các mốc và câu trả lời. Người không có audio để phần
 nghe chưa kiểm. Lưu review tạo version mới trên D, không sửa review cũ.
 
+Protocol nội bộ hiện là version2, giữ tên file để tương thích đường dẫn. Trước
+khi tạo bài xem mù, mở **Câu hỏi trắc nghiệm theo từng nguồn** và nhập câu hỏi,
+2–6 lựa chọn, chỉ số đáp án cùng bằng chứng source/timecode cho từng recording.
+Không có đáp án thì vẫn hỏi mở; accuracy để N/A. Public review không chứa đáp án
+hoặc bằng chứng của key, cũng không truy cập được hai file mapping/run private.
+Xem lượt đầu ở1× không tua, trả lời câu hỏi rồi mới phát lại để ghi lỗi QC.
+Form ghi tốc độ và chiều rộng player thực tế; màn hình390px hiện còn294px sau
+các lề. Không ghi giả rằng tất cả reviewer đã xem đúng360px hoặc đã nghe.
+
+Mỗi export dùng receipt đã đóng băng: SHA của brief trước render, branding,
+captions, proof và toàn bộ code/font/runtime của renderer; thêm encoder thực,
+prompt/schema/decoder và worker của mỗi model scene. Không lấy settings đang
+chỉnh hoặc file proof hôm nay để mô tả master cũ. Đổi brief dù MP4 không đổi
+cũng phải tạo hồ sơ phiên bản mới. Dùng frame count từ timeline đã render.
+Import lại cùng source hash không tạo thêm một tập hoặc first pass độc lập.
+
+Harness `app/full_video_acceptance.py` đợi API lưu/chèn scene hoàn tất, đọc lại
+settings và tập scene thực sự được chèn trước khi Queue. Scene model báo thiếu
+input hoặc bị từ chối chèn được ghi là thất bại; không render master thiếu demo
+rồi tính là một đối chứng hoàn chỉnh. Export kỹ thuật đạt nhưng thiếu proof vẫn
+không đủ điều kiện so model hoặc giao khách. Bài benchmark giữ cả thất bại và
+những controls không khớp; nó không tự chọn bản thắng hay bật adapter.
+
 Developer commands từ checkout root:
 
 ```powershell

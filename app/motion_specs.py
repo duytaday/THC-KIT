@@ -3,6 +3,7 @@ import copy, math, re, textwrap, unicodedata
 
 SCENE_TYPES=('intro','replace','wrap','explain','compare','focus','action_result','hold')
 COMPONENTS=('05','07','08','09','11','12','13','15','19')
+ANCHOR_KINDS=('speech','visual','control','contact','result')
 SOUNDS=('slide','chapter','click','chime','tap')
 BASE_MODEL='Qwen/Qwen2.5-1.5B-Instruct'
 BASE_REVISION='989aa7980e4cf806f80c7fef2b1adb7bc71aa306'
@@ -37,13 +38,19 @@ def validate(spec,context,*,check_hold=True):
         raise ValueError('Unknown animation-spec fields')
     if spec.get('v')!=1 or spec.get('scene_type') not in SCENE_TYPES:raise ValueError('Unsupported animation-spec version/type')
     if spec.get('layout') not in ('host','shoulder','full','demo'):raise ValueError('Unknown animation layout')
+    required=context.get('layout_requirement')
+    if required is not None:
+        if required not in ('host','shoulder','full','demo'):raise ValueError('Unknown declared layout requirement')
+        if spec['layout']!=required:raise ValueError('Scene does not meet the declared layout requirement')
+        if required=='full' and context.get('request')=='intro' and spec['scene_type']!='intro':raise ValueError('A declared full-screen intro requires an intro scene')
     frames=context['frames']
     if type(frames) is not int or not 15<=frames<=900:raise ValueError('Scene needs 15–900 frames')
     anchors={}
     for a in context.get('anchors',[]):
         if not isinstance(a,dict) or not isinstance(a.get('id'),str) or not a['id'] or a['id'] in anchors:raise ValueError('Source anchor IDs must be unique')
-        if a.get('kind') not in ('speech','control','contact','result'):raise ValueError('Unknown source anchor kind')
+        if a.get('kind') not in ANCHOR_KINDS:raise ValueError('Unknown source anchor kind')
         if type(a.get('frame')) is not int or not 0<=a['frame']<frames:raise ValueError('Anchor is outside scene frames')
+        if a['kind']=='visual':finite(a.get('source_pts'),0,1e9,'Observed visual source time')
         if 'end_frame' in a and (type(a['end_frame']) is not int or not a['frame']<a['end_frame']<=frames):raise ValueError('Invalid source anchor end')
         if 'roi' in a:
             roi=a['roi']

@@ -32,8 +32,20 @@ class AnimationContractTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError,'reassign'):
             hooks.before_render(dict(motion_specs=[self.entry()],keep=[[0,5],[6,10]]),10)
 
+    def test_observed_graphic_timecode_cannot_be_copied_to_another_source_clock(self):
+        entry=self.entry();a=entry['context']['anchors'][0];a.update(kind='visual',source_pts=3)
+        hooks.before_render(dict(motion_specs=[entry]),10)
+        a['source_pts']=28
+        with self.assertRaisesRegex(ValueError,'source clock'):hooks.before_render(dict(motion_specs=[entry]),10)
+
     def test_existing_projects_are_compatible(self):
         self.assertEqual(hooks.before_render(dict(keep=[[0,10]]),10),[])
+
+    def test_model_and_manual_spec_cannot_ignore_a_declared_layout_requirement(self):
+        ctx=self.context();ctx['layout_requirement']='full';s=specs.rules(ctx)
+        with self.assertRaisesRegex(ValueError,'layout requirement'):specs.validate(s,ctx)
+        ctx['layout_requirement']='not-a-layout'
+        with self.assertRaisesRegex(ValueError,'Unknown declared'):specs.validate(s,ctx)
 
     def test_duplicate_or_out_of_range_anchor_is_rejected(self):
         for extra in (dict(id='repo',frame=2,kind='speech'),dict(id='bad',frame=180,kind='speech')):

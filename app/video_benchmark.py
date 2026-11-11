@@ -1,5 +1,5 @@
 """Whole-export benchmark and source-separated correction intake. Never grants release."""
-import argparse, copy, json, math, random, shutil, statistics, subprocess, time
+import argparse, copy, json, math, random, re, shutil, statistics, subprocess, time
 from fractions import Fraction
 from pathlib import Path
 from engine import media
@@ -95,11 +95,12 @@ def reference_card(source, out):
 def controls_match(records, protocol):
     expected = protocol['controls']
     complete = len(records) == len(protocol['arms']) and {r['arm'] for r in records} == set(protocol['arms'])
-    missing = sorted({k for r in records for k in expected if k not in r.get('controls', {}) or r['arm']!='rules' and k in ('rag','prompt') and r['controls'][k] is None})
+    missing = sorted({k for r in records for k in expected if not(r['arm']=='rules' and k in ('rag','prompt')) and (k not in r.get('controls',{}) or r['controls'][k] is None)})
     unequal=[]
     for k in expected:
         compared=[r for r in records if r['arm']!='rules'] if k in ('rag','prompt') else records
         if len({motion_learning.fingerprint(r.get('controls', {}).get(k)) for r in compared})>1:unequal.append(k)
+    if len({motion_learning.fingerprint(r.get('quiz',[])) for r in records})>1:unequal.append('viewer_questions')
     return dict(eligible=complete and not missing and not unequal, missing_controls=missing,
                 unequal_controls=unequal, arms_complete=complete)
 
@@ -145,7 +146,7 @@ def create(config, out):
         # Copy exact masters. Do not falsely call unequal-level inputs loudness matched.
         bound.append(freeze_file(out / file))
         public.append(dict(id=record['id'], label=label, file=file, sha256=record['sha256'], duration=record['metrics']['duration'],
-                           required_beats=record['required_beats'], quiz=[{k:v for k,v in q.items() if k != 'expected'} for q in record['quiz']]))
+                           required_beats=record['required_beats'], quiz=public_quiz(record['quiz'])))
         mapping.append(dict(label=label, id=record['id'], arm=record['arm'], episode=record['episode']))
         pending.append(dict(id=record['id'], master_sha256=record['sha256'], reviewer='', can_watch=False, can_listen=False,
                             speed=1, width_px=360, watched_ranges=[], listened_ranges=[],
@@ -377,41 +378,109 @@ def merge_feedback(dataset, pairs, out):
     motion_learning.check_dataset(out);return new
 
 
-def from_workspace(ws, ids, reference_ids=()):
+def renderer_identity(recipe, encoding):
+    """Use the rendered recipe, never today's files or only its entrypoint."""
+    root=Path(recipe['renderer']).resolve().parent.parent;dependencies={}
+    for item in recipe.get('dependencies',[]):
+        path=Path(item['path']).resolve()
+        if path.suffix.lower() not in ('.py','.ttf','.otf','.woff','.woff2','.exe'):continue
+        try:name=path.relative_to(root).as_posix()
+        except ValueError:name='runtime/'+path.name.lower()
+        if name in dependencies and dependencies[name]!=item['sha256']:raise ValueError('Ambiguous renderer dependency identity')
+        dependencies[name]=item['sha256']
+    if not dependencies or not encoding.get('encoder'):return None
+    command=encoding.get('command',[]);flags=('-c:v','-preset','-cq','-crf','-profile:v','-pix_fmt','-r','-fps_mode')
+    args={key:command[command.index(key)+1] for key in flags if key in command and command.index(key)+1<len(command)}
+    return dict(entry=recipe['renderer_sha256'],dependencies=dependencies,encoder=encoding['encoder'],settings=args)
+
+
+def prompt_identity(root,specs,version):
+    traces=[]
+    for scene in sorted(specs,key=lambda s:(s['source_start'],s['source_end'],s['context']['request'])):
+        model=scene.get('model',{});run=model.get('inference_run_id','');decoding=model.get('decoding',{})
+        if not re.fullmatch(r'[a-f0-9]{32}',run) or not decoding.get('prompt_sha256'):return None
+        file=Path(root)/'model-runs'/run/'request.json'
+        if not file.is_file():return None
+        request=read(file)
+        if not request.get('worker_sha256') or not request.get('base_files'):return None
+        traces.append(dict(span=[scene['source_start'],scene['source_end']],role=scene['context']['request'],
+            prompt_sha256=decoding['prompt_sha256'],decoder={k:decoding.get(k) for k in ('mode','schema_sha256','code_sha256')},
+            worker_sha256=request['worker_sha256'],base_files=request['base_files'],output_token_budget=request.get('max_new_tokens','worker default')))
+    return dict(version=version,scenes=traces) if traces else None
+
+
+def validate_quiz(questions):
+    if not isinstance(questions,list) or not 1<=len(questions)<=8:raise ValueError('Use 1–8 source-specific viewer questions')
+    result=[];seen=set()
+    for q in questions:
+        if not isinstance(q,dict) or not re.fullmatch(r'[a-z][a-z0-9_-]{0,30}',q.get('id','')) or q['id'] in seen:raise ValueError('Use unique question IDs')
+        options=q.get('options',[])
+        if not isinstance(options,list) or not 2<=len(options)<=6 or any(not isinstance(s,str) or not s.strip() or len(s)>180 for s in options) or len(set(options))!=len(options):raise ValueError('Use 2–6 distinct readable answer choices')
+        if q.get('expected') not in options:raise ValueError('Declare the correct answer before the blind review')
+        if not isinstance(q.get('text'),str) or not q['text'].strip() or len(q['text'])>400 or q.get('modality') not in ('visual','audio'):raise ValueError('Declare the question and required viewing/listening capability')
+        if not isinstance(q.get('answer_evidence'),str) or not q['answer_evidence'].strip() or len(q['answer_evidence'])>1200:raise ValueError('Record source/timecoded evidence for the answer key')
+        seen.add(q['id']);result.append({k:copy.deepcopy(q[k]) for k in ('id','text','options','expected','modality','answer_evidence')})
+    return result
+
+
+def public_quiz(questions):return [{k:v for k,v in q.items() if k not in ('expected','answer_evidence')} for q in questions]
+
+
+def from_workspace(ws, ids, reference_ids=(), quiz_by_job=None):
     """UI hook snapshots under lock, measures outside it and appends a new record."""
     import uuid
     with ws.lock:
         state=copy.deepcopy(ws.data)
     selected=[e for e in state['exports'] if e['id'] in set(ids)]
     if not selected or len(selected)!=len(set(ids)) or len(selected)>12:raise ValueError('Choose 1–12 existing full exports')
+    quiz_by_job={} if quiz_by_job is None else quiz_by_job
+    if not isinstance(quiz_by_job,dict) or set(quiz_by_job)-{e['job'] for e in selected}:raise ValueError('Viewer questions belong to a selected source only')
+    quizzes={job:validate_quiz(q) for job,q in quiz_by_job.items()}
     videos=[]
     for e in selected:
         folder=Path(e['folder']);recipe=read(folder/'render-project.json');plan=recipe['plan'];host=state['assets'][e['job']]
+        if media.sha(folder/'edit.mp4')!=e['sha256']:raise ValueError('Export bytes changed; retain the old record and import/render a new revision')
+        timeline=read(folder/'timeline.json');frozen_settings=timeline.get('settings',{})
+        profile=read(folder/'acceptance-profile.json');brief_hash=profile.get('plan_hashes',{}).get('brief.md')
+        if brief_hash and (not (folder/'brief.md').is_file() or media.sha(folder/'brief.md')!=brief_hash):raise ValueError('Brief changed after export; preserve this cut and prepare a new revision before comparing')
+        expected_frames=timeline.get('expected_frames')
+        if type(expected_frames) is not int or expected_frames<=0:raise ValueError('The export needs its planned timeline frame count')
+        encoding=read(folder/'edit-review.json').get('video_encoding',{}) if (folder/'edit-review.json').is_file() else {}
+        dependencies={str(Path(d['path']).resolve()):d['sha256'] for d in recipe.get('dependencies',[])}
+        proof=[dict(sha256=dependencies.get(str(Path(q['file']).resolve())),start=q['start'],end=q['end'],source_start=q['source_start']) for q in plan.get('proof',[])]
+        if any(not q['sha256'] for q in proof):proof=None
+        brand=plan.get('branding');branding=dict(enabled=False)
+        if brand:
+            digest=dependencies.get(str(Path(brand['file']).resolve()))
+            branding=dict(enabled=True,sha256=digest,settings={k:v for k,v in brand.items() if k!='file'}) if digest else None
         specs=plan.get('motion_specs',[]);models=[s.get('model',{}) for s in specs]
         modes={m.get('mode') for m in models};arm=next(iter(modes)) if len(modes)==1 else 'current'
         previous=[]
         for old in state['exports']:
             if old['id']==e['id']:break
-            if old['job']!=e['job']:continue
             old_recipe=Path(old['folder'])/'render-project.json'
             if old_recipe.is_file():
-                old_modes={m.get('model',{}).get('mode') for m in read(old_recipe)['plan'].get('motion_specs',[])}
+                previous_recipe=read(old_recipe)
+                if previous_recipe['source_sha256']!=recipe['source_sha256']:continue
+                old_modes={m.get('model',{}).get('mode') for m in previous_recipe['plan'].get('motion_specs',[])}
                 old_arm=next(iter(old_modes)) if len(old_modes)==1 else 'current'
                 if old_arm==arm:previous.append(old['id'])
-        controls=dict(source=recipe['source_sha256'],script=media.sha(folder/'captions.srt'),edit_decisions=plan.get('keep',[[0,host['duration']]]),
-                      proof=[dict(sha256=media.sha(q['file']),start=q['start'],end=q['end'],source_start=q['source_start']) for q in plan.get('proof',[])],
-                      renderer=recipe['renderer_sha256'],caption_treatment={k:state['jobs'][e['job']]['settings'][k] for k in ('style','fit','caption_position')},
-                      style=sorted({s['context'].get('style','balanced') for s in specs}),music=plan.get('music'),rag=None,prompt=None)
+        controls=dict(source=recipe['source_sha256'],brief=brief_hash,script=media.sha(folder/'captions.srt'),edit_decisions=plan.get('keep',[[0,host['duration']]]),
+                      proof=proof,renderer=renderer_identity(recipe,encoding),caption_treatment={k:frozen_settings[k] for k in ('style','fit','caption_position')} if all(k in frozen_settings for k in ('style','fit','caption_position')) else None,
+                      style=sorted({s['context'].get('style','balanced') for s in specs}),branding=branding,music=plan.get('music'),rag=None,prompt=None)
         versions={m.get('version') for m in models if m.get('mode') in ('base_rag','fine_tuned')}
         if len(versions)==1:
             provenance=ws.root/'models/animation-spec'/next(iter(versions))/'provenance.json'
             if provenance.is_file():
-                pr=read(provenance);controls.update(rag=pr['retrieval_sha256'],prompt=pr['prompt_version'])
-        videos.append(dict(id=e['id'],episode=e['job'],source_group=state['jobs'][e['job']].get('parent_source') or e['job'],
+                pr=read(provenance);controls.update(rag=pr['retrieval_sha256'],prompt=prompt_identity(ws.root,specs,pr['prompt_version']))
+        family='sha256:'+recipe['source_sha256']
+        questions=quizzes.get(e['job'],[dict(id='target',text='Trong demo chính, người dẫn vừa bấm nút nào?',modality='visual'),dict(id='result',text='Sau khi bấm, điều gì thay đổi?',modality='visual')])
+        questions=copy.deepcopy(questions)+[dict(id='covered',text='Có chữ hoặc kết quả nào chưa kịp đọc / bị che? Ghi timecode.',modality='visual')]
+        videos.append(dict(id=e['id'],episode=family,source_group=state['jobs'][e['job']].get('parent_source') or family,
                            scope='development',arm=arm,stage='revision' if previous else 'proposal',path=str(folder/'edit.mp4'),source_sha256=recipe['source_sha256'],controls=controls,
-                           expected=dict(width=1080,height=1920,fps=30,frames=round(host['duration']*30)),
-                           required_beats=[p['id'] for p in read(folder/'acceptance-profile.json').get('demonstrations',[])],
-                           quiz=[dict(id='target',text='Trong demo chính, người dẫn vừa bấm nút nào?',modality='visual'),dict(id='result',text='Sau khi bấm, điều gì thay đổi?',modality='visual'),dict(id='covered',text='Có chữ hoặc kết quả nào chưa kịp đọc / bị che? Ghi timecode.',modality='visual')],
+                           expected=dict(width=1080,height=1920,fps=30,frames=expected_frames),
+                           required_beats=[p['id'] for p in profile.get('demonstrations',[])],
+                           quiz=questions,
                            pickups=[r['plan']['intended_visual'] for r in state.get('artifacts',{}).values() if r['job']==e['job'] and r['plan']['kind']=='placeholder']))
     refs=[]
     for id_ in dict.fromkeys(reference_ids):

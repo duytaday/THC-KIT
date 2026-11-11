@@ -34,6 +34,9 @@
   blinded complete-video comparison on new material, same source/listening level,
   all QC gates, viewer answers and actual repair time. A corrected training episode
   remains a regression example; the next unseen claim requires fresh held-out data.
+  Latest explicit restatement: “So mù các bản toàn tập cùng nguồn/mức nghe,
+  kiểm đủ QC, câu trả lời người xem và thời gian sửa thực tế.” This verifies the
+  promotion criterion, not an actual approval or observed benchmark result.
 - [x] Benchmark granularity: user explicitly requires full edited videos and
   reference-based flow criteria. Scene/spec diagnostics do not replace whole-episode
   acceptance. A future folder of 30 shorts is intake, not a claim that 30 exist now.

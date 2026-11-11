@@ -29,6 +29,21 @@ class GateSafetyTests(unittest.TestCase):
         self.assertEqual(self.assess()['status'],'REVISE')
     def test_missing_listening_never_passes(self):
         self.p['gates']['E']={'review_required':True,'evidence_ids':['listen']};self.assertEqual(self.assess()['status'],'NEEDS_REVIEW')
+    def test_disjoint_review_keeps_an_earlier_observed_failure(self):
+        self.p['gates']['B']={'review_required':True,'evidence_ids':['demo']}
+        review=dict(bundle=self.bundle,reviewer=dict(id='Still-frame fixture reviewer',can_watch=True,can_listen=False),watched_ranges=[[5,5.1],[1,1.1]],gates={'B':dict(status='FAIL',evidence=[dict(id='demo',master_range=[1,1.1],expected='Actual resulting screen',actual='Presenter only',modality='visual')])})
+        result=self.assess(review)
+        self.assertEqual(result['status'],'REVISE')
+        self.assertTrue(any(i['id']=='review:demo' for i in result['issues']))
+        self.assertFalse(result.get('approved_by'))
+    def test_later_inspection_does_not_certify_the_unseen_gap(self):
+        ranges=[[5,5.1],[1,1.1]]
+        self.assertTrue(gate.covered(ranges,1,1.1))
+        self.assertTrue(gate.covered(ranges,5,5.1))
+        self.assertFalse(gate.covered(ranges,1,5.1))
+        self.assertFalse(gate.covered(ranges,0,6))
+        self.assertFalse(gate.covered([],1,1.01))
+        self.assertFalse(gate.covered([[0,.1]],1,1.01))
     def test_stale_review_cannot_inject_old_sync_failure(self):
         self.p['gates']['E']={'review_required':True,'evidence_ids':['listen']}
         r=self.assess({'bundle':{},'reviewer':{'can_listen':True,'can_watch':True},'sync_observations':[{'time':1,'offset_frames':50}]})

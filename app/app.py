@@ -279,7 +279,7 @@ class Handler(BaseHTTPRequestHandler):
                 return self.result({'ids':ws.artifacts.generate(b['ids'],b.get('evidence'),bool(b.get('spoken_confirmed',False)),b.get('design'),b.get('animation_mode'),b.get('animation_style'))})
             elif p == '/api/benchmarks/create':
                 import video_benchmark
-                return self.result(video_benchmark.from_workspace(ws,b['ids'],b.get('references',[])))
+                return self.result(video_benchmark.from_workspace(ws,b['ids'],b.get('references',[]),b.get('quiz_by_job')))
             elif p == '/api/benchmarks/review':
                 import video_benchmark
                 return self.result(video_benchmark.save_review(ws,b['id'],b['review']))

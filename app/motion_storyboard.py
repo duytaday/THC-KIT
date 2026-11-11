@@ -1,6 +1,7 @@
 """Translate current-project passages/proof to model inputs; no reference timings copied."""
 import copy,math
 import motion_specs,speech
+CONTEXT_VERSION=2
 
 
 def context(plan,host,assets,transcript=None):
@@ -17,10 +18,14 @@ def context(plan,host,assets,transcript=None):
     frames=min(round(float(plan['duration'])*30),round((host['duration']-at)*30))
     if frames<30:raise ValueError('Not enough source footage for this scene; move it or record a pickup')
     texts=list(dict.fromkeys([plan['title'],*plan.get('items',[])]))[:6] if plan['type']=='introduction' else [plan['title']]
-    texts=[text[:140] for text in texts]
+    # Reject an oversized label explicitly; never silently remove its last words.
+    texts=[motion_specs.clean_text(text) for text in texts]
     ctx=dict(request='intro' if plan['type']=='introduction' else 'demo',quote=plan['source_quote'],texts=texts,anchors=[],frames=frames,
         protected=[dict(kind='face',rect=[.1,.15,.8,.4]),dict(kind='captions',rect=[.02,.77,.96,.15])],style=plan.get('motion_style','balanced'),voice_aligned=False)
-    ctx['intent']='Giới thiệu chủ đề và các mục cần nhớ.' if plan['type']=='introduction' else 'Hướng mắt vào nút, click thật, rồi giữ kết quả.' if proof else 'Giải thích một ý cạnh vai, giữ người dẫn.'
+    ctx['intent']='Intro toàn màn hình: giới thiệu chủ đề và các mục cần nhớ.' if plan['type']=='introduction' else 'Hướng mắt vào nút, click thật, rồi giữ kết quả.' if proof else 'Giải thích một ý cạnh vai, giữ người dẫn.'
+    # The native intro treatment is explicitly full-screen, as is its rules
+    # baseline. This buyer/preset requirement is not a learned layout decision.
+    if plan['type']=='introduction':ctx['layout_requirement']='full'
     visible=[w for w in words if at<=w['start']<at+frames/30]
     anchor=visible[0] if visible else None
     ctx['anchors']=[dict(id='spoken-start',frame=round((anchor['start']-at)*30) if anchor else 0,kind='speech',text=anchor['text'] if anchor else plan['source_quote'])]
@@ -56,6 +61,6 @@ def attach(plan,ctx,at,prediction):
     result.update(kind='animation_spec',duration=ctx['frames']/30,at=at,origin='animation_'+prediction['model']['mode'],
         intended_visual=spec.get('rationale','Editable source-linked animation'),
         status='NEEDS_REVIEW' if ctx.get('voice_aligned') else 'STORYBOARD · NARRATION PICKUP',
-        animation=dict(id='scene-'+plan['passage_ids'][0]+'-'+plan['type'],context=copy.deepcopy(ctx),spec=spec,model=prediction['model']))
+        animation=dict(id='scene-'+plan['passage_ids'][0]+'-'+plan['type'],context_version=CONTEXT_VERSION,context=copy.deepcopy(ctx),spec=spec,model=prediction['model']))
     if spec.get('missing'):result['status']='NEEDS_INPUT · '+ '; '.join(spec['missing'])
     return result

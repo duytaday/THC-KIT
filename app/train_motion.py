@@ -10,7 +10,7 @@ def run(dataset,out,steps=128):
     manifest,rows,pool=data.check_dataset(dataset)
     out=Path(out);out.mkdir(parents=True,exist_ok=False)
     receipt=dict(task='script_animation_spec_lora_v1',status='RUNNING',base_model=schema.BASE_MODEL,base_revision=schema.BASE_REVISION,dataset_fingerprint=manifest['dataset_fingerprint'],label_scope=manifest['dataset_kind'],human_confirmed_labels=manifest['human_confirmed_labels'],agent_experimental_labels=manifest['agent_experimental_labels'],source_families=manifest['source_content_families'],actual_optimizer_steps=0,training_completed=False,production_eligible=False,code_sha256=media.sha(__file__),style='maverick_fast',full_master_listening='UNVERIFIED')
-    receipt['prompt_version']=data.PROMPT_VERSION;receipt['training_device']='cuda:0'
+    receipt['prompt_version']=data.PROMPT_VERSION;receipt['retrieval_version']=data.RETRIEVAL_VERSION;receipt['training_device']='cuda:0'
     receipt['source_groups']={part:sorted({r['source_group'] for r in rs}) for part,rs in rows.items()}
     receipt['source_hashes']={part:sorted({r['source_sha256'] for r in rs}) for part,rs in rows.items()}
     receipt['reference_timecoded_experimental_labels']=manifest.get('reference_timecoded_experimental_labels',0)
@@ -18,6 +18,9 @@ def run(dataset,out,steps=128):
     receipt['label_origins']=manifest.get('label_origins',{})
     receipt['reference_timecoded_gold_labels']=manifest.get('reference_timecoded_gold_labels',0)
     receipt['independent_creator_benchmark']=manifest.get('independent_creator_benchmark',False)
+    styles={name:sum(r['input'].get('style','unspecified')==name for r in rows['train']) for name in sorted({r['input'].get('style','unspecified') for r in rows['train']})}
+    receipt.update(training_style_counts=styles,style=next(iter(styles)) if len(styles)==1 else 'mixed')
+    receipt.update(initialization='fresh_pinned_base_no_adapter_resume',target_coverage=manifest.get('target_coverage',{}),experiment_lineage=manifest.get('experiment_lineage',{}))
     def save():media.write_json(out/'provenance.json',receipt)
     def stage(s):receipt['stage']=s;save();print('STAGE',s,flush=True)
     save()
@@ -42,7 +45,7 @@ def run(dataset,out,steps=128):
             if p.requires_grad:p.data=p.data.float()
         initial={n:p.detach().cpu().clone() for n,p in model.named_parameters() if p.requires_grad}
         receipt['trainable_parameters']=sum(v.numel() for v in initial.values())
-        retrieved={r['id']:data.retrieve(r['input'],[e for e in pool if e['id']!=r['id']]) for rs in rows.values() for r in rs}
+        retrieved={r['id']:data.retrieve(r['input'],[e for e in pool if e['id']!=r['id']],version=receipt['retrieval_version']) for rs in rows.values() for r in rs}
         media.write_json(out/'retrieved-examples.json',{k:[e['id'] for e in v] for k,v in retrieved.items()})
         def encode(row):
             prompt=tok.apply_chat_template(data.messages(row['input'],retrieved[row['id']]),tokenize=False,add_generation_prompt=True)

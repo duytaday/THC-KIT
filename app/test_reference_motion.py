@@ -44,6 +44,19 @@ class ReferenceLabelTests(unittest.TestCase):
         self.assertEqual(result['reference_timecoded_experimental_labels'],1)
         self.assertNotIn('sfx',row['target'])
 
+    def test_visual_source_cue_is_not_a_claim_that_a_word_was_heard(self):
+        self.label['input']['anchors'][0]['kind']='visual'
+        with patch('reference_motion.motion_learning.check_dataset'):
+            result=self.export()
+        row=json.loads((self.root/'dataset/train.jsonl').read_text(encoding='utf-8'))
+        self.assertEqual(row['input']['anchors'][0]['kind'],'visual')
+        self.assertEqual(result['target_coverage']['train']['full_screen_intros'],1)
+        self.assertEqual(result['target_coverage']['train']['audio_supervised'],0)
+
+    def test_visual_source_frame_must_match_reference_timecode(self):
+        anchor=self.label['input']['anchors'][0];anchor.update(kind='visual',source_pts=5)
+        with self.assertRaisesRegex(ValueError,'source timecode'):self.export()
+
 
 class ReferenceTimingTests(unittest.TestCase):
     def context(self):return dict(request='intro',texts=['Đúng vị trí'],frames=90,protected=[],anchors=[dict(id='word',kind='speech',frame=10)])
@@ -64,6 +77,19 @@ class ReferenceTimingTests(unittest.TestCase):
     def test_legacy_checkpoint_keeps_its_frozen_prompt(self):
         self.assertNotIn('lead_frames',motion_learning.messages(self.context(),prompt_version=2)[0]['content'])
         self.assertIn('lead_frames',motion_learning.messages(self.context(),prompt_version=3)[0]['content'])
+
+    def test_curation_limits_do_not_request_an_unneeded_customer_pickup(self):
+        self.assertIn('missing/rationale',motion_learning.SYSTEMS[4])
+        self.assertNotIn('missing/rationale',motion_learning.SYSTEMS[5])
+        self.assertIn('input/pickup bắt buộc',motion_learning.SYSTEMS[5])
+
+    def test_count_aware_retrieval_preserves_legacy_order_and_uses_input_only(self):
+        ctx=dict(request='intro',intent='full',quote='topic',texts=['a']*6)
+        pool=[dict(id='a',input=dict(ctx,texts=['a']*3),target=dict(layout='full')),dict(id='b',input=dict(ctx),target=dict(layout='host'))]
+        self.assertEqual(motion_learning.retrieve(ctx,pool)[0]['id'],'a')
+        self.assertEqual(motion_learning.retrieve(ctx,pool,version=2)[0]['id'],'b')
+        pool[1]['target']={'invented':'ranking must not read this'}
+        self.assertEqual(motion_learning.retrieve(ctx,pool,version=2)[0]['id'],'b')
 
 
 if __name__=='__main__':unittest.main()

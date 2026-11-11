@@ -29,7 +29,8 @@ def covered(ranges,start,end):
         if b<=cursor:continue
         if a>cursor+.05:return False
         cursor=max(cursor,b)
-    return cursor>=end-.05
+        if cursor>=end-.05:return True
+    return False
 
 def validate_profile(p):
     if p.get('schema_version')!=1 or not p.get('revision') or p.get('job_kind') not in ('real','fixture'):raise ValueError('Invalid acceptance profile identity')

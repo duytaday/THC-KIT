@@ -56,6 +56,13 @@ class SpecIntegrationTests(unittest.TestCase):
         self.assertEqual(self.ws.data['artifacts'][original[0]]['plan']['animation']['context']['style'],'balanced')
         self.assertEqual(self.ws.data['artifacts'][fast[0]]['plan']['animation']['context']['style'],'maverick_fast')
 
+    def test_full_intro_constraint_is_input_and_does_not_reuse_a_legacy_context(self):
+        ids=self.generate();record=self.ws.data['artifacts'][ids[0]]
+        self.assertEqual(record['plan']['animation']['context']['layout_requirement'],'full')
+        record['story_key']=record['story_key'].replace('|context:2','')
+        new=self.generate();self.assertNotEqual(ids[0],new[0])
+        self.assertIn(ids[0],self.ws.data['artifacts'])
+
     def test_model_work_does_not_hold_the_workspace_lock(self):
         import threading,motion_policy
         infer=motion_policy.infer
@@ -99,6 +106,10 @@ class SpecIntegrationTests(unittest.TestCase):
 
 
 class TranscriptAnchorTests(unittest.TestCase):
+    def test_long_scene_text_is_rejected_instead_of_silently_truncated(self):
+        plan=dict(at=0,duration=4,type='introduction',title='Từ '+('rất dài '*30),items=[],source_quote='Lời thật.')
+        with self.assertRaisesRegex(ValueError,'140'):motion_storyboard.context(plan,dict(duration=8),{})
+
     def test_asr_uses_only_current_episode_terminology_and_separate_cache(self):
         import types
         calls=[]

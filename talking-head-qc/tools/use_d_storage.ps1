@@ -8,6 +8,8 @@ $env:NPM_CONFIG_CACHE=Join-Path $storageRoot 'cache\npm'
 $env:HF_HOME=Join-Path $storageRoot 'cache\huggingface'
 $env:HF_HUB_CACHE=Join-Path $env:HF_HOME 'hub'
 $env:XDG_CACHE_HOME=Join-Path $storageRoot 'cache'
+$env:TORCH_HOME=Join-Path $storageRoot 'cache\torch'
+$env:CUDA_CACHE_PATH=Join-Path $storageRoot 'cache\cuda'
 $env:HYPERFRAMES_CACHE_DIR=Join-Path $storageRoot 'cache\hyperframes'
 $env:HYPERFRAMES_FONT_CACHE_DIR=Join-Path $env:HYPERFRAMES_CACHE_DIR 'fonts'
 $env:HYPERFRAMES_CONFIG_DIR=Join-Path $storageRoot 'config\hyperframes'
@@ -16,5 +18,5 @@ $env:HYPERFRAMES_NO_TELEMETRY='1'
 $env:PYTHONPYCACHEPREFIX=Join-Path $storageRoot 'cache\python-bytecode'
 $env:PYTHONUTF8='1'
 $env:PLAYWRIGHT_BROWSERS_PATH=Join-Path $storageRoot 'cache\playwright'
-foreach($path in @($env:TEMP,$env:UV_CACHE_DIR,$env:NPM_CONFIG_CACHE,$env:HF_HUB_CACHE,$env:PYTHONPYCACHEPREFIX)) { New-Item -ItemType Directory -Path $path -Force | Out-Null }
+foreach($path in @($env:TEMP,$env:UV_CACHE_DIR,$env:NPM_CONFIG_CACHE,$env:HF_HUB_CACHE,$env:PYTHONPYCACHEPREFIX,$env:TORCH_HOME,$env:CUDA_CACHE_PATH)) { New-Item -ItemType Directory -Path $path -Force | Out-Null }
 Write-Output "Kit=$kitRoot; generated files, cache and temp=$storageRoot"

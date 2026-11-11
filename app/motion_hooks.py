@@ -28,6 +28,9 @@ def before_render(plan, source_seconds, fps=30):
         if any(type(t) not in (int,float) or not math.isfinite(t) for t in (start,end)):raise ValueError('Animation source times must be finite')
         frames=entry['context']['frames']
         if abs((end-start)*fps-frames)>.01:raise ValueError('Animation span must equal its editable frame count')
+        for anchor in entry['context']['anchors']:
+            if anchor['kind']=='visual' and abs(anchor['source_pts']-start-anchor['frame']/fps)>1/fps+.0001:
+                raise ValueError('Reassign the observed visual cue to this episode’s source clock')
         kept=next((c for c in clock if c[0]-1e-6<=start<end<=c[1]+.5/fps+1e-6),None)
         if not kept:raise ValueError('Trim removed an animation span; reassign its source cues')
         frame=(kept[2]+start-kept[0])*fps

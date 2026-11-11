@@ -19,15 +19,39 @@ SYSTEM=SYSTEM.replace('Cuối cảnh đủ hold và6frame fade.','Cuối cảnh 
 SYSTEM+='\nObjects có thể có theme brand/paper/charcoal, lead_frames0..30 (vào trước mốc lời, không âm), exit_frames0..30 (0 khi giữ cứng đến hết). Marker11/12/13 không được lead trước thao tác thật. Bản cũ thiếu các trường này dùng brand, lead0, exit6. Âm thanh chưa quan sát không phải lựa chọn mute; sfx có thể bỏ khi chưa có nhãn âm thanh.'
 PROMPT_VERSION=3
 SYSTEMS[3]=SYSTEM
+SYSTEMS[4]=SYSTEM+'''\nVisual anchor là mốc đồ họa quan sát trên source, không phải lời đã nghe và không phải bằng chứng phần mềm.
+Chọn bố cục theo intent hiện tại: intro toàn màn hình dùng full; giữ mặt dùng host/shoulder và tránh protected.
+Một thẻ text không tái tạo được ảnh, icon, rotation hay counter của reference. Ghi rõ giới hạn trong missing/rationale.
+Lời giải thích của planner không phải provenance về weights hay trạng thái QC; không sao chép câu rules-baseline từ ví dụ.'''
+PROMPT_VERSION=4
+SYSTEMS[5]=SYSTEMS[4].replace('Ghi rõ giới hạn trong missing/rationale.','Giới hạn tái dựng reference chỉ ghi trong rationale. missing chỉ dành cho input/pickup bắt buộc của cảnh hiện tại; không dùng nó để xin lại icon/ảnh gốc không được brief yêu cầu.')
+SYSTEMS[5]+='\nĐếm các text hiện tại trước khi xếp thẻ. Mọi thẻ phải nằm trong canvas và tránh protected; không kéo dài danh sách theo khoảng cách của ví dụ ít mục hơn. Không chép phần giải thích của annotation thành lỗi thiếu footage của khách.'
+PROMPT_VERSION=5
+RETRIEVAL_VERSION=2
+
+
+def coverage(rows):
+    """Expose what the labelled targets actually cover, not an adequacy score."""
+    return {part:dict(rows=len(rs),roles={k:sum(r['input']['request']==k for r in rs) for k in ('intro','demo')},
+        layouts={k:sum(r['target']['layout']==k for r in rs) for k in ('host','shoulder','full','demo')},
+        full_screen_intros=sum(r['target']['scene_type']=='intro' and r['target']['layout']=='full' for r in rs),
+        moving_entrances=sum(any(any(k['x'] or k['y'] or k['scale']!=1 or k['opacity']!=1 for k in o['keyframes']) for o in r['target']['objects']) for r in rs),
+        audio_supervised=sum(r.get('reference_evidence',{}).get('audio')=='supervised' for r in rs))
+        for part in ('train','validation','test') for rs in [[r for r in rows if r['split']==part]]}
 
 
 def fingerprint(data):
     return hashlib.sha256(json.dumps(data,sort_keys=True,ensure_ascii=False,separators=(',',':')).encode()).hexdigest()
 
 
-def retrieve(context,pool,limit=1):
+def retrieve(context,pool,limit=1,version=1):
+    if version not in (1,2):raise ValueError('Unsupported animation retrieval version')
     words=set(context.get('quote','').casefold().split())
-    return sorted(pool,key=lambda r:(r['input'].get('request')!=context.get('request'),r['input'].get('intent')!=context.get('intent'),-len(words & set(r['input'].get('quote','').casefold().split())),r['id']))[:limit]
+    def key(r):
+        source=r['input'];prefix=(source.get('request')!=context.get('request'),source.get('intent')!=context.get('intent'))
+        if version==2:prefix+=(abs(len(source.get('texts',[]))-len(context.get('texts',[]))),bool(source.get('proof'))!=bool(context.get('proof')),source.get('style')!=context.get('style'))
+        return prefix+(-len(words & set(source.get('quote','').casefold().split())),r['id'])
+    return sorted(pool,key=key)[:limit]
 
 
 def messages(context,examples=(),prompt_version=None):
@@ -58,7 +82,7 @@ def check_dataset(root):
         for row in rs:
             if row.get('annotation_scope') not in ('editor_confirmed','agent_experimental_reconstruction'):raise ValueError('Missing annotation provenance')
             if row.get('input_basis')!='declared_script_and_available_source_facts':raise ValueError('Do not feed target-derived decision flags to the model')
-            if set(row['input'])-{'request','quote','texts','anchors','frames','protected','proof','style','voice_aligned','intent'}:raise ValueError('Unexpected inference feature')
+            if set(row['input'])-{'request','quote','texts','anchors','frames','protected','proof','style','voice_aligned','intent','layout_requirement'}:raise ValueError('Unexpected inference feature')
             schema.validate(row['target'],row['input'])
     pool=json.loads((root/'retrieval-train-only.json').read_text(encoding='utf-8'))
     training={r['id']:r for r in rows['train']}

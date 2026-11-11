@@ -4,7 +4,7 @@ from pathlib import Path
 from engine import media
 from version import VERSION
 
-MODULES='animation_library app artifact_store artifacts asr_setup assignments audition author_audio benchmark_ui components creator editing_styles encoder_setup generative generative_data generative_infer generative_package generative_train hyperframes_bridge learning learning_inventory motion_hooks motion_learning motion_policy motion_render motion_specs motion_storyboard motion_worker openings planner_policy planner_worker qc_bridge reference_motion revision_cache speech speech_worker storyboard train_motion train_planner version video_benchmark viewer_quiz workspace'.split()
+MODULES='animation_library app artifact_store artifacts asr_setup assignments audition author_audio benchmark_ui components creator editing_styles encoder_setup generative generative_data generative_infer generative_package generative_train hyperframes_bridge learning learning_inventory motion_decode motion_hooks motion_learning motion_policy motion_render motion_specs motion_storyboard motion_worker openings planner_policy planner_worker qc_bridge reference_motion revision_cache speech speech_worker storyboard train_motion train_planner version video_benchmark viewer_quiz workspace'.split()
 ENGINE='__init__ cues edit enhance layouts media planner references'.split()
 UI='app.js benchmark-review.html benchmark-review.js DM-Sans-LICENSE.txt dm-sans.woff2 icon.svg index.html style.css'.split()
 STAMP=(2026,11,12,0,0,0)

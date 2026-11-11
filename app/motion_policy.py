@@ -23,7 +23,14 @@ def verify_run(folder):
     if config.get('base_model_name_or_path')!=motion_specs.BASE_MODEL or config.get('peft_type')!='LORA' or set(config.get('target_modules',[]))!={'q_proj','v_proj'}:raise ValueError('Unexpected adapter architecture')
     rag=folder/'retrieval-train-only.json'
     if receipt.get('retrieval_sha256')!=media.sha(rag):raise ValueError('Changed training-only retrieval index')
-    if any(r.get('split')!='train' for r in json.loads(rag.read_text(encoding='utf-8'))):raise ValueError('Held-out data in RAG')
+    pool=json.loads(rag.read_text(encoding='utf-8'))
+    if any(r.get('split')!='train' for r in pool):raise ValueError('Held-out data in RAG')
+    styles={name:sum(r['input'].get('style','unspecified')==name for r in pool) for name in sorted({r['input'].get('style','unspecified') for r in pool})}
+    # Derive rather than rewrite the immutable run receipt. Early trainer versions
+    # hardcoded the requested style even for a different/mixed annotation corpus.
+    receipt=dict(receipt,observed_training_style_counts=styles)
+    if styles and receipt.get('style') not in styles and receipt.get('style')!='mixed':
+        receipt['provenance_warnings']=['Legacy style field differs from the actual training-only retrieval rows; no style-fidelity claim.']
     return receipt
 
 
@@ -38,7 +45,7 @@ def import_package(root,package):
             dest.parent.mkdir(parents=True,exist_ok=True)
             with z.open(i) as src,dest.open('wb') as out:shutil.copyfileobj(src,out)
     receipt=verify_run(folder)
-    record=dict(folder=str(folder),version=folder.name,checkpoint_sha256=receipt['adapter_files']['adapter_model.safetensors'],dataset_fingerprint=receipt['dataset_fingerprint'],actual_optimizer_steps=receipt['actual_optimizer_steps'],production_eligible=False)
+    record=dict(folder=str(folder),version=folder.name,checkpoint_sha256=receipt['adapter_files']['adapter_model.safetensors'],dataset_fingerprint=receipt['dataset_fingerprint'],actual_optimizer_steps=receipt['actual_optimizer_steps'],production_eligible=False,training_style_counts=receipt['observed_training_style_counts'],provenance_warnings=receipt.get('provenance_warnings',[]))
     media.write_json(root/'models'/'animation-spec'/'candidate.json',record)
     return record
 
@@ -67,9 +74,13 @@ def infer(root,contexts,mode,source_sha256=None):
     names += [p.name for p in base.glob('*.safetensors')]+[p.name for p in base.glob('*.safetensors.index.json')]
     hashes={name:media.sha(base/name) for name in names if (base/name).is_file()}
     if 'config.json' not in hashes or not any(n.endswith('.safetensors') for n in hashes):raise ValueError('Local base snapshot is incomplete')
-    rows=[dict(id=str(i),context=c,examples=motion_learning.retrieve(c,pool)) for i,c in enumerate(contexts)]
     receipt=verify_run(folder)
-    request=dict(mode=mode,base_path=str(base),base_files=hashes,adapter_path=str(folder/'adapter'),adapter_files=receipt['adapter_files'],prompt_version=receipt['prompt_version'],rows=rows,version=record['version'],checkpoint_sha256=record['checkpoint_sha256'])
+    rows=[dict(id=str(i),context=c,examples=motion_learning.retrieve(c,pool,version=receipt.get('retrieval_version',1))) for i,c in enumerate(contexts)]
+    decoder=os.environ.get('CUTROOM_ANIMATION_DECODER','unconstrained')
+    if decoder not in ('unconstrained','source_json_v1'):raise ValueError('Unknown animation decoder; use unconstrained or source_json_v1')
+    request=dict(mode=mode,base_path=str(base),base_files=hashes,adapter_path=str(folder/'adapter'),adapter_files=receipt['adapter_files'],prompt_version=receipt['prompt_version'],retrieval_version=receipt.get('retrieval_version',1),rows=rows,version=record['version'],checkpoint_sha256=record['checkpoint_sha256'],decode_mode=decoder)
+    if decoder=='source_json_v1' and os.environ.get('CUTROOM_ANIMATION_DECODER_SITE'):
+        request['decoder_site']=str(Path(os.environ['CUTROOM_ANIMATION_DECODER_SITE']).resolve(strict=True))
     run_id=uuid.uuid4().hex;run=Path(root)/'model-runs'/run_id;run.mkdir(parents=True,exist_ok=False)
     media.write_json(run/'request.json',dict(**request,source_sha256=source_sha256,worker_sha256=media.sha(Path(__file__).parent/'motion_worker.py')))
     executable=os.environ.get('CUTROOM_ANIMATION_PYTHON',sys.executable)
@@ -82,6 +93,7 @@ def infer(root,contexts,mode,source_sha256=None):
     answer=[]
     for row,prediction in zip(rows,result['predictions']):
         if prediction['id']!=row['id']:raise ValueError('Worker scene identity mismatch')
+        if prediction.get('decoding',{}).get('mode')!=decoder:raise ValueError('Worker did not use the requested animation decoder')
         if prediction.get('error'):raise ValueError('Model spec rejected for scene '+row['id']+': '+prediction['error']+'. No rules fallback was substituted.')
-        answer.append(dict(spec=motion_specs.validate(prediction['spec'],row['context']),model=dict(mode=mode,weights_loaded=True,version=record['version'],checkpoint_sha256=record['checkpoint_sha256'],adapter_active=mode=='fine_tuned',device=result['device'],base_files=hashes,retrieved_ids=[e['id'] for e in row['examples']],raw_output=prediction['raw'],runtime_seconds=prediction['runtime_seconds'],inference_run_id=run_id,compiler=prediction.get('compiler',{}))))
+        answer.append(dict(spec=motion_specs.validate(prediction['spec'],row['context']),model=dict(mode=mode,weights_loaded=True,version=record['version'],checkpoint_sha256=record['checkpoint_sha256'],adapter_active=mode=='fine_tuned',device=result['device'],base_files=hashes,retrieved_ids=[e['id'] for e in row['examples']],raw_output=prediction['raw'],runtime_seconds=prediction['runtime_seconds'],inference_run_id=run_id,compiler=prediction.get('compiler',{}),decoding=prediction.get('decoding',{'mode':'unconstrained'}))))
     return answer

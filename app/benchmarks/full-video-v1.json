@@ -1,8 +1,8 @@
 {
-  "version": 1,
+  "version": 2,
   "unit": "complete_episode",
   "arms": ["rules", "base_rag", "fine_tuned"],
-  "controls": ["source", "script", "edit_decisions", "proof", "renderer", "caption_treatment", "style", "music", "rag", "prompt"],
+  "controls": ["source", "brief", "script", "edit_decisions", "proof", "renderer", "caption_treatment", "style", "branding", "music", "rag", "prompt"],
   "gates": {
     "A": "Promise/result by 3s where appropriate; every promised demo pays off; actual CTA readable.",
     "B": "Real target, contact and readable result at phone size and 1x; prices include units; no overlay hides proof.",
@@ -21,7 +21,7 @@
   },
   "review": {"speed": 1, "width_px": 360, "audio_unavailable": "UNVERIFIED", "effect_count_is_not_quality": true},
   "pilot_targets": {
-    "source": "Configurable house engineering targets, not published universal standards or a power calculation.",
+    "source": "House planning targets, not published universal standards or a power calculation. The current interval implementation enforces its 10-episode/3-verified-group pilot floors; other targets are advisory and never auto-promote a model.",
     "critical_failures": 0,
     "first_pass_episode_acceptance": 0.8,
     "viewer_question_accuracy": 0.9,

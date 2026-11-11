@@ -55,9 +55,9 @@ def export(labels_file,out):
         if not evidence:raise ValueError('Bind the inspected decoded frame evidence')
         ctx=copy.deepcopy(label['input']);target=motion_specs.validate(label['target'],ctx)
         for anchor in ctx['anchors']:
-            if anchor['kind']=='speech' and 'source_pts' in anchor:
+            if anchor['kind'] in ('speech','visual') and 'source_pts' in anchor:
                 pts=anchor['source_pts']
-                if not span[0]-1/30<=pts<span[1] or abs((pts-span[0])*30-anchor['frame'])>1.01:raise ValueError('Speech frame does not match its source timecode')
+                if not span[0]-1/30<=pts<span[1] or abs((pts-span[0])*30-anchor['frame'])>1.01:raise ValueError('Source anchor frame does not match its source timecode')
         if ctx.get('proof'):
             proof=proofs.get(ctx['proof']['asset'])
             if not proof or media.sha(proof['path'])!=proof['sha256'] or proof['data_class']!=ctx['proof']['data_class']:raise ValueError('Bind proof to its actual current media/class')
@@ -94,6 +94,8 @@ def export(labels_file,out):
         independent_creator_benchmark=False,creator_limitations='Collection grouping is conservative; actual creator independence remains unverified. Not a creator-heldout quality claim.',
         dataset_kind='Source-timecoded visual reference reconstructions, agent experimental; audio decisions omitted when unobserved; no original editor projects or human gold claimed.',
         raw_reference_media_uploaded=0,annotation_input_sha256=media.sha(labels_file),files={p.name:media.sha(p) for p in out.iterdir() if p.is_file()})
+    if document.get('experiment_lineage'):report['experiment_lineage']=copy.deepcopy(document['experiment_lineage'])
+    report['target_coverage']=motion_learning.coverage(rows)
     report['dataset_fingerprint']=motion_learning.fingerprint(report);media.write_json(out/'manifest.json',report);motion_learning.check_dataset(out)
     return report
 

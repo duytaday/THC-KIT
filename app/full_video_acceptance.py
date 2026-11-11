@@ -2,19 +2,39 @@
 import argparse,json,time
 from pathlib import Path
 from playwright.sync_api import sync_playwright
+from engine import media
 
 
 def main():
-    p=argparse.ArgumentParser(description=__doc__);p.add_argument('--url',required=True);p.add_argument('--config',type=Path,required=True);p.add_argument('--out',type=Path,required=True);p.add_argument('--resume',action='store_true');a=p.parse_args()
+    p=argparse.ArgumentParser(description=__doc__);p.add_argument('--url',required=True);p.add_argument('--config',type=Path,required=True);p.add_argument('--out',type=Path,required=True);p.add_argument('--resume',action='store_true');p.add_argument('--modes',nargs='+',choices=('rules','base_rag','fine_tuned'),default=['rules','base_rag','fine_tuned']);a=p.parse_args()
     config=json.loads(a.config.read_text(encoding='utf-8'));out=a.out.resolve();out.mkdir(parents=True,exist_ok=a.resume)
     report=dict(exports=[],attempts=[],page_errors=[],coverage='complete_episode',scope='development',listening='UNVERIFIED')
     if a.resume and (out/'results.json').exists():report=json.loads((out/'results.json').read_text(encoding='utf-8'))
+    fixed={k:v for k,v in config.items() if k!='package'}
+    inputs=[config[k] for k in ('source','srt','proof','style_reference')]+[r['path'] for r in config['captures']]
+    identity=dict(config=fixed,files={str(Path(f).resolve()):media.sha(f) for f in inputs})
+    if report.get('source_identity') and report['source_identity']!=identity:raise ValueError('Source/config changed; start a new comparison and retain the previous one')
+    report['source_identity']=identity
+    model_required=any(m!='rules' for m in a.modes)
+    if model_required:
+        package_hash=media.sha(config['package'])
+        if report.get('model_package_sha256') and report['model_package_sha256']!=package_hash:raise ValueError('Model package changed between model arms; start a new paired comparison')
+        report['model_package_sha256']=package_hash
     def save(): (out/'results.json').write_text(json.dumps(report,ensure_ascii=False,indent=2),encoding='utf-8')
     with sync_playwright() as pw:
         browser=pw.chromium.launch(executable_path=r'C:\Program Files\Google\Chrome\Application\chrome.exe',headless=True)
         ctx=browser.new_context(viewport=dict(width=1440,height=950));page=ctx.new_page();page.set_default_timeout(600000)
         page.on('pageerror',lambda e:report['page_errors'].append(str(e)));page.goto(a.url)
         def state():return page.request.get(a.url+'/api/state').json()
+        def save_settings():
+            if not page.locator('#save').is_enabled():return
+            with page.expect_response(lambda r:r.url.endswith('/api/update')) as event:page.locator('#save').click()
+            if not event.value.ok:raise AssertionError(event.value.text())
+            page.wait_for_function("() => !touched.size && document.getElementById('save').disabled")
+        def insert_scene(id_,enabled):
+            with page.expect_response(lambda r:r.url.endswith('/api/artifacts/insert')) as event:page.locator(f'[data-artifact-insert="{id_}"]').click()
+            if not event.value.ok:raise AssertionError(event.value.text())
+            page.wait_for_function("([id,enabled]) => state.artifacts[id].inserted === enabled",arg=[id_,enabled])
         def choose_host(job):
             page.locator(f'[data-row="{job}"] .clip-name').click();page.wait_for_timeout(200)
         def import_file(file,kind):
@@ -28,7 +48,7 @@ def main():
                 if new:return new[0]['id']
                 page.wait_for_timeout(250)
             raise AssertionError('UI import did not complete: '+name)
-        if not report.get('package_imported'):
+        if model_required and not report.get('package_imported'):
             with page.expect_response(lambda r:r.url.endswith('/api/motion-package'),timeout=120000) as event:
                 page.locator('#motionPackageInput').set_input_files(config['package'])
             response=event.value
@@ -38,7 +58,7 @@ def main():
         choose_host(job);page.locator('[data-panel="script"]').click()
         script=Path(config['srt']).read_text(encoding='utf-8')
         if page.locator('#script').input_value()!=script:
-            page.locator('#script').fill(script);page.locator('#save').click()
+            page.locator('#script').fill(script);save_settings()
         proof=import_file(config['proof'],'reference');style=import_file(config['style_reference'],'reference')
         report.update(proof=proof,style_reference=style);save()
         capture_ids={q['id']:import_file(q['path'],'reference') for q in config['captures']}
@@ -48,15 +68,22 @@ def main():
             for i,q in enumerate(config['captures']):
                 page.locator('#addInsert').click();row=page.locator(f'[data-insert="{i}"]');row.locator('[data-k="asset"]').select_option(capture_ids[q['id']])
                 for k in ('at','offset','duration'):row.locator(f'[data-k="{k}"]').fill(str(q[k]))
-            page.locator('#save').click();report['manual_inserts_saved']=True;save()
-        page.locator('[data-panel="look"]').click();page.locator('#style_ref').select_option(style);page.locator('#motion_profile').select_option('baseline');page.locator('#music_mode').select_option('off')
-        if page.locator('#save').is_enabled():page.locator('#save').click()
+            save_settings();report['manual_inserts_saved']=True;save()
+        page.locator('[data-panel="look"]').click();page.locator('#style_ref').select_option(style);page.locator('#motion_profile').select_option(config.get('motion_profile','baseline'));page.locator('#music_mode').select_option('off')
+        save_settings()
+        expected_settings=dict(style_ref=style,motion_profile=config.get('motion_profile','baseline'),music_mode='off')
+        if any(state()['jobs'][job]['settings'].get(k)!=v for k,v in expected_settings.items()):raise AssertionError('UI settings were not saved before rendering')
+        if config.get('cta') and not report.get('cta_saved'):
+            cue=config['cta'];page.locator('#addEvent').click();card=page.locator('[data-event]').last;card.locator('summary').first.click()
+            card.locator('[data-event-field="kind"]').select_option('chapter')
+            for k in ('at','hold_frames','text'):card.locator(f'[data-event-field="{k}"]').fill(str(cue[k]))
+            card.locator('[data-sound-field="muted"]').check();save_settings();report['cta_saved']=True;save()
         if not state()['jobs'][job].get('transcript'):
             page.locator('[data-panel="script"]').click();page.locator('#transcribeRecording').click();page.locator('#close').click()
         report['asr']={k:state()['jobs'][job]['transcript'][k] for k in ('source_sha256','device','compute_type')};save()
-        for mode in ('rules','base_rag','fine_tuned'):
+        for mode in a.modes:
             if any(x['mode']==mode for x in report['exports']):continue
-            if a.resume and any(x['mode']==mode and x['status']=='MODEL_REJECTED' and 'Model spec rejected' in str(x['error']) for x in report['attempts']):
+            if a.resume and any(x['mode']==mode and x['status']=='MODEL_REJECTED' for x in report['attempts']):
                 print('RETAINED_REJECTION',mode,'same source/prompt/weights; no automatic fallback',flush=True);continue
             print('GENERATE',mode,flush=True);started=time.monotonic();before=state()
             page.locator('[data-panel="script"]').click();page.locator('#generateArtifacts').click();page.locator('#animationMode').select_option(mode);page.locator('#animationStyle').select_option('maverick_fast')
@@ -67,14 +94,32 @@ def main():
             with page.expect_response(lambda r:r.url.endswith('/api/artifacts/generate'),timeout=660000) as event:page.locator('#confirmGenerateArtifacts').click()
             response=event.value
             if not response.ok:
-                report['attempts'].append(dict(mode=mode,status='PIPELINE_FAILED' if mode=='rules' else 'MODEL_REJECTED',error=response.json(),wall_seconds=time.monotonic()-started));save();page.locator('#close').click();print('REJECTED',mode,response.text()[:300],flush=True);continue
+                error=response.json();rejected=mode!='rules' and 'Model spec rejected for scene ' in str(error)
+                report['attempts'].append(dict(mode=mode,status='MODEL_REJECTED' if rejected else 'PIPELINE_FAILED',error=error,wall_seconds=time.monotonic()-started));save();page.locator('#close').click();print('REJECTED' if rejected else 'PIPELINE_FAILED',mode,response.text()[:300],flush=True);continue
             page.locator('#modal').wait_for(state='hidden');s=state();ids=response.json()['ids']
+            unavailable=[s['artifacts'][id_] for id_ in ids if s['artifacts'][id_]['plan']['kind']=='animation_spec' and s['artifacts'][id_]['status'].startswith(('STALE','NEEDS_INPUT'))]
+            if unavailable:
+                report['attempts'].append(dict(mode=mode,status='MODEL_REJECTED' if mode!='rules' else 'PIPELINE_FAILED',error='Required generated scene cannot be inserted; no incomplete master exported',scenes=[dict(id=r['id'],status=r['status'],missing=r['plan']['animation']['spec'].get('missing',[])) for r in unavailable],wall_seconds=time.monotonic()-started));save();print('INCOMPLETE_SCENES',mode,flush=True);continue
             # Switch the inserted pair through the same buttons a buyer uses.
             for r in list(s['artifacts'].values()):
-                if r['job']==job and r['inserted'] and r['id'] not in ids:page.locator(f'[data-artifact-insert="{r["id"]}"]').click()
+                if r['job']==job and r['inserted'] and r['id'] not in ids:insert_scene(r['id'],False)
             for id_ in ids:
                 r=state()['artifacts'][id_]
-                if r['plan']['kind']=='animation_spec' and not r['inserted']:page.locator(f'[data-artifact-insert="{id_}"]').click()
+                if r['plan']['kind']=='animation_spec' and not r['inserted']:insert_scene(id_,True)
+            required={id_ for id_ in ids if state()['artifacts'][id_]['plan']['kind']=='animation_spec'}
+            inserted={r['id'] for r in state()['artifacts'].values() if r['job']==job and r['inserted']}
+            if inserted!=required:raise AssertionError('Inserted scene set does not match this arm; refusing an incomplete comparison')
+            if not report.get('encoder_smoke'):
+                demo=next(r for r in state()['artifacts'].values() if r['id'] in ids and r['plan']['kind']=='animation_spec' and r['plan']['type']=='demo' and r['plan']['duration']>=5)
+                folder=out/'encoder-smoke';folder.mkdir(exist_ok=True);clip=folder/'edit.mp4';source=folder/'source-preview.mp4'
+                response=page.request.get(a.url+f'/artifacts/{demo["id"]}/preview?download=1')
+                if not response.ok:raise AssertionError('Scene preview download failed: '+response.status_text)
+                source.write_bytes(response.body());assert media.sha(source)==demo['sha256']
+                media.ff('-i',source,'-t',5,'-map','0:v:0','-map','0:a:0',*media.video_encoder_args(),'-c:a','aac','-b:a','192k','-movflags','+faststart',clip)
+                media.ff('-i',clip,'-f','null','-')
+                v=media.stream(clip,'video');audio=media.stream(clip,'audio')
+                assert (v['width'],v['height'],int(v['nb_frames']))==(1080,1920,150)
+                report['encoder_smoke']=dict(path=str(clip),sha256=media.sha(clip),dimensions=[v['width'],v['height']],frames=int(v['nb_frames']),duration=media.duration(v),audio=audio['codec_name'],encoding=json.loads((folder/'ffmpeg-encode.jsonl').read_text().splitlines()[-1]),decode='PASS',visual_listening_review='UNVERIFIED');save()
             page.screenshot(path=str(out/(mode+'-settings.png')),full_page=True)
             count=len(state()['exports']);page.locator('#queue').click();deadline=time.monotonic()+1200
             while time.monotonic()<deadline:

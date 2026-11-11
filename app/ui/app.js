@@ -25,7 +25,7 @@ let state = {},
   importing = false,
   versionKey = "",
   waiting = false;
-let unresolvedScripts=[], inspectorOpen=true, manualEvents=[],pendingTakeParent='';
+let unresolvedScripts=[], inspectorOpen=true, manualEvents=[],pendingTakeParent='',editRevision=0;
 const extraSettings=['motion_profile','motion_intensity','music_mode','music_track','music_gain_db','music_asset','planner_mode','brand_logo','brand_from','brand_to'];
 const locked = (j) => ["Rendering", "Queued"].includes(j.status);
 const notify = (s) => {
@@ -36,6 +36,24 @@ const notify = (s) => {
   timer = setTimeout(() => el("toast").classList.add("hidden"), 5000);
 };
 const selectedIds = () => [...selected].filter((id) => state.jobs[id]);
+function benchmarkQuizFields(exports){
+ return `<details class="benchmark-quiz"><summary>Câu hỏi trắc nghiệm theo từng nguồn · tùy chọn</summary><p>Chuẩn bị đáp án từ footage trước khi so mù. Để trống lựa chọn thì chỉ thu câu trả lời mở, chưa tính độ chính xác.</p>${[...new Set(exports.map(e=>e.job))].map(job=>`<fieldset data-benchmark-quiz-job="${esc(job)}"><legend>${esc(sourceName(job))}</legend>${['Trong demo chính, người dẫn vừa bấm nút nào?','Sau khi bấm, điều gì thay đổi?'].map((text,i)=>`<label>Câu hỏi ${i+1}<input data-bq-text="${i}" value="${esc(text)}"></label><label>Lựa chọn · mỗi dòng một mục<textarea rows="4" data-bq-options="${i}"></textarea></label><label>Thứ tự đáp án đúng · từ 1<input type="number" min="1" max="6" data-bq-correct="${i}"></label>`).join('')}<label>Nguồn và timecode xác nhận đáp án<textarea rows="3" data-bq-evidence></textarea></label></fieldset>`).join('')}</details>`;
+}
+function readBenchmarkQuizzes(exportIds){
+ const jobs=new Set(state.exports.filter(e=>exportIds.includes(e.id)).map(e=>e.job)),quizzes={};
+ for(const box of all('[data-benchmark-quiz-job]')){
+  const job=box.dataset.benchmarkQuizJob;if(!jobs.has(job))continue;
+  const questions=[],evidence=box.querySelector('[data-bq-evidence]').value.trim();
+  for(let i=0;i<2;i++){
+   const options=box.querySelector(`[data-bq-options="${i}"]`).value.split(/\r?\n/).map(s=>s.trim()).filter(Boolean);if(!options.length)continue;
+   const text=box.querySelector(`[data-bq-text="${i}"]`).value.trim(),correct=Number(box.querySelector(`[data-bq-correct="${i}"]`).value);
+   if(!text||!evidence||!Number.isInteger(correct)||correct<1||correct>options.length)throw Error('Điền câu hỏi, đáp án và nguồn/timecode xác nhận trước khi tạo bài so mù.');
+   questions.push({id:i?'result':'target',text,options,expected:options[correct-1],modality:'visual',answer_evidence:evidence});
+  }
+  if(questions.length)quizzes[job]=questions;
+ }
+ return quizzes;
+}
 const sourceName=id=>state.jobs[id]?.label||state.assets[id]?.name||'Recording';
 const versionsFor=id=>state.exports.filter(e=>e.job===id);
 const cutVersion=e=>'v'+String(versionsFor(e.job).findIndex(x=>x.id===e.id)+1).padStart(3,'0');
@@ -218,6 +236,7 @@ function showPanel(name) {
   );
 }
 function setDirty(k) {
+  editRevision++;
   touched.add(k);
   el("dirty").textContent = "Unsaved changes";
   el("save").disabled = false;
@@ -492,7 +511,7 @@ async function manageSource(id){
 function drawArtifacts(){
  const ids=selectedIds();el('generateArtifacts').disabled=!ids.length||ids.some(id=>locked(state.jobs[id])||(state.scene_generating||[]).includes(id))||!ids.every(id=>state.jobs[id].settings.script.trim());
  el('transcribeRecording').disabled=ids.length!==1||ids.some(id=>locked(state.jobs[id]));
- el('animationModelStatus').textContent=state.animation_model?`Experimental spec adapter · ${state.animation_model.actual_optimizer_steps} optimizer steps · SHA ${state.animation_model.checkpoint_sha256.slice(0,12)} · choose per generation; not production-approved`:'No animation-spec adapter installed. Native rules and existing scenes remain available.';
+ el('animationModelStatus').textContent=state.animation_model?`Experimental spec adapter · ${state.animation_model.actual_optimizer_steps} optimizer steps · SHA ${state.animation_model.checkpoint_sha256.slice(0,12)} · choose per generation; not production-approved${state.animation_model.training_style_counts?` · training labels: ${Object.entries(state.animation_model.training_style_counts).map(([name,count])=>`${name} ${count}`).join(', ')}`:''}${state.animation_model.provenance_warnings?.length?' · Style metadata differs from the training labels; fidelity unverified.':''}`:'No animation-spec adapter installed. Native rules and existing scenes remain available.';
  const records=Object.values(state.artifacts||{}).filter(r=>ids.includes(r.job));
  el('storyboard').innerHTML=ids.length===1?(state.storyboards?.[ids[0]]?.passages||[]).map(p=>`<details class="passage"><summary>${time(p.start)} · Passage ${esc(p.id.slice(-6))} · occurrence ${p.occurrence+1}</summary><p>${esc(p.quote)}</p><small>${esc(p.timing)} · ${p.start.toFixed(2)}–${p.end.toFixed(2)}s</small></details>`).join(''):'';
  el('artifactCards').innerHTML=records.map(r=>`<article class="artifact-card"><div class="artifact-heading"><img src="/artifacts/${r.id}/thumb?v=${r.version}" alt="${esc(r.plan.type)} thumbnail"><div><small>${r.plan.type==='introduction'?'Introduction':'Demo'} · v${String(r.version).padStart(3,'0')}</small><strong>${esc(r.plan.title)}</strong><span>${r.plan.duration.toFixed(1)}s · ${r.plan.enabled?'':'Disabled · '}${esc(r.status)}</span></div></div><blockquote>${esc(r.plan.source_quote)}</blockquote><small>${esc(r.plan.intended_visual)} · ${esc(r.plan.timing)}</small><div class="artifact-actions"><button type="button" class="soft" data-artifact-preview="${r.id}">Preview</button><button type="button" class="textbtn" data-artifact-edit="${r.id}">Edit</button><button type="button" class="textbtn" data-artifact-regenerate="${r.id}">Regenerate this scene</button><button type="button" class="textbtn" data-artifact-toggle="${r.id}">${r.plan.enabled?'Disable':'Enable'}</button><button type="button" class="textbtn" data-artifact-insert="${r.id}">${r.inserted?'Remove from episode':'Insert in episode'}</button><a class="link" download href="/artifacts/${r.id}/preview?download=1">Export MP4</a></div></article>`).join('');
@@ -539,9 +558,11 @@ async function refresh() {
 }
 async function save() {
   if (!touched.size) return;
+  const savingRevision=editRevision;
   const changes = {};
   for (const k of touched) changes[k] = k === "inserts" ? inserts : k==='events'?manualEvents:['motion_intensity','music_gain_db','brand_from','brand_to'].includes(k)?Number(el(k).value):el(k).value;
   await req("/api/update", { ids: selectedIds(), changes });
+  if(editRevision!==savingRevision){notify('Earlier settings saved. Newer edits are still unsaved.');return;}
   touched.clear();
   versionKey = "";
   await refresh();
@@ -669,11 +690,11 @@ document.addEventListener(
     if(b.id==='confirmGenerateArtifacts'){b.disabled=true;b.textContent='Generating original scenes…';try{await req('/api/artifacts/generate',{ids:selectedIds(),evidence:readSceneEvidence(),spoken_confirmed:el('sceneSpokenConfirmed').checked,design:readSceneDesign(),animation_mode:el('animationMode').value||null,animation_style:el('animationStyle').value});el('modal').close();versionKey='';await refresh();showPanel('script');notify('Storyboard and independent scene previews created. Review the original quote and any pickups.');}finally{b.disabled=false;}return;}
     if(b.id==='benchmarkExports'){
       const source=el('exportSource').value,available=state.exports.filter(e=>!source||e.job===source);
-      dialog('Benchmark full edited videos',`<p>Choose complete exports from the same episode for controlled comparisons. This does not approve delivery. Every master is decoded and measured; human viewing/listening remains pending.</p><fieldset><legend>Exports · previous cuts remain intact</legend>${available.slice(-12).map(e=>`<label><input type="checkbox" data-benchmark-export="${e.id}" ${e.id===available.at(-1)?.id?'checked':''}>${esc(sourceName(e.job))} · ${cutVersion(e)} · ${time(e.duration)}</label>`).join('')}</fieldset><fieldset><legend>Style references · optional</legend>${refs().map(a=>`<label><input type="checkbox" data-benchmark-ref="${a.id}">${esc(a.name)}</label>`).join('')||'<p>No style references imported.</p>'}</fieldset><button id="createBenchmark" type="button" class="primary">Measure full videos & create blind review</button>`);return;
+      dialog('Benchmark full edited videos',`<p>Choose complete exports from the same episode for controlled comparisons. This does not approve delivery. Every master is decoded and measured; human viewing/listening remains pending.</p><fieldset><legend>Exports · previous cuts remain intact</legend>${available.slice(-12).map(e=>`<label><input type="checkbox" data-benchmark-export="${e.id}" ${e.id===available.at(-1)?.id?'checked':''}>${esc(sourceName(e.job))} · ${cutVersion(e)} · ${time(e.duration)}</label>`).join('')}</fieldset><fieldset><legend>Style references · optional</legend>${refs().map(a=>`<label><input type="checkbox" data-benchmark-ref="${a.id}">${esc(a.name)}</label>`).join('')||'<p>No style references imported.</p>'}</fieldset>${benchmarkQuizFields(available.slice(-12))}<button id="createBenchmark" type="button" class="primary">Measure full videos & create blind review</button>`);return;
     }
     if(b.id==='createBenchmark'){
       const ids=all('[data-benchmark-export]:checked').map(x=>x.dataset.benchmarkExport),references=all('[data-benchmark-ref]:checked').map(x=>x.dataset.benchmarkRef);
-      b.disabled=true;b.textContent='Decoding complete exports…';try{const r=await req('/api/benchmarks/create',{ids,references});dialog('Full-video benchmark ready',`<p>Measured ${r.technical.length} complete exports. Review, first-pass decisions and repair time are pending.</p><a class="link" href="${esc(r.url)}" target="_blank" rel="noopener">Open blind phone-size review</a><p>${r.technical.map(v=>`${esc(v.id.slice(0,8))}: ${esc(v.status)}`).join(' · ')}</p><small>Results saved locally. Confirmed corrections from development episodes can be exported for learning. Frozen test corrections stay quarantined.</small>`);await refresh();}finally{b.disabled=false;}return;
+      b.disabled=true;b.textContent='Decoding complete exports…';try{const r=await req('/api/benchmarks/create',{ids,references,quiz_by_job:readBenchmarkQuizzes(ids)});dialog('Full-video benchmark ready',`<p>Measured ${r.technical.length} complete exports. Review, first-pass decisions and repair time are pending.</p><a class="link" href="${esc(r.url)}" target="_blank" rel="noopener">Open blind phone-size review</a><p>${r.technical.map(v=>`${esc(v.id.slice(0,8))}: ${esc(v.status)}`).join(' · ')}</p><small>Results saved locally. Confirmed corrections from development episodes can be exported for learning. Frozen test corrections stay quarantined.</small>`);await refresh();}finally{b.disabled=false;}return;
     }
     if(b.id==='importMotionModel'){el('motionPackageInput').click();return;}
     if(b.dataset.animationSaveScene){await req('/api/animations/save',{id:b.dataset.animationSaveScene});await refresh();notify('Saved an editable template and silent preview in animations.');return;}
