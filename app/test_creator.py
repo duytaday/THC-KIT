@@ -67,6 +67,20 @@ class CreatorTests(unittest.TestCase):
         result=creator.refresh(report,self.t,{**DEFAULT,'niche':'Manufacturing'},self.host,assets,'host')
         self.assertEqual(result['keep'],[[.1,9]]);self.assertEqual(result['brief_text'],'Editor choice');self.assertEqual(len(result['broll_suggestions']),1)
 
+    def test_repo_token_merge_keeps_every_other_phrase_word_time(self):
+        transcript=dict(words=[dict(start=a,end=b,text=t) for a,b,t in [(1,1.2,'Dùng'),(1.3,1.5,'record'),(1.6,2.,'league.'),(3.1,3.3,'Giữ'),(4.5,5.,'nghĩa.')]])
+        c=creator.explain(transcript,'',self.host);script='1\n00:00:01,000 --> 00:00:02,000\nDùng Recordly.\n\n2\n00:00:03,100 --> 00:00:05,000\nGiữ nghĩa.\n'
+        groups,_=planner.script_groups(script,10,self.file);plan=dict(captions=planner.word_pages(groups,4));creator.apply(plan,c,transcript,script,self.host)
+        words=[w for page in plan['captions'] for w in page]
+        self.assertEqual(words[1],[1.3,2.,'Recordly.']);self.assertEqual(words[-2:],[ [3.1,3.3,'Giữ'],[4.5,5.,'nghĩa.']])
+        self.assertTrue(plan['creator']['caption_text_edits']);self.assertEqual(plan['creator']['listening'],'UNVERIFIED')
+
+    def test_retiming_one_cue_does_not_retime_the_next(self):
+        transcript=dict(words=[dict(start=a,end=b,text=t) for a,b,t in [(1,1.2,'Dùng'),(1.4,2.,'Recordly.'),(3.1,3.3,'Giữ'),(4.5,5.,'nghĩa.')]])
+        c=creator.explain(transcript,'',self.host);script='1\n00:00:00,800 --> 00:00:02,200\nDùng Recordly.\n\n2\n00:00:03,100 --> 00:00:05,000\nGiữ nghĩa.\n'
+        groups,_=planner.script_groups(script,10,self.file);plan=dict(captions=planner.word_pages(groups,4));creator.apply(plan,c,transcript,script,self.host)
+        self.assertEqual(plan['captions'][-1],[[3.1,3.3,'Giữ'],[4.5,5.,'nghĩa.']]);self.assertEqual(plan['captions'][0][0][0],.8)
+
     def test_proof_opening_excludes_style_and_preserves_narration(self):
         import openings
         q=dict(id='proof1',file='proof.mp4',source_start=0,start=5,end=10,anchors={'result':2})

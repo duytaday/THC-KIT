@@ -9,16 +9,21 @@ from playwright.sync_api import sync_playwright,expect
 
 
 def main():
-    p=argparse.ArgumentParser(description=__doc__);p.add_argument('--package',type=Path,required=True);p.add_argument('--fresh',type=Path,required=True);p.add_argument('--source',type=Path,required=True);p.add_argument('--broll',type=Path,required=True);p.add_argument('--reference',type=Path,required=True);p.add_argument('--script',type=Path,required=True);p.add_argument('--out',type=Path,required=True);a=p.parse_args()
-    root=a.fresh.resolve();root.mkdir(parents=True,exist_ok=False);out=a.out.resolve();out.mkdir(parents=True,exist_ok=False)
-    with zipfile.ZipFile(a.package) as z:z.extractall(root)
+    p=argparse.ArgumentParser(description=__doc__);p.add_argument('--package',type=Path,required=True);p.add_argument('--fresh',type=Path,required=True);p.add_argument('--source',type=Path,required=True);p.add_argument('--broll',type=Path,required=True);p.add_argument('--reference',type=Path,required=True);p.add_argument('--script',type=Path,required=True);p.add_argument('--out',type=Path,required=True);p.add_argument('--resume',action='store_true');p.add_argument('--script-only',action='store_true');p.add_argument('--encoder-bin',type=Path);a=p.parse_args()
+    root=a.fresh.resolve();root.mkdir(parents=True,exist_ok=a.resume);out=a.out.resolve();out.mkdir(parents=True,exist_ok=a.resume)
+    if not a.resume:
+        with zipfile.ZipFile(a.package) as z:z.extractall(root)
     manifest=json.loads((root/'version-manifest.json').read_text(encoding='utf-8'))
     for name,sha in manifest['files'].items():assert hashlib.sha256((root/name).read_bytes()).hexdigest()==sha,name
     report=dict(package=str(a.package),package_sha256=hashlib.sha256(a.package.read_bytes()).hexdigest(),manifest=manifest,tests={},exports=[],page_errors=[],human_listening='UNVERIFIED',clean_windows_tested=False)
+    if a.resume:
+        report=json.loads((out/'results.json').read_text(encoding='utf-8'))
+        if report.get('failure'):report.setdefault('previous_test_failures',[]).append(report.pop('failure'))
     def save():(out/'results.json').write_text(json.dumps(report,ensure_ascii=False,indent=2),encoding='utf-8')
     save();env=os.environ.copy()
     for name in ('CUTROOM_DATA','CUTROOM_ASR_PYTHON','CUTROOM_WHISPER_MODEL','CUTROOM_ANIMATION_PYTHON','CUTROOM_ANIMATION_BASE','CUTROOM_QC_SKILL','PYTHONPATH'):env.pop(name,None)
     env.update(CUTROOM_ENCODER='libx264',CUTROOM_ASR_DEVICE='cpu',LOCALAPPDATA=str(root/'isolated-appdata'),PATH=os.pathsep.join([str(root/'runtime'),str(Path(os.environ['SystemRoot'])/'System32'),os.environ['SystemRoot']]))
+    if a.encoder_bin:env['PATH']=str(a.encoder_bin.resolve())+os.pathsep+env['PATH']
     process=None;url='';server_log=(out/'launcher.log').open('a',encoding='utf-8')
     def launch():
         nonlocal process,url
@@ -68,31 +73,49 @@ def main():
                 folder=root/'workspace/exports'/e['id'];qc=json.loads((folder/'qc.json').read_text(encoding='utf-8'))
                 assert e['sha256']==hashlib.sha256((folder/'edit.mp4').read_bytes()).hexdigest();assert e['technical']['verified']['full_decode'];assert e['technical']['video_encoding']['encoder']=='libx264'
                 assert qc['measurements']['decoded_frames']==e['technical']['verified']['frames'];report['exports'].append(dict(export=e,folder=str(folder)));save()
-            s=state();assert not s['tools'];assert s['speech_setup']['status']=='NEEDS_SETUP';report['tests']['fresh_exe_unicode_missing_tools']=True
-            page.locator('#settings').click();page.screenshot(path=str(out/'missing-encoder.png'));page.locator('#install').click();s=until(lambda s:s['tools'] or bool(s['setup']) and not s['installing'],600)
-            assert s['tools'],s['setup'];page.locator('#modal').evaluate('(d)=>d.close()');page.reload();report['tests']['local_encoder_download_recovery']=json.loads((root/'workspace/tools/ffmpeg-8.1.2/install-receipt.json').read_text());save();print('ENCODER_READY',flush=True)
-            raw=upload(a.source,'hostInput');report['raw_job']=raw;start_first();expect(page.locator('#dialogBody')).to_contain_text('486MB');page.screenshot(path=str(out/'first-use-captions.png'));page.locator('#dialogBody #setupLocalCaptions').click()
-            s=until(lambda s:s['speech_setup']['status'] in ('READY','FAILED'),1500);assert s['speech_setup']['status']=='READY',s['speech_setup'];report['tests']['first_use_local_asr_download']=s['speech_setup'];save();print('ASR_READY',flush=True)
-            select(raw);before=len(state()['exports']);start_first();s=until(lambda s:s['jobs'][raw]['status'] not in ('Queued','Rendering','Draft') and len(s['exports'])>before)
-            first=s['exports'][-1];kept(first);assert s['jobs'][raw]['creator']['device']=='cpu';assert s['jobs'][raw]['creator']['keep']==[[0,round(s['assets'][raw]['duration']*30)/30]]
-            report['tests']['recording_only_cpu']=dict(export=first['id'],asr=s['jobs'][raw]['transcript']['runtime_versions'],device=s['jobs'][raw]['creator']['device'],performance=first['technical']['performance']);save();print('REAL_FIRST_CUT',first['id'],first['technical']['performance'],flush=True)
-            page.screenshot(path=str(out/'recording-only.png'),full_page=True)
-            # Invalidate only the caption, interrupt the owned test process after
-            # queueing, then reopen exactly the same workspace through the EXE.
-            page.locator('[data-panel="script"]').click();text=page.locator('#script').input_value();lines=text.splitlines();i=next(i for i,l in enumerate(lines) if l.strip() and not l.strip().isdigit() and '-->' not in l);lines[i]=lines[i].upper();page.locator('#script').fill('\n'.join(lines));page.locator('#save').click();page.locator('#queue').click()
-            until(lambda s:s['jobs'][raw]['status']=='Rendering',30);terminate_owned_tree();launch();page.goto(url);s=state();assert s['jobs'][raw]['status']=='Interrupted';assert s['jobs'][raw]['transcript']['words'];assert next(e for e in s['exports'] if e['id']==first['id'])['sha256']==first['sha256']
-            select(raw);revised=render(raw);kept(revised);cache=json.loads((root/'workspace/exports'/revised['id']/'revision-cache.json').read_text());assert revised['technical']['performance']['reused_transcript'];assert cache['reused'],cache
-            report['tests']['caption_interrupt_resume']=dict(export=revised['id'],cache=cache,performance=revised['technical']['performance'],original_master_preserved=True);save();print('RESUMED',revised['id'],flush=True)
+            if a.script_only:
+                assert state()['tools'] and state()['speech_setup']['status']=='NEEDS_SETUP'
+                job=upload(root/'Example/Technical example.mp4','hostInput');select(job)
+                page.locator('#creatorScriptInput').set_input_files(str(root/'Example/Technical example.srt'));page.wait_for_timeout(1000)
+                before=len(state()['exports']);start_first('Script-assisted technical fixture; speech unverified')
+                s=until(lambda s:s['jobs'][job]['status'] not in ('Queued','Rendering','Draft') and len(s['exports'])>before)
+                e=s['exports'][-1];kept(e);context=s['jobs'][job]['creator'];assert context['device'] is None and 'supplied script timing' in context['warning']
+                assert not (root/'workspace/asr/config.json').exists();assert s['speech_setup']['status']=='NEEDS_SETUP'
+                report['tests']['missing_model_script_route']=dict(status='PASS',export=e['id'],speech='UNVERIFIED; bundled technical fixture has no spoken narration',warning=context['warning'],download_not_required=True)
+                page.screenshot(path=str(out/'missing-model-script-route.png'),full_page=True);assert not report['page_errors'];save();browser.close();print('SCRIPT_ROUTE_DONE',flush=True);return
+            if not a.resume:
+                s=state();assert not s['tools'];assert s['speech_setup']['status']=='NEEDS_SETUP';report['tests']['fresh_exe_unicode_missing_tools']=True
+                page.locator('#settings').click();page.screenshot(path=str(out/'missing-encoder.png'));page.locator('#install').click();s=until(lambda s:s['tools'] or bool(s['setup']) and not s['installing'],600)
+                assert s['tools'],s['setup'];page.locator('#modal').evaluate('(d)=>d.close()');page.reload();report['tests']['local_encoder_download_recovery']=json.loads((root/'workspace/tools/ffmpeg-8.1.2/install-receipt.json').read_text());save();print('ENCODER_READY',flush=True)
+                raw=upload(a.source,'hostInput');report['raw_job']=raw;start_first();expect(page.locator('#dialogBody')).to_contain_text('486MB');page.screenshot(path=str(out/'first-use-captions.png'));page.locator('#dialogBody #setupLocalCaptions').click()
+                s=until(lambda s:s['speech_setup']['status'] in ('READY','FAILED'),1500);assert s['speech_setup']['status']=='READY',s['speech_setup'];report['tests']['first_use_local_asr_download']=s['speech_setup'];save();print('ASR_READY',flush=True)
+                select(raw);before=len(state()['exports']);start_first();s=until(lambda s:s['jobs'][raw]['status'] not in ('Queued','Rendering','Draft') and len(s['exports'])>before)
+                first=s['exports'][-1];kept(first);assert s['jobs'][raw]['creator']['device']=='cpu';assert s['jobs'][raw]['creator']['keep']==[[0,round(s['assets'][raw]['duration']*30)/30]]
+                report['tests']['recording_only_cpu']=dict(export=first['id'],asr=s['jobs'][raw]['transcript']['runtime_versions'],device=s['jobs'][raw]['creator']['device'],performance=first['technical']['performance']);save();print('REAL_FIRST_CUT',first['id'],first['technical']['performance'],flush=True)
+                page.screenshot(path=str(out/'recording-only.png'),full_page=True)
+                # Invalidate only the caption, interrupt the owned test process after
+                # queueing, then reopen exactly the same workspace through the EXE.
+                page.locator('[data-panel="script"]').click();text=page.locator('#script').input_value();lines=text.splitlines();i=next(i for i,l in enumerate(lines) if l.strip() and not l.strip().isdigit() and '-->' not in l);lines[i]=lines[i].upper();page.locator('#script').fill('\n'.join(lines));page.locator('#save').click();page.locator('#queue').click()
+                until(lambda s:s['jobs'][raw]['status']=='Rendering',30);terminate_owned_tree();launch();page.goto(url);s=state();assert s['jobs'][raw]['status']=='Interrupted';assert s['jobs'][raw]['transcript']['words'];assert next(e for e in s['exports'] if e['id']==first['id'])['sha256']==first['sha256']
+                select(raw);revised=render(raw);kept(revised);cache=json.loads((root/'workspace/exports'/revised['id']/'revision-cache.json').read_text());assert revised['technical']['performance']['reused_transcript'];assert cache['reused'],cache
+                report['tests']['caption_interrupt_resume']=dict(export=revised['id'],cache=cache,performance=revised['technical']['performance'],original_master_preserved=True);save();print('RESUMED',revised['id'],flush=True)
+            else:
+                raw=report['raw_job'];first=report['exports'][0]['export']
             # Same real source plus prepared script, ordinary-name actual capture,
             # separate style reference and free-text niche. All input via UI.
-            second=upload(a.source,'hostInput','Tutorial supplied take.mp4');select(second);page.locator('#creatorScriptInput').set_input_files(str(a.script));page.wait_for_timeout(1000)
-            footage=upload(a.broll,'brollInput','clip 02.mp4');select(second);style=upload(a.reference,'styleReferenceInput','style example.mp4');select(second)
-            page.locator(f'[data-describe-footage="{footage}"]').click();page.locator('#footageDescription').fill('Recordly GitHub Releases trang kết quả');page.locator('[data-save-footage-label]').click();page.locator('#modal').wait_for(state='hidden')
-            page.locator('[data-panel="inserts"]').click();page.locator('#addInsert').click();page.locator('[data-k="asset"]').select_option(footage);page.locator('[data-k="at"]').fill('54');page.locator('[data-k="offset"]').fill('0');page.locator('[data-k="duration"]').fill('10.5');page.locator('[data-anchor="result"]').fill('5.5');page.locator('#save').click()
-            before=len(state()['exports']);start_first('Hướng dẫn phần mềm cho người mới');s=until(lambda s:s['jobs'][second]['status'] not in ('Queued','Rendering','Draft') and len(s['exports'])>before);enhanced=s['exports'][-1];kept(enhanced)
-            project=json.loads((root/'workspace/exports'/enhanced['id']/'render-project.json').read_text());assert all(q['file']!=str(root/'workspace/assets'/style) for q in project['plan']['proof']);assert not any('style example' in q['file'] for q in project['plan']['proof']);assert any('clip 02' in q['file'] for q in project['plan']['proof']);assert s['jobs'][second]['settings']['niche']=='Hướng dẫn phần mềm cho người mới'
-            report['tests']['script_broll_reference_niche']=dict(job=second,export=enhanced['id'],style_only_excluded=True,ordinary_filename_assigned=True,retakes_preserved_for_review=s['jobs'][second]['creator']['uncertain']);save();print('ASSIGNED_BROLL',enhanced['id'],flush=True)
-            page.wait_for_timeout(1800);select(second);page.locator('[data-audition-openings]').click();expect(page.locator('#dialogBody video')).to_have_count(2,timeout=120000)
+            if 'script_broll_reference_niche' not in report['tests']:
+                second=next((j['id'] for j in state()['jobs'].values() if state()['assets'][j['id']]['name']=='Tutorial supplied take.mp4'),None) or upload(a.source,'hostInput','Tutorial supplied take.mp4');select(second);page.locator('#creatorScriptInput').set_input_files(str(a.script));page.wait_for_timeout(1000)
+                footage=next((x['id'] for x in state()['assets'].values() if x['name']=='clip 02.mp4'),None) or upload(a.broll,'brollInput','clip 02.mp4');select(second);style=next((x['id'] for x in state()['assets'].values() if x['name']=='style example.mp4'),None) or upload(a.reference,'styleReferenceInput','style example.mp4');select(second)
+                page.locator(f'[data-describe-footage="{footage}"]').click();page.locator('#footageDescription').fill('Recordly GitHub Releases trang kết quả');page.locator('[data-save-footage-label]').click();page.locator('#modal').wait_for(state='hidden')
+                page.locator('[data-panel="inserts"]').click();
+                if not state()['jobs'][second]['settings']['inserts']:page.locator('#addInsert').click()
+                page.locator('[data-k="asset"]').select_option(footage);page.locator('[data-k="at"]').fill('54');page.locator('[data-k="offset"]').fill('0');page.locator('[data-k="duration"]').fill('10.5');page.locator('.anchor-controls > summary').click();page.locator('[data-anchor="result"]').fill('5.5');page.locator('#save').click()
+                before=len(state()['exports']);start_first('Hướng dẫn phần mềm cho người mới');s=until(lambda s:s['jobs'][second]['status'] not in ('Queued','Rendering','Draft') and len(s['exports'])>before);enhanced=s['exports'][-1];kept(enhanced)
+                project=json.loads((root/'workspace/exports'/enhanced['id']/'render-project.json').read_text());assert all(q['file']!=str(root/'workspace/assets'/style) for q in project['plan']['proof']);assert not any('style example' in q['file'] for q in project['plan']['proof']);assert any('clip 02' in q['file'] for q in project['plan']['proof']);assert s['jobs'][second]['settings']['niche']=='Hướng dẫn phần mềm cho người mới'
+                report['tests']['script_broll_reference_niche']=dict(job=second,export=enhanced['id'],style_only_excluded=True,ordinary_filename_assigned=True,retakes_preserved_for_review=s['jobs'][second]['creator']['uncertain']);save();print('ASSIGNED_BROLL',enhanced['id'],flush=True)
+            else:
+                second=report['tests']['script_broll_reference_niche']['job']
+            page.wait_for_timeout(1800);select(second);page.locator('[data-panel="script"]').click();page.locator('[data-audition-openings]').click();expect(page.locator('#dialogBody video')).to_have_count(2,timeout=120000)
             audition=next(reversed(state()['opening_auditions'].values()));assert audition['receipt']['audio_packets_identical'];report['tests']['short_opening_audition']=audition['receipt'];page.screenshot(path=str(out/'opening-auditions.png'),full_page=True);page.locator('[data-opening-choice="proof_first"]').click();select(second);chosen=render(second);kept(chosen)
             report['tests']['opening_choice_rendered']=chosen['id'];save()
             # A genuinely failed scripted input must not stall the other job.

@@ -129,24 +129,55 @@ def prepare(ws,key,settings,host,assets):
     return settings,result
 
 
+def align_phrase(words,texts):
+    """Keep unchanged anchors; a renamed multi-token term owns its original span."""
+    if not words or any(w['end']<=w['start'] for w in words):return None,[]
+    result=[];changes=[]
+    for op,a,b,c,d in difflib.SequenceMatcher(None,[speech.key(w['text']) for w in words],[speech.key(t) for t in texts],autojunk=False).get_opcodes():
+        old=words[a:b];new=texts[c:d]
+        if op=='equal' or op=='replace' and len(old)==len(new):
+            result.extend([[w['start'],w['end'],t] for w,t in zip(old,new)])
+        elif op=='replace':
+            left,right=old[0]['start'],old[-1]['end'];weights=[max(1,len(t)) for t in new];total=sum(weights);at=left
+            for t,weight in zip(new,weights):
+                finish=at+(right-left)*weight/total;result.append([at,finish,t]);at=finish
+        elif op=='insert':return None,[dict(type='insert_requires_manual_timing',after=' '.join(new))]
+        if op!='equal':changes.append(dict(type=op,before=' '.join(w['text'] for w in old),after=' '.join(new),listening='UNVERIFIED'))
+    return result,changes
+
+
 def apply(plan,creator,transcript=None,script=None,host=None):
     plan['creator']=copy.deepcopy(creator)
     plan.setdefault('keep',copy.deepcopy(creator['keep']))
     words=(transcript or {}).get('words',[]);printed=[w[2] for p in plan.get('captions',[]) for w in p]
-    timing_edited=bool(creator.get('caption_schedule') and schedule(script)!=creator['caption_schedule'])
-    if words and len(words)==len(printed) and not timing_edited:
-        page_size=max((len(p) for p in plan.get('captions',[])),default=4);pages=[];offset=0;fallbacks=[]
-        phrases=planner.script_groups(script,host['duration'],Path(host['path']))[0] if script and host else [[w for p in plan['captions'] for w in p]]
+    page_size=max((len(p) for p in plan.get('captions',[])),default=4);pages=[];fallbacks=[];manual=[];changes=[]
+    if words and script and host:
+        phrases=planner.script_groups(script,host['duration'],Path(host['path']))[0]
+        try:baseline=planner.script_groups(speech.captions(words),host['duration'],Path(host['path']))[0]
+        except ValueError:baseline=[]
+        blocks={};offset=0
+        for phrase in baseline:
+            count=len(phrase);blocks[(round(phrase[0][0],3),round(phrase[-1][1],3))]=words[offset:offset+count];offset+=count
         for phrase in phrases:
-            block=words[offset:offset+len(phrase)];texts=printed[offset:offset+len(phrase)];offset+=len(phrase)
-            valid=bool(block) and all(w['end']>w['start'] for w in block)
-            if valid:group=[[w['start'],w['end'],text] for w,text in zip(block,texts)]
-            else:
-                group=copy.deepcopy(phrase);fallbacks.append([phrase[0][0],phrase[-1][1]])
-            for i in range(0,len(group),page_size):pages.append(group[i:i+page_size])
-        plan['captions']=pages;plan['creator']['caption_timing']='source_word_anchors' if not fallbacks else 'source_word_anchors_with_phrase_fallbacks'
-        plan['creator']['caption_timing_fallback_ranges']=fallbacks
-    else:plan['creator']['caption_timing']='manual_phrase_timing_preserved; review required' if timing_edited else 'supplied_phrase_timing_or_edited_word_count; review required'
+            span=[phrase[0][0],phrase[-1][1]];block=blocks.get(tuple(round(t,3) for t in span));group=None
+            if block is None:
+                contained=[w for w in words if span[0]-.001<=w['start'] and w['end']<=span[1]+.001]
+                if contained and abs(contained[0]['start']-span[0])<.001 and abs(contained[-1]['end']-span[1])<.001:block=contained
+            if block is not None:
+                group,edits=align_phrase(block,[w[2] for w in phrase]);changes.extend(dict(edit,source_range=span) for edit in edits)
+                if group is None:fallbacks.append(span)
+            else:manual.append(span)
+            for i in range(0,len(group or phrase),page_size):pages.append((group or phrase)[i:i+page_size])
+        plan['captions']=pages
+        plan['creator']['caption_timing']='source_word_anchors'+('_with_phrase_fallbacks' if fallbacks else '')+('_with_manual_phrase_timing' if manual else '')
+        plan['creator']['caption_timing_fallback_ranges']=fallbacks;plan['creator']['manual_caption_timing_ranges']=manual;plan['creator']['caption_text_edits']=changes
+    elif words and len(words)==len(printed):
+        # Older caller without a phrase schedule retains its original behavior.
+        group=[[w['start'],w['end'],text] for w,text in zip(words,printed)]
+        if all(w[0]<w[1] for w in group):
+            plan['captions']=[group[i:i+page_size] for i in range(0,len(group),page_size)];plan['creator']['caption_timing']='source_word_anchors'
+        else:plan['creator']['caption_timing']='supplied_phrase_timing; review required'
+    else:plan['creator']['caption_timing']='supplied_phrase_timing_or_edited_word_count; review required'
     filtered=[]
     for page in plan.get('captions',[]):
         for start,end in plan['keep']:
