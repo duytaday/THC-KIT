@@ -4,6 +4,12 @@ Trạng thái: quy tắc vận hành v1. Đây là hợp đồng của kit, khô
 model đã đạt phong cách reference. Vlog “5 repo GitHub” là bài kiểm thử đầu;
 không đưa đường dẫn, tên repo hay timing của tập đó vào mặc định cho tập mới.
 
+Đường recording-only mới: Make first cut → optional ASR local/SRT → brief và
+voice-first map → B-roll gắn riêng → opening audition → versioned export/QC.
+Xem [quick start](CREATOR-QUICKSTART.vi.md) và
+[kết quả RC0.14](CREATOR-RELEASE-RESULTS-2026-11-12.vi.md) cho phạm vi đã thử.
+Một sửa chính tả hoặc retime chỉ được đổi cue liên quan; từ ngoài cue giữ anchors.
+
 ## 1. Những gì giữ chung, những gì thuộc từng tập
 
 Giữ branding, logo đã được phép dùng, font tiếng Việt và sáu gate QC chung.

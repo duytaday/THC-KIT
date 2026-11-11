@@ -23,6 +23,8 @@
   insufficient for “open the exported file”; Recordly must capture that action.
 - [ ] New references: distinguish a newly observed badge/style from a render-tested
   component and from an approved episode. More files alone do not establish gain.
+  A focused checkpoint is pending: where to use an attractive new badge when the
+  client episode lacks actual result footage, and what delivery status follows.
 - [ ] Optional skill/render integration: distinguish a rendered layout template
   from the current episode's actual action/result proof and from demonstrated
   improvement. A focused checkpoint was sent; no answer recorded yet. Do not
