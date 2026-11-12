@@ -1,9 +1,15 @@
 # Session understanding
 
-- [ ] Source protection: asked what `protected: face [x,y,w,h]` means when placing
+- [ ] Same-video model comparison: actual v007 base/tuned exports have the same
+  MP4 hash, while real training/loading succeeded. Asked whether that proves
+  fine-tuning improved picture/sound or requires a new blind episode and measured
+  repair work. Awaiting the user's answer; no acceptance inferred from hashes.
+
+- [x] Source protection: asked what `protected: face [x,y,w,h]` means when placing
   a graphic, with three choices. The question follows the actual v006 failure
-  that copied this rectangle into a card. Awaiting an answer; tests and the
-  agent's data curation do not establish the user's understanding.
+  that copied this rectangle into a card. The user answered: “Đây là vùng cần
+  tránh đặt thẻ; không được chép nó làm khung thẻ.” This demonstrates the
+  exclusion-zone concept; it does not approve any current master or model.
 
 - [ ] Prompt recheck 12/11 v002: distinguish a passing mechanical replay from
   independent episode quality. Current 24 targeted tests and a synthetic gallery

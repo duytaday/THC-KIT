@@ -272,3 +272,86 @@ thật xác nhận10file phẳng, không raw media. Chưa gọi QUEUED là train
 base/tuned sau train phải dùng cùng prompt9/RAG3/decoder và code renderer; các case
 regression từng dùng không trở thành final cohort mới. Không dùng riêng thay đổi
 loss hoặc layout validation để bật model cho khách.
+
+### Kết quả v007 đã chạy
+
+Private Kaggle version1 đã **COMPLETE**.64optimizer steps thật/32unique applied
+rows,79,354s optimizer training trêncuda:0/một TeslaT4 trong môi trường2T4;
+peak8.402.964.480bytes, weight-updateL2=2,551866. Validation loss0,839871→0,811438.
+Adapter SHA256`cc75c7e5b47961a8763ef249a49539e2c654d004f782e013008ac493ee4fbbd4`.
+Đã tải riêng package4.055.881bytes/receipts/adapter, kiểm safetensors/config/RAG
+hashes và nạp lại thật trêncuda:0 máy RTX3070Ti Laptop. Base disable adapter,
+tuned enable adapter. Không tải HF base cache2,88GB vào output lần này.
+
+Standalone raw regression4cases: base intro0/2,demo0/2; tuned intro0/2,demo1/2.
+Tuned vẫn sai inventory ở cả hai intro; demo còn lỗi JSON ở một case. Đây là bộ
+regression đã từng dùng, không phải final cohort mới, không chứng minh chất lượng
+full video tăng. Lượt train có budget một run đã xong; không tự tăng steps/chạy
+thêm chỉ để tìm một kết quả đẹp hơn.
+
+Qua UI59518/workspace`cutroom-reference-v007-001`, cùng complete development5repo,
+prompt9/RAG3/source_json_v1/renderer/source/branding/music-off/captions:
+
+|Arm|Intro/demo compiled|Full MP4 SHA256|
+|---|---|---|
+|Rules|2/2|4f705c2fa89637ed7b024a24505fe3059747f44fcf53e59473f7c1c82f4ffaf2|
+|Base + RAG|2/2|f7b443b73eb5d1b8d9aa3edcb2d7790016ef85c093cd416b65861de6fc51916a|
+|V007 + cùng RAG|2/2|f7b443b73eb5d1b8d9aa3edcb2d7790016ef85c093cd416b65861de6fc51916a|
+
+Local decoder là điều kiện chung; compiled-valid không thay kết quả raw ở trên.
+Không compiler repair hoặc rules fallback trong hai model runs. Base/tuned có
+context, train-only examples và effective-prompt hashes giống nhau, inference
+run3330733c…/0ecd7aec…. RAG intro nay lấy `ref-01-000`, thay vì mượn kiểu state
+replacement; demo lấy house physical-cue fixture. Vì input/prompt/RAG cùng thay
+so v006, không quy mọi khác biệt với v006 cho weights. Base/tuned cùng MP4 thì
+chưa có lợi ích hình/âm riêng của fine-tune được chứng minh.
+
+Ba exports đều118,1s/3543frames,1080×1920/30,AAC48k,NVENC,full decode PASS;
+−16,08LUFS/−1,65dBTP. Voice WAV/SRT/decoded PCM mix giống nhau. ASR thực tế
+CUDA/float16. Cảnh intro0–2,6s/source time không đổi; demo44,5–55,2s giữ target/
+contact/result source anchors. Đã xem sheet78frame intro mới: nền ôm chữ, không
+panel lớn như tunedA/v006. Base/tuned byte-identical nên không đếm hai lần xem
+cùng hình thành hai independent reviews. Selected phone frames contact45,967s,
+result49s và CTA108s được lưu riêng; chưa nghe/full1×watch đúng master.
+
+Còn lệch: headline “5 repo GitHub” chưa nêu rõ lợi ích edit video bằng AI; model
+rationale có thể gọi footage thật là synthetic fixture, không được coi prose đó
+là provenance. Base chọn scene_type wrap cho demo, tuned action_result; hình/âm
+vẫn giống nhau. Những điểm này cần phản biện tiếp, không che bằng một technical
+PASS. Proof FFmpeg preview và Runway output đúng lượt vẫn phải có capture nếu
+lời/brief hứa chúng; chưa quay thêm Recordly trong lượt train này.
+
+Gallery từ normal batch UI có3arms, matched playback và hai MCQ visual cùng câu
+covered/reading, đáp án/source evidence chỉ ở private key. Link:
+`http://127.0.0.1:59518/benchmarks/31f238b9fecc4f9f990442b8bdabf7e4/index.html`.
+Harness đầu kỳ vọng đúng2questions nên assertion thất bại khi app thêm câu
+covered; đã đọc run đã lưu, kiểm đủ3questions và đáp án không public, không tạo
+duplicate. Kết quả PASS_AFTER_HARNESS_RECOVERY. Reviewer0, first-pass acceptance
+và repair minutes vẫn null; không submit review giả, không admit library clips.
+
+Internal dev16 từddf9c2b/source_dirty=false:153files/17.661.022bytes,
+ZIP SHA7b0eac0e170558bce9ec7b70283392c243de3ac51cc92ffe7bb6150a61818481.
+EmbeddedPython3.12.10 render backend prefix5s/150frames/NVENC/decode PASS,
+SHA8e4f3f90…. Prefix audio là scene-preview original level, không là master pass.
+GUI launcher/Windows sạch chưa chạy; starter distribution grant vẫn unresolved.
+Giữ dev15, v006 adapter và các master cũ. V007 không production-approved;
+master NEEDS_REVIEW, quality INCONCLUSIVE, chưa có tậpB độc lập mới.
+
+Evidence:`output/reference-training/reference-spec-v007/`: protocol, curation,
+actual-context-canonicalization, verified-training, actual-results-v001,
+viewer-quiz-ui, short-previews, Kaggle logs và UI results. Hai intro derivative
+trước/sau lấy[0,3) của exact v006/v007 masters,90frames/decode PASS mỗi bản;
+không thay full-master review hay tạo thêm independent episode.
+
+```powershell
+. .\talking-head-qc\tools\use_d_storage.ps1
+python -m unittest discover -s app -p 'test_*.py'
+python app/prepare_motion_kaggle.py D:\frozen-dataset --out D:\NEW-package --owner YOUR_OWNER --steps 64
+kaggle kernels status duytruyenthong/talking-head-spec-training-311219a04a95
+# Chỉ tải adapter/report, tránh download base cache:
+kaggle kernels output duytruyenthong/talking-head-spec-training-311219a04a95 -p D:\NEW-v007-output --file-pattern 'talking-head-motion-spec/(provenance.json|evaluation.json|predictions.json|retrieval-train-only.json|motion-spec-package.zip|adapter/[^/]+)$' --page-size 200
+```
+
+UI trial chia hai lượt: rules trước khi package về, rồi resume cùng config/code
+cho base/tuned. Đây là continuation có kiểm identity, không phải restart model
+do timeout. Rerun từ workspace/out mới theo lệnh ở trên; raw sources vẫn trên D.
