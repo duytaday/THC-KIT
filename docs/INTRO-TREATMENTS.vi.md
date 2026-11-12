@@ -54,6 +54,20 @@ Hai model worker nạp đúng v006 b5c78d75… trên`cuda:0`; base adapter inact
 tuned active. Current comparison **INCOMPLETE**, không phải ba master đạt. Gallery
 có một bản để review, `arms_complete:false`, `promotion_eligible:false`. Human
 first-cut acceptance, phút sửa và whole-master listening vẫn chưa đo.
+Selected phone frames trên rules master:44,500s thấy Releases được viền;
+45,967s ring chạm Releases, caption hiện “vào đây”;49,000s trang đích hiện
+Recordly v1.4.0, caption không che title. Đây là kiểm ảnh, không phải kết quả
+quiz người xem1× hoặc nghe lời. Không ghi human sign-off từ các frame này.
+
+Gói internal dev13 được build từ918fae2/source_dirty=false:17.653.827bytes,
+152files, ZIP SHA256
+`5a7f6c075b4e3120b96ac591ae8aa875437d4be5667a7a92190b43af3123dcb7`.
+EmbeddedPython3.12.10 thực thi chính renderer trong package, xuất prefix5s có
+headline/caption:150frames/NVENC/full decode, SHA8e4f3f90…; giữ nguyên full master.
+Prefix là scene-preview level nguồn (−22,58LUFS/−9,86dBTP), không phải master
+mix pass. Native launcher/Windows sạch chưa thử; starter grant chưa chốt cho
+public distribution. Package ở D:\.codex\workspaces\talking-head-support\releases;
+receipt và tested JSON ở cạnh ZIP. App source UI mới ở59515; EXE cũ giữ nguyên.
 
 ## Hai giả định cần xử lý trước khi train tiếp
 
