@@ -82,6 +82,18 @@ element; đã yêu cầu chọn đúng cửa sổ một lần, chưa bấm Recor
 đúng lượt chạy chưa có. Không có animation nào mới được admit thư viện.
 Model gain vẫn **INCONCLUSIVE**, chưa có tập B độc lập/first-pass/phút sửa.
 
+## Gói nội bộ dev17
+
+Đóng gói từ commit sạch `55f5a7ae8bb1b8d30377b6159824cf8b4a8608cb`.
+ZIP 17.661.975bytes/153files, SHA256
+`9f530d05fc7197e6fb6b6a334c333f2a9db22488c96bbd01a8cb69fd351a99d0`.
+Python3.12.10 của chính gói đã render prefix5s từ recipe master mới:
+150frames/NVENC/full decode PASS, master nguồn giữ nguyên SHA. Prefix là scene
+preview giữ level nguồn (−22,58LUFS/−9,86dBTP), không tính là master loudness pass.
+Log: `package-smoke.log`, receipt `packaged-dev17-smoke.json` trong evidence.
+GUI launcher và máy Windows sạch **NOT_RUN**; không thay instance đang mở.
+Grant phân phối starter còn chưa xác nhận, gói giữ phạm vi nội bộ.
+
 ## Chạy lại
 
 ```powershell
