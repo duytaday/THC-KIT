@@ -162,6 +162,10 @@ qua validator. UI lost-response/state/hook test hoàn tất sau khi sửa select
 harness; lỗi cũ được giữ, không khai cold-run PASS. Model v005 đã có ba full
 exports kiểm kỹ thuật; base/tuned trùng hash, không có quality gain được chứng minh.
 Chi tiết device/codec/weights và các giới hạn ở`MOTION-PLANNER-V005.vi.md`.
+Lượt tiếp theo v006 đã train/reload thật và thêm control nền riêng từng dòng;
+229app tests PASS, packaged UI render A/B sau sửa fade. Đây là component upgrade;
+base/tuned trong case mới vẫn trùng preview, không có whole-video quality gain.
+Kết quả, hash, lỗi harness được giữ và lệnh tái chạy ở`MOTION-PLANNER-V006.vi.md`.
 
 Đối chiếu lại trực tiếp file yêu cầu ngày12/11: SHA256 vẫn khớp giá trị đầu tài
 liệu. Source dev11 thêm kiểm tính nhất quán layout;224app tests PASS trong lượt
