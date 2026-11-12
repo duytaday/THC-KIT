@@ -7,6 +7,9 @@
   That UI test now passed: first response deliberately lost, same request retried,
   exactly one note remained. A follow-up asks whether the ID represents a deliberate
   user request or each arriving packet. No answer has been recorded yet.
+  During the prompt recheck, asked the same distinction as a concrete open-ended
+  case: one deliberate Send, retry with the same ID — how many notes/edits?
+  Still pending; implementation tests do not establish the user's mastery.
 
 - [x] Reusable production contract: the user explicitly distinguished customer
   script, industry, B-roll/footage, logo/branding, then chose full blinded review,

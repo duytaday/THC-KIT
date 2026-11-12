@@ -117,6 +117,7 @@ class SpecIntegrationTests(unittest.TestCase):
         p=dict(at=1,duration=5,title='Chạy tác vụ',type='demo',source_quote='Bấm nút này.',narration_status='operator_confirmed',evidence=dict(asset='screen',target=0,contact=1,result=2,target_roi=[100,100,200,80],contact_point=[180,140],result_roi=[100,300,500,100]))
         screen=dict(duration=5,width=1280,height=800)
         ctx,at=motion_storyboard.context(p,self.host,{'screen':screen})
+        self.assertEqual(ctx['layout_requirement'],'demo')
         self.assertEqual([a['kind'] for a in ctx['anchors']],['control','contact','result'])
         self.assertAlmostEqual(ctx['anchors'][0]['roi'][1],(622.5+100*.84375)/1920)
         self.assertFalse(ctx['voice_aligned'])

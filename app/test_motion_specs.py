@@ -47,6 +47,26 @@ class AnimationContractTests(unittest.TestCase):
         ctx['layout_requirement']='not-a-layout'
         with self.assertRaisesRegex(ValueError,'Unknown declared'):specs.validate(s,ctx)
 
+    def test_proof_layout_cannot_be_silently_ignored_or_repaired(self):
+        ctx=dict(request='demo',texts=[],frames=180,protected=[],proof=dict(data_class='real_screen'),
+            anchors=[dict(id='spoken',kind='speech',frame=0)])
+        s=specs.rules(ctx);self.assertEqual(s['layout'],'demo');specs.validate(s,ctx)
+        entry=dict(id='screen',context=ctx,spec=s,source_start=0,source_end=6)
+        self.assertEqual(len(hooks.before_render(dict(motion_specs=[entry]),6)),1)
+        for layout in ('host','shoulder','full'):
+            with self.subTest(layout=layout):
+                s['layout']=layout;before=copy.deepcopy(entry)
+                with self.assertRaisesRegex(ValueError,'Screen-proof scenes require layout=demo'):
+                    hooks.before_render(dict(motion_specs=[entry]),6)
+                with self.assertRaisesRegex(ValueError,'Screen-proof scenes require layout=demo'):
+                    specs.compile_spec(s,ctx)
+                self.assertEqual(entry,before)
+
+    def test_conflicting_proof_layout_requirement_is_rejected(self):
+        ctx=self.context();ctx.update(proof=dict(data_class='real_screen'),layout_requirement='host')
+        with self.assertRaisesRegex(ValueError,'Screen-proof scenes require layout=demo'):
+            specs.validate(specs.rules(ctx),ctx)
+
     def test_duplicate_or_out_of_range_anchor_is_rejected(self):
         for extra in (dict(id='repo',frame=2,kind='speech'),dict(id='bad',frame=180,kind='speech')):
             ctx=self.context();s=specs.rules(ctx);ctx['anchors'].append(extra)

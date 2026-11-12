@@ -1,7 +1,7 @@
 """Translate current-project passages/proof to model inputs; no reference timings copied."""
 import copy,math
 import motion_specs,speech
-CONTEXT_VERSION=3
+CONTEXT_VERSION=4
 
 
 def context(plan,host,assets,transcript=None):
@@ -36,6 +36,9 @@ def context(plan,host,assets,transcript=None):
             asset=assets[e['asset']];offset=float(e.get('offset',0));frames=min(frames,round((asset['duration']-offset)*30));ctx['frames']=frames
             if asset.get('media_is_reusable_proof') is False or asset.get('data_class') not in (None,'real_screen'):raise ValueError('Choose actual screen footage; an illustration or reference excerpt is not action proof')
             ctx['proof']=dict(asset=e['asset'],offset=offset,data_class='real_screen',source_sha256=asset.get('source_sha256') or e.get('source_sha256'))
+            # Source ROIs below are bound to full-demo containment, not host/PiP.
+            # All planner arms receive this same actual renderer constraint.
+            ctx['layout_requirement']='demo'
             if e.get('for_repo'):ctx['proof']['for_repo']=e['for_repo']
             ctx['protected']=[p for p in ctx['protected'] if p['kind']!='face']
             width,height=asset['width'],asset['height'];scale=min(1080/width,1920/height);dx=(1080-width*scale)/2;dy=(1920-height*scale)/2

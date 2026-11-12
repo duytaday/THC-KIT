@@ -65,5 +65,14 @@ class SourceGrammarTests(unittest.TestCase):
         s['objects'][0]['keyframes'][0]['rotation']=5;self.assertFalse(self.accepts(s,c));s['objects'][0]['keyframes'][0]['rotation']=0
         s['objects'][0]['lead_frames']=1;self.assertFalse(self.accepts(s,c))
 
+    def test_source_proof_cannot_decode_a_layout_the_renderer_would_ignore(self):
+        c=dict(request='demo',texts=[],frames=180,protected=[],proof=dict(data_class='real_screen'),
+            anchors=[dict(id='speech',kind='speech',frame=0)])
+        s=motion_specs.rules(c);self.assertTrue(self.accepts(s,c))
+        for layout in ('host','shoulder','full'):
+            s['layout']=layout;self.assertFalse(self.accepts(s,c))
+        c['layout_requirement']='host'
+        with self.assertRaisesRegex(ValueError,'Screen-proof scenes require layout=demo'):motion_decode.schema(c)
+
 
 if __name__=='__main__':unittest.main()

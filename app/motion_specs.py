@@ -48,16 +48,33 @@ def object_state(obj,anchors,frame):
     return text,box,emphasis
 
 
+def layout_options(context):
+    """Share declared constraints and the native proof canvas requirement.
+
+    Proof ROIs use the full contained screen canvas. Presenter PiP is a separate
+    cutaway control; a model's host/shoulder label cannot silently request it.
+    """
+    required=context.get('layout_requirement')
+    if required is not None and required not in ('host','shoulder','full','demo'):
+        raise ValueError('Unknown declared layout requirement')
+    if context.get('proof'):
+        if required is not None and required!='demo':
+            raise ValueError('Screen-proof scenes require layout=demo; reassign the scene instead of changing its source geometry')
+        return ('demo',)
+    return (required,) if required else ('host','shoulder','full','demo')
+
+
 def validate(spec,context,*,check_hold=True):
     if not isinstance(spec,dict) or set(spec)-{'v','scene_type','layout','objects','sfx','evidence','missing','rationale'}:
         raise ValueError('Unknown animation-spec fields')
     if spec.get('v')!=1 or spec.get('scene_type') not in SCENE_TYPES:raise ValueError('Unsupported animation-spec version/type')
     if spec.get('layout') not in ('host','shoulder','full','demo'):raise ValueError('Unknown animation layout')
-    required=context.get('layout_requirement')
+    choices=layout_options(context);required=context.get('layout_requirement')
     if required is not None:
-        if required not in ('host','shoulder','full','demo'):raise ValueError('Unknown declared layout requirement')
         if spec['layout']!=required:raise ValueError('Scene does not meet the declared layout requirement')
         if required=='full' and context.get('request')=='intro' and spec['scene_type']!='intro':raise ValueError('A declared full-screen intro requires an intro scene')
+    if spec['layout'] not in choices:
+        raise ValueError('Screen-proof scenes require layout=demo; regenerate or reassign this scene. The previous export is preserved.')
     frames=context['frames']
     if type(frames) is not int or not 15<=frames<=900:raise ValueError('Scene needs 15–900 frames')
     anchors={}
@@ -272,5 +289,5 @@ def rules(context):
         changes=[dict(anchor=a['id'],text=texts[i]) for i,a in enumerate(anchors[1:len(texts)],1)]
         objects=[dict(id='badge',component='08',text=texts[0],rect=[.55,.59,.41,.155],font_size=54,anchor=anchors[0]['id'],keyframes=entrance(9),changes=changes,hold_frames=min(36,context['frames']-anchors[min(len(texts),len(anchors))-1]['frame']-(6 if changes else 15)))]
         sounds=[dict(anchor=anchors[0]['id'],id='slide',gain_db=-26)]
-    else:kind='hold';layout='host'
+    else:kind='hold';layout='demo' if context.get('proof') else 'host'
     return dict(v=1,scene_type=kind,layout=layout,objects=objects,sfx=sounds,evidence=('real_screen' if context['proof'].get('data_class')=='real_screen' else 'reconstruction') if context.get('proof') else 'code' if objects else 'presenter',missing=missing,rationale='Rules baseline from supplied words/assets; no model weights used.')

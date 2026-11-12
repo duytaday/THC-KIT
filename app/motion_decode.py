@@ -43,10 +43,9 @@ def schema(context):
         sounds.append(obj(dict(anchor=enum([a['id']]),id=enum(ids),gain_db=number(-60,-6)),['anchor','id']))
     evidence=['code','reconstruction','presenter']
     if (context.get('proof') or {}).get('data_class')=='real_screen':evidence.append('real_screen')
-    required=context.get('layout_requirement')
-    if required is not None and required not in ('host','shoulder','full','demo'):raise ValueError('Unknown declared layout requirement')
+    required=context.get('layout_requirement');layouts=motion_specs.layout_options(context)
     types=['intro'] if required=='full' and context.get('request')=='intro' else motion_specs.SCENE_TYPES
-    return obj(dict(v=enum([1]),scene_type=enum(types),layout=enum([required] if required else ('host','shoulder','full','demo')),
+    return obj(dict(v=enum([1]),scene_type=enum(types),layout=enum(layouts),
         objects=array(dict(anyOf=branches) if branches else {},0,12 if branches else 0),sfx=array(dict(anyOf=sounds)),
         evidence=enum(evidence),missing=array(dict(type='string',minLength=1,maxLength=300)),rationale=dict(type='string',maxLength=600)),
         ['v','scene_type','layout','objects','evidence'])

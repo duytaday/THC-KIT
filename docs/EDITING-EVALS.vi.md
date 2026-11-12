@@ -50,6 +50,18 @@ Approval và dry validation còn hash-check source/render dependencies hiện t�
 
 ## Baseline và kết quả đã đo
 
+Đối chiếu bảy mục của file gốc:
+
+| Mục | Đã có / giới hạn còn lại |
+|---|---|
+|1 Baseline, audit |Snapshot baseline, xung đột/prompt versions và logs hiện có; điểm lịch sử được tách riêng |
+|2 Editing contract |Hook export3s, source anchors, stems và kiểm timing; xem/nghe và hiểu proof trên master thật còn chờ reviewer |
+|3 Ba runtime failures |Idempotency, attestation và gallery API đã kiểm; gallery không phải OS sandbox cho code tùy ý cùng tài khoản |
+|4 Whole conversation |T1–T8 +3variants qua app/renderer; B hiện chỉ là excerpt, chưa đủ tập mới độc lập |
+|5 Split/isolation |Connected family/conversation checks và actual-read development log; final cohort thật chưa được mở |
+|6 Hill climb/release |Có freeze/budget/stop/CI gates; quality hill climb và final paired batch **NOT_RUN**, chưa đủ human metrics/families |
+|7 Evidence/delivery |Code, commands, logs và preserved versions có sẵn; master **NEEDS_REVIEW**, model **INCONCLUSIVE** |
+
 Evidence riêng trên D: `output/editing-evals/v001/`; raw media, logs, model và
 private scorer files không vào Git. Baseline source được copy trước ba runtime
 fix, lưu HEAD, dirty patch SHA và hashes. Điểm lịch sử8/8 cue,8/11 Studio trong
@@ -88,6 +100,7 @@ và95%CI còn null. Thời gian render được đo riêng, không dùng làm ph
 |`app/workspace.py` |giới hạn12chặn13cutaways của nguồn thật; nâng32, giữ kiểm range/overlap |failed full replay được giữ; test32/33, rerender13 |
 |`app/motion_render.py` |round centisecond làm lặp tư thế ởframe2/5/8; dùng floor |decoded10frame regression; đây là renderer fix, không phải model gain |
 |`app/motion_specs.py`, native UI |chữ đổi nhưng thẻ không đổi geometry; thêm rect từng state và inherit |source-PTS reference frames, validator và actual-control tests |
+|`app/motion_specs.py`, `motion_storyboard.py`, `motion_decode.py` |spec proof ghi `host` nhưng renderer vẫn chèn full demo; chỉ cho phép `demo` trong context/grammar/validator, từ chối spec mâu thuẫn |recipe base v005 thật bị từ chối, tuned hợp lệ; cả ba master cũ giữ nguyên SHA |
 |`qc_gates.py`, sound catalog |peak lock không chứng minh onset lock; đo riêng onset1%asset-peak |decoded AAC fixture; không thay kiểm nghe bằng ngưỡng âm học |
 |`app/ui/app.js` |cue audition dùnglegacy`none.wav`; chuyển sang đúng SFX stem của export |UI/API export stem route |
 
@@ -149,6 +162,22 @@ qua validator. UI lost-response/state/hook test hoàn tất sau khi sửa select
 harness; lỗi cũ được giữ, không khai cold-run PASS. Model v005 đã có ba full
 exports kiểm kỹ thuật; base/tuned trùng hash, không có quality gain được chứng minh.
 Chi tiết device/codec/weights và các giới hạn ở`MOTION-PLANNER-V005.vi.md`.
+
+Đối chiếu lại trực tiếp file yêu cầu ngày12/11: SHA256 vẫn khớp giá trị đầu tài
+liệu. Source dev11 thêm kiểm tính nhất quán layout;224app tests PASS trong lượt
+này, bao gồm grammar runtime thật.54QC và39reference tests là kết quả lượt trước,
+không được tính thành lượt chạy mới. Evidence bổ sung:
+`output/editing-evals/v001/layout-contract-v001/` có protocol trước sửa, baseline,
+script kiểm lại recipe/master thật, results và log tests. Đây là một sửa hợp đồng
+renderer, không phải một round chứng minh chất lượng model tăng.
+
+Native animation v1 đặt ROI theo màn hình được contain toàn khung; vì vậy cảnh
+có proof phải dùng `layout=demo`. Presenter PiP vẫn là control của cutaway riêng,
+không được ngầm suy ra từ `host`. Context mới là version4 để không tái dùng scene
+cache version3. Spec cũ mâu thuẫn bị yêu cầu regenerate/reassign khi dựng lại;
+compiler không tự sửa lựa chọn đó. MP4, recipe và checkpoint cũ được giữ nguyên.
+Kiểm recipe thật xác nhận demo base v005 ghi `host`, tuned ghi `demo`; renderer
+cũ đã cho cùng hình. Do đó trường layout này không phải bằng chứng model thắng.
 
 Kiểm EXE thực tế phát hiện gói dev9 thiếu deferred import`proof_assignments.py`;
 render bị chặn trước khi có master. Gói lỗi được giữ. Dev10 bổ sung module và

@@ -69,3 +69,17 @@ Chưa có reviewer nghe thật, style winner, first-cut approval, editor time ho
 fresh complete episode B. Không admit clip vào usable library hoặc bật production
 model dựa trên train/load/schema logs. Workflow nhiều lượt và lệnh chạy lại ở
 `EDITING-EVALS.vi.md`.
+## Kiểm bổ sung hợp đồng layout — dev11
+
+Đối chiếu recipe thật sau lượt dựng: demo base ghi `host`, demo tuned ghi `demo`,
+nhưng native renderer luôn dùng full screen proof. Đây là khác biệt JSON bị bỏ
+qua, không phải thay đổi nhìn thấy được. Dev11 bắt buộc proof dùng `demo` ở cả
+context mới, constrained decoder và validator; spec mâu thuẫn bị từ chối, không
+được compiler tự đổi. Context version4 tránh dùng lại cache cũ. Presenter PiP
+tiếp tục dùng control cutaway riêng với geometry được kiểm tra.
+
+Diagnostic chạy trên toàn bộ plan thật: base cũ bị từ chối đúng lỗi; tuned hợp
+lệ. SHA256 của cả ba MP4 và hai recipe không đổi.224app tests PASS, gồm3test mới.
+Không train lại, không sửa checkpoint/prompt huấn luyện cũ, không chấm lại final
+cohort. Kết luận chất lượng vẫn **INCONCLUSIVE**; nghe master vẫn **UNVERIFIED**.
+Evidence: `output/editing-evals/v001/layout-contract-v001/`.
