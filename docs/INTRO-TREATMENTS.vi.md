@@ -1,0 +1,93 @@
+# Chọn intro và nhận diện model — dev13
+
+Trong **Generate intro & demos**, chọn một editable planner, rồi **Intro layout**:
+`Full screen` giữ mặc định cũ; `Keep presenter` tạo headline phía trên người dẫn.
+Đây là lựa chọn của buyer, không được chấm thành một quyết định model học được.
+Headline host chỉ dùng title của tập, không xếp cả danh sách repo lên mặt. Rules
+Maverick dùng nền theo dòng, headline hiện tĩnh; không tự thêm entrance vào một
+headline reference vốn đã hiện tại đầu interval. Demo, lời, captions và branding
+giữ riêng. Legacy native mode chưa hỗ trợ host nên control bị disable ở mode đó.
+
+Đổi treatment tạo proposal mới, chưa tự chèn. Các cảnh cũ đã khóa/chỉnh tay vẫn
+giữ nguyên; disable intro cũ khi muốn chèn proposal thay thế. Demo không đổi được
+tái sử dụng, không gọi model lại. Proposal snapshot cũng giữ đúng plan đã chỉnh,
+không mô tả một spec khác với cảnh thực tế. Full/default key cũ vẫn tương thích;
+sáu synthetic full-context cases cho spec giống hệt commit6615bd3.
+
+## Lỗi cache đã sửa
+
+`ArtifactStore.generate` trước đây luôn inference trước khi tra story key; key
+chỉ có mode/context/style. Vì vậy import checkpoint mới có thể tốn inference rồi
+vẫn nhận cảnh của checkpoint cũ. Key mới thêm checkpoint SHA + dataset fingerprint
+cho base/RAG và tuned; đổi weights hoặc retrieval dataset tạo proposal mới. Cảnh
+không đổi không cần inference. Nếu candidate đổi giữa lúc generate, batch bị từ
+chối và cảnh cũ giữ nguyên. Existing locked scenes không bị thay thế tự động.
+
+233app tests PASS: host/default routing, không infer lại demo đã sửa, giữ khóa/
+history, invalid inputs, weights/RAG identity và candidate race. Tests model-cache
+dùng fake identities trong unit fixtures; không gọi đó là lượt train thật. UI run
+riêng dưới đây dùng v006 thật. Acceptance helper đọc generation outcome đã lưu
+sau thao tác UI, tránh phụ thuộc response body bị Chrome inspector evict; không
+resubmit khi lỗi quan sát. Kiểm filename import còn so source hash khi có metadata.
+
+## Chạy toàn tập qua UI thật
+
+Workspace riêng:`D:\.codex\workspaces\talking-head-support\cutroom-intro-routing-001`,
+port59515. Cùng source/script,13cutaways, proof Recordly, logo và CTA của lượt trước;
+chỉ chọn intro host. Không có train mới, không mở final cohort. V006 vẫn candidate.
+
+|Arm|Intro|Demo|Full export|
+|---|---|---|---|
+|Rules|render host|render proof|118,1s/3543frames, full decode PASS|
+|Base + RAG|validator từ chối vùng face|compiled valid; không render riêng|không xuất batch thiếu intro|
+|V006 + cùng RAG|validator từ chối vùng face|compiled valid; không render riêng|không xuất batch thiếu intro|
+
+Rules export`e0e326d477ee4340a6cf2886617e36e7`, SHA256
+`4f705c2fa89637ed7b024a24505fe3059747f44fcf53e59473f7c1c82f4ffaf2`.
+1080×1920/30, AAC48k,`h264_nvenc`; −16,08LUFS/−1,65dBTP.
+Voice WAV a7e1880b… và SRT343b75cb… giữ đúng hash lượt v005. Intro cùng đoạn
+nguồn/master0–2,6s: từ full-screen cards sang headline host; demo44,5–55,2s giữ
+đồng hồ nguồn. Smoke5s/150frames trước full render có proof, NVENC/full decode;
+SHA28536700… khớp lần trước. ASR thực tếCUDA/float16; local GPU RTX3070Ti Laptop8GB.
+
+Hai model worker nạp đúng v006 b5c78d75… trên`cuda:0`; base adapter inactive,
+tuned active. Current comparison **INCOMPLETE**, không phải ba master đạt. Gallery
+có một bản để review, `arms_complete:false`, `promotion_eligible:false`. Human
+first-cut acceptance, phút sửa và whole-master listening vẫn chưa đo.
+
+## Hai giả định cần xử lý trước khi train tiếp
+
+1. `motion_storyboard.context` đang dùng vùng face cố định[.1,.15,.8,.4]. Model
+   base tạo thẻ y=.110937..223437; tuned y=.125..25. Lỗi validator chứng minh
+   giao với **vùng khai báo**, chưa chứng minh che mặt thật. Đã xem sheet78frame
+   nguồn0–2,6s, PTS0..2,567; vùng trống phía trên đầu khác giả định. Cần protection
+   gắn source/hash/interval/framing và bằng chứng quan sát. Không nới guard chỉ để
+   pass model, không coi một ROI là đúng cho mọi take.
+2. Reference được chọn là reference-1/a10c694f…; analyzer có cut candidates và
+   timing profile, không tự xác nhận typography/overlay/SFX. Các facts ấy hiện
+   nằm trong proposal reference_evidence, chưa được truyền vào model context.
+   Context chỉ có style label/intent tổng quát. Cần nối facts đã kiểm và nguồn
+   của chúng tới planner; không chép target ẩn hay reference pixels thành proof.
+
+Diagnostic sampler đầu chỉ lấy52frame vì time bucket30fps gặp MKV time-base1ms.
+Đã đọc vượt boundary cho decoder và select mọi PTS thuộc[0,2,6), tạo sheet78frame
+riêng; file cũ giữ nguyên, không gọi52frame là toàn bộ. Đây là xem frames, không
+phải xác nhận watch/listen1×. Không có clip nào được admit vào usable library.
+
+Evidence:`output/reference-training/intro-routing-v001/`: protocol trước sửa,
+default-full compatibility, tests, frozen UI config/implementation, actual results,
+model runs và sheet/PTS sidecars. `ui-full-v001` giữ cả hai rejection, không dùng
+rules fallback để giả model pass. Rules master **NEEDS_REVIEW**, quality
+**INCONCLUSIVE**; bản v035 và model/cut trước được giữ.
+
+```powershell
+. .\talking-head-qc\tools\use_d_storage.ps1
+python -m unittest discover -s app -p 'test_*.py'
+python app/app.py --data D:\Cutroom-new-workspace --no-browser
+python app/full_video_acceptance.py --url http://127.0.0.1:PORT --config D:\routing-config.json --out D:\NEW-routing-run
+```
+
+Config có `intro_layout: "host"` hoặc `"full"`; API `/api/artifacts/generate`
+nhận cùng field. Không sửa frozen source/implementation rồi resume cùng trial.
+Giữ6615bd3/dev12 và v006 weights để rollback; không auto-promote model từ các
+kiểm thử này. Fresh episode B và capable human review vẫn cần trước release claim.

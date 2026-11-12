@@ -19,6 +19,12 @@ For persisted revision requests and style transfer, follow
 
 Use individual Edit/Regenerate actions. Preserve other scenes, manual overrides,
 previous exports and each recording’s script. A deleted anchor requires reassignment.
+Choose Intro layout explicitly with an editable planner: full preserves the
+existing default; host keeps a headline above the presenter. New treatments are
+proposals, not automatic replacements of locked/manual scenes. Model identity
+includes checkpoint and retrieval dataset; do not reuse a same-mode scene as proof
+that a newly imported checkpoint ran. See `docs/INTRO-TREATMENTS.vi.md` for the
+current conservative face-region and reference-context limitations.
 For a reference with backgrounds hugging individual text lines, use native
 `box_style: lines` / Text background in the scene editor. Keep `panel` for one
 enclosing card. Do not invent an entrance for a label already visible in the

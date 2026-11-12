@@ -275,10 +275,16 @@ def rules(context):
     kind='intro' if role=='intro' else 'action_result' if any(a['kind']=='contact' for a in anchors) else 'replace' if len(anchors)>1 and len(texts)>1 else 'explain'
     objects=[];sounds=[];missing=[];layout='full' if kind=='intro' else 'demo' if context.get('proof') else 'shoulder'
     if kind=='intro':
-        for i,text in enumerate(texts[:6]):
-            rect=[.08,.12,.84,.13] if i==0 else [.08,.28+(i-1)*.10,.84,.09]
-            objects.append(dict(id='card'+str(i),component='05' if i==0 else '08',text=text,rect=rect,font_size=54,anchor=anchors[0]['id'],keyframes=entrance(9+i*2),changes=[],hold_frames=max(12,min(60,context['frames']-anchors[0]['frame']-9-i*2-6))))
-        sounds=[dict(anchor=anchors[0]['id'],id='slide',gain_db=-26)]
+        if context.get('layout_requirement')=='host':
+            layout='host'
+            if texts:
+                objects=[dict(id='headline',component='05',text=texts[0],rect=[.08,.02,.84,.12],font_size=54,anchor=anchors[0]['id'],
+                    keyframes=[dict(frame=f,x=0,y=0,scale=1,opacity=1,ease='linear') for f in (0,1)],changes=[],hold_frames=12,exit_frames=0,theme='paper',box_style='lines' if context.get('style')=='maverick_fast' else 'panel')]
+        else:
+            for i,text in enumerate(texts[:6]):
+                rect=[.08,.12,.84,.13] if i==0 else [.08,.28+(i-1)*.10,.84,.09]
+                objects.append(dict(id='card'+str(i),component='05' if i==0 else '08',text=text,rect=rect,font_size=54,anchor=anchors[0]['id'],keyframes=entrance(9+i*2),changes=[],hold_frames=max(12,min(60,context['frames']-anchors[0]['frame']-9-i*2-6))))
+            sounds=[dict(anchor=anchors[0]['id'],id='slide',gain_db=-26)]
     elif kind=='action_result':
         for a in anchors:
             if a['kind'] not in ('control','contact','result') or not a.get('roi'):continue

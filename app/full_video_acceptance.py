@@ -51,7 +51,9 @@ def main():
         def import_file(file,kind):
             name=Path(file).name
             found=next((x for x in state()['assets'].values() if x['name']==name and x['kind']==kind),None)
-            if found:return found['id']
+            if found:
+                if found.get('source_sha256') and found['source_sha256']!=media.sha(file):raise AssertionError('Existing asset name refers to different source bytes: '+name)
+                return found['id']
             before=set(state()['assets']);page.locator({'host':'#hostInput','reference':'#refInput','graphic':'#graphicInput'}[kind]).set_input_files(str(file))
             deadline=time.monotonic()+180
             while time.monotonic()<deadline:
@@ -105,16 +107,22 @@ def main():
                 print('RETAINED_REJECTION',mode,'same source/prompt/weights; no automatic fallback',flush=True);continue
             print('GENERATE',mode,flush=True);started=time.monotonic();before=state()
             page.locator('[data-panel="script"]').click();page.locator('#generateArtifacts').click();page.locator('#animationMode').select_option(mode);page.locator('#animationStyle').select_option('maverick_fast')
+            page.locator('#introLayout').select_option(config.get('intro_layout','full'))
             page.locator('.scene-evidence summary').click();page.locator('#sceneEvidence').select_option(proof);page.locator('#sceneEvidenceRepo').select_option('Recordly')
             for k,value in dict(target=0,contact=1.476,result=4.5).items():page.locator(f'[data-scene-evidence="{k}"]').fill(str(value))
             for k,values in dict(target_roi=[145,402,178,54],contact_point=[204,425],result_roi=[45,315,310,50]).items():
                 for i,value in enumerate(values):page.locator(f'[data-scene-evidence-array="{k}"][data-coordinate="{i}"]').fill(str(value))
             with page.expect_response(lambda r:r.url.endswith('/api/artifacts/generate'),timeout=660000) as event:page.locator('#confirmGenerateArtifacts').click()
-            response=event.value
+            response=event.value;s=state();prior={x['id'] for x in before.get('generation_attempts',[])}
+            completed=next((x for x in reversed(s.get('generation_attempts',[])) if x['id'] not in prior and x['job']==job and x['mode']==mode),None)
+            if not completed:raise AssertionError('No persisted generation outcome; inspect the existing run before retrying')
             if not response.ok:
-                error=response.json();rejected=mode!='rules' and 'Model spec rejected for scene ' in str(error)
-                report['attempts'].append(dict(mode=mode,status='MODEL_REJECTED' if rejected else 'PIPELINE_FAILED',error=error,wall_seconds=time.monotonic()-started));save();page.locator('#close').click();print('REJECTED' if rejected else 'PIPELINE_FAILED',mode,response.text()[:300],flush=True);continue
-            page.locator('#modal').wait_for(state='hidden');s=state();ids=response.json()['ids']
+                error=completed.get('error','HTTP'+str(response.status));rejected=mode!='rules' and 'Model spec rejected for scene ' in str(error)
+                report['attempts'].append(dict(mode=mode,status='MODEL_REJECTED' if rejected else 'PIPELINE_FAILED',error=error,generation_id=completed['id'],wall_seconds=time.monotonic()-started));save()
+                if page.locator('#modal').is_visible():page.locator('#close').click()
+                print('REJECTED' if rejected else 'PIPELINE_FAILED',mode,str(error)[:300],flush=True);continue
+            if completed['status']!='GENERATED':raise AssertionError('Generation status contradicts successful HTTP response')
+            page.locator('#modal').wait_for(state='hidden');s=state();ids=completed['scene_ids']
             unavailable=[s['artifacts'][id_] for id_ in ids if s['artifacts'][id_]['plan']['kind']=='animation_spec' and s['artifacts'][id_]['status'].startswith(('STALE','NEEDS_INPUT'))]
             if unavailable:
                 report['attempts'].append(dict(mode=mode,status='MODEL_REJECTED' if mode!='rules' else 'PIPELINE_FAILED',error='Required generated scene cannot be inserted; no incomplete master exported',scenes=[dict(id=r['id'],status=r['status'],missing=r['plan']['animation']['spec'].get('missing',[])) for r in unavailable],wall_seconds=time.monotonic()-started));save();print('INCOMPLETE_SCENES',mode,flush=True);continue

@@ -54,7 +54,7 @@ class SpecIntegrationTests(unittest.TestCase):
         self.assertEqual(record['plan']['animation']['spec']['objects'][0]['box_style'],'lines')
 
     def test_failed_model_is_not_a_successful_rules_fallback(self):
-        with patch('motion_policy.infer',side_effect=ValueError('Rejected model output')):
+        with patch('motion_policy.candidate',return_value=dict(version='test',checkpoint_sha256='a'*64,dataset_fingerprint='b'*64)),patch('motion_policy.infer',side_effect=ValueError('Rejected model output')):
             with self.assertRaisesRegex(ValueError,'Rejected'):self.ws.artifacts.generate(['host'],animation_mode='fine_tuned')
         self.assertFalse(self.ws.data.get('artifacts'))
 
@@ -81,6 +81,57 @@ class SpecIntegrationTests(unittest.TestCase):
         record['story_key']=record['story_key'].replace('|context:'+str(motion_storyboard.CONTEXT_VERSION),'')
         new=self.generate();self.assertNotEqual(ids[0],new[0])
         self.assertIn(ids[0],self.ws.data['artifacts'])
+
+    def test_host_intro_routes_only_the_title_and_keeps_locked_manual_scenes(self):
+        import motion_policy
+        intro,demo=self.generate();self.ws.artifacts.edit(intro,dict(locked=True),1)
+        self.ws.artifacts.edit(demo,dict(title='Manual demo title'),1)
+        before={i:copy.deepcopy(self.ws.data['artifacts'][i]) for i in (intro,demo)}
+        infer=motion_policy.infer;seen=[]
+        def inspect(root,contexts,*args):
+            seen.extend(contexts);return infer(root,contexts,*args)
+        with patch('motion_policy.infer',side_effect=inspect):
+            ids=self.ws.artifacts.generate(['host'],spoken_confirmed=True,animation_mode='rules',intro_layout='host')
+        new=self.ws.data['artifacts'][ids[0]];c=new['plan']['animation']['context']
+        self.assertEqual(len(seen),1);self.assertEqual(c['layout_requirement'],'host');self.assertEqual(c['texts'],[new['plan']['title']])
+        self.assertEqual(new['plan']['animation']['spec']['layout'],'host')
+        self.assertEqual(ids[1],demo);self.assertNotEqual(ids[0],intro);self.assertFalse(new['inserted'])
+        self.assertEqual({i:self.ws.data['artifacts'][i] for i in (intro,demo)},before)
+        self.assertEqual(self.ws.data['storyboards']['host']['artifacts'][1],before[demo]['plan'])
+        with patch('motion_policy.infer',side_effect=AssertionError('Cached unchanged scenes need no inference')):
+            self.assertEqual(self.ws.artifacts.generate(['host'],spoken_confirmed=True,animation_mode='rules',intro_layout='full'),[intro,demo])
+
+    def test_invalid_or_legacy_host_layout_fails_before_model_or_render(self):
+        for layout,mode in [('unknown','rules'),('host',None)]:
+            with patch('motion_policy.infer') as infer:
+                with self.assertRaises(ValueError):self.ws.artifacts.generate(['host'],animation_mode=mode,intro_layout=layout)
+                infer.assert_not_called()
+        self.assertFalse(self.ws.data.get('artifacts'))
+
+    def test_new_weights_or_retrieval_dataset_get_new_proposals(self):
+        import motion_specs
+        candidate=dict(version='test-v1',checkpoint_sha256='a'*64,dataset_fingerprint='1'*64)
+        def infer(root,contexts,mode,*args):
+            return [dict(spec=motion_specs.rules(c),model=dict(mode=mode,version=candidate['version'],checkpoint_sha256=candidate['checkpoint_sha256'])) for c in contexts]
+        with patch('motion_policy.candidate',side_effect=lambda root:copy.deepcopy(candidate)),patch('motion_policy.infer',side_effect=infer) as worker:
+            first=self.ws.artifacts.generate(['host'],animation_mode='fine_tuned');before=copy.deepcopy(self.ws.data['artifacts'])
+            self.ws.artifacts.generate(['host'],animation_mode='fine_tuned');self.assertEqual(worker.call_count,1)
+            candidate.update(version='test-v2',checkpoint_sha256='b'*64)
+            second=self.ws.artifacts.generate(['host'],animation_mode='fine_tuned')
+            self.assertTrue(set(first).isdisjoint(second));self.assertEqual({i:self.ws.data['artifacts'][i] for i in first},before)
+            candidate.update(version='test-v3',dataset_fingerprint='2'*64)
+            third=self.ws.artifacts.generate(['host'],animation_mode='fine_tuned');self.assertTrue(set(second).isdisjoint(third))
+        self.assertEqual(worker.call_count,3)
+
+    def test_candidate_change_during_inference_rejects_stale_batch(self):
+        import motion_specs
+        candidate=dict(version='test-v1',checkpoint_sha256='a'*64,dataset_fingerprint='1'*64)
+        def infer(root,contexts,mode,*args):
+            predictions=[dict(spec=motion_specs.rules(c),model=dict(mode=mode,version=candidate['version'],checkpoint_sha256=candidate['checkpoint_sha256'])) for c in contexts]
+            candidate['version']='test-v2';return predictions
+        with patch('motion_policy.candidate',side_effect=lambda root:copy.deepcopy(candidate)),patch('motion_policy.infer',side_effect=infer):
+            with self.assertRaisesRegex(ValueError,'Model candidate changed'):self.ws.artifacts.generate(['host'],animation_mode='fine_tuned')
+        self.assertFalse(self.ws.data.get('artifacts'));self.assertFalse(self.ws.artifacts.generating)
 
     def test_model_work_does_not_hold_the_workspace_lock(self):
         import threading,motion_policy

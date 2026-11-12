@@ -17,15 +17,17 @@ def context(plan,host,assets,transcript=None):
                 break
     frames=min(round(float(plan['duration'])*30),round((host['duration']-at)*30))
     if frames<30:raise ValueError('Not enough source footage for this scene; move it or record a pickup')
-    texts=list(dict.fromkeys([plan['title'],*plan.get('items',[])]))[:6] if plan['type']=='introduction' else [plan['title']]
+    intro_layout=plan.get('intro_layout','full')
+    if plan['type']=='introduction' and intro_layout not in ('full','host'):raise ValueError('Choose full or host for the intro')
+    texts=list(dict.fromkeys([plan['title'],*plan.get('items',[])]))[:6] if plan['type']=='introduction' and intro_layout=='full' else [plan['title']]
     # Reject an oversized label explicitly; never silently remove its last words.
     texts=[motion_specs.clean_text(text) for text in texts]
     ctx=dict(request='intro' if plan['type']=='introduction' else 'demo',quote=plan['source_quote'],texts=texts,anchors=[],frames=frames,
         protected=[dict(kind='face',rect=[.1,.15,.8,.4]),dict(kind='captions',rect=[.02,.77,.96,.15])],style=plan.get('motion_style','balanced'),voice_aligned=False)
-    ctx['intent']='Intro toàn màn hình: giới thiệu chủ đề và các mục cần nhớ.' if plan['type']=='introduction' else 'Hướng mắt vào nút, click thật, rồi giữ kết quả.' if proof else 'Giải thích một ý cạnh vai, giữ người dẫn.'
-    # The native intro treatment is explicitly full-screen, as is its rules
-    # baseline. This buyer/preset requirement is not a learned layout decision.
-    if plan['type']=='introduction':ctx['layout_requirement']='full'
+    ctx['intent']=('Intro toàn màn hình: giới thiệu chủ đề và các mục cần nhớ.' if intro_layout=='full' else 'Giữ người dẫn; headline giới thiệu chủ đề, không xếp danh sách lên mặt.') if plan['type']=='introduction' else 'Hướng mắt vào nút, click thật, rồi giữ kết quả.' if proof else 'Giải thích một ý cạnh vai, giữ người dẫn.'
+    # The explicit buyer treatment is shared by all planner arms, not a learned
+    # decision. Default full preserves the existing episode's chosen treatment.
+    if plan['type']=='introduction':ctx['layout_requirement']=intro_layout
     visible=[w for w in words if at<=w['start']<at+frames/30]
     anchor=visible[0] if visible else None
     ctx['anchors']=[dict(id='spoken-start',frame=round((anchor['start']-at)*30) if anchor else 0,kind='speech',text=anchor['text'] if anchor else plan['source_quote'])]

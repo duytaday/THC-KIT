@@ -1,5 +1,10 @@
 # Session understanding
 
+- [ ] New model versus cached scene: a checkpoint can change while the menu still
+  says Fine-tuned. A focused multiple-choice checkpoint asks which evidence proves
+  the new model generated the preview, separately from whether its quality is
+  better. Awaiting the user's answer; no mastery inferred from the code/tests.
+
 - [ ] Logical feedback retry: user initially chose two notes for a single click
   retried by the network. Explained one deliberate submission vs transport retry,
   and why a relative change must not execute twice. Mastery is not yet demonstrated;

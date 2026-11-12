@@ -27,8 +27,10 @@ class ArtifactStore:
         record.update(version=version,folder=str(folder),sha256=media.sha(folder/'preview.mp4'),plan=generated,status=generated['status'])
         record.pop('pending_proposal',None)
         return record
-    def generate(self,ids,evidence=None,spoken_confirmed=False,design=None,animation_mode=None,animation_style=None):
+    def generate(self,ids,evidence=None,spoken_confirmed=False,design=None,animation_mode=None,animation_style=None,intro_layout=None):
         if animation_style not in (None,'balanced','maverick_fast'):raise ValueError('Choose a supported animation style')
+        if intro_layout not in (None,'full','host'):raise ValueError('Choose full or host for the intro')
+        if intro_layout=='host' and not animation_mode:raise ValueError('Choose an editable animation planner for the host intro')
         results=[]
         for key in dict.fromkeys(ids):
             started=time.monotonic()
@@ -54,41 +56,58 @@ class ArtifactStore:
                 proposal=storyboard.propose(settings['script'],host['duration'],Path(host['path']),proof,reference,spoken_confirmed)
                 if animation_style:
                     for plan in proposal['artifacts']:plan['motion_style']=animation_style
-                if animation_mode:
-                    import motion_storyboard,motion_policy
-                    transcript=job.get('transcript')
-                    eligible=[(i,p) for i,p in enumerate(proposal['artifacts']) if p['kind']!='placeholder']
-                    prepared=[motion_storyboard.context(p,host,assets,transcript) for _,p in eligible]
-                    predictions=motion_policy.infer(self.ws.root,[ctx for ctx,_ in prepared],animation_mode,media.sha(host['path']))
-                    for (i,p),(ctx,at),prediction in zip(eligible,prepared,predictions):proposal['artifacts'][i]=motion_storyboard.attach(p,ctx,at,prediction)
                 mapping={}
                 for i,p in enumerate(proposal['passages']):
                     if i<len(previous) and previous[i]['quote']!=p['quote'] and not any(x['quote']==p['quote'] for x in previous):mapping[p['id']]=previous[i]['id'];p['id']=previous[i]['id']
+                for plan in proposal['artifacts']:
+                    plan['passage_ids']=[mapping.get(id_,id_) for id_ in plan['passage_ids']]
+                    if plan['type']=='introduction' and intro_layout=='host':plan['intro_layout']='host'
+                candidate=None
+                if animation_mode in ('base_rag','fine_tuned'):
+                    import motion_policy
+                    candidate=motion_policy.candidate(self.ws.root)
+                def identity(plan):
+                    kind='animation_spec' if animation_mode and plan['kind']!='placeholder' else plan['kind']
+                    value=plan['type']+'|'+'|'.join(plan['passage_ids'])+'|'+(plan['title'] if plan.get('claim','').startswith('Show this repository') else kind if plan['type']=='demo' else '')
+                    if animation_mode:
+                        import motion_storyboard
+                        value+='|animation:'+animation_mode+'|context:'+str(motion_storyboard.CONTEXT_VERSION)
+                    if animation_style:value+='|style:'+animation_style
+                    if plan['type']=='introduction' and intro_layout=='host':value+='|intro:host'
+                    if candidate:value+='|weights:'+candidate['checkpoint_sha256']+'|dataset:'+candidate['dataset_fingerprint']
+                    return value
+                previous_by_key={r.get('story_key'):r for r in existing_records}
+                if animation_mode:
+                    import motion_storyboard,motion_policy
+                    transcript=job.get('transcript')
+                    eligible=[(i,p) for i,p in enumerate(proposal['artifacts']) if p['kind']!='placeholder' and (identity(p) not in previous_by_key or previous_by_key[identity(p)]['plan']['source_quote']!=p['source_quote'])]
+                    prepared=[motion_storyboard.context(p,host,assets,transcript) for _,p in eligible]
+                    predictions=motion_policy.infer(self.ws.root,[ctx for ctx,_ in prepared],animation_mode,media.sha(host['path'])) if prepared else []
+                    if candidate and any(p['model'].get('version')!=candidate['version'] or p['model'].get('checkpoint_sha256')!=candidate['checkpoint_sha256'] for p in predictions):raise ValueError('Model candidate changed during generation; previous scenes were preserved')
+                    for (i,p),(ctx,at),prediction in zip(eligible,prepared,predictions):proposal['artifacts'][i]=motion_storyboard.attach(p,ctx,at,prediction)
                 for n,plan in enumerate(proposal['artifacts']):
                     plan['design']=copy.deepcopy(design or {})
                     if not animation_mode and plan['type']=='demo' and all(plan['design'].get(k) for k in ('before','after')):
                         plan.update(kind='before_after',intended_visual='Supplied before/after images with consistent fit; verify they show the claimed change.',enabled=True,status='STORYBOARD · NARRATION PICKUP')
-                    plan['passage_ids']=[mapping.get(id_,id_) for id_ in plan['passage_ids']]
-                    identity=plan['type']+'|'+'|'.join(plan['passage_ids'])+'|'+(plan['title'] if plan.get('claim','').startswith('Show this repository') else plan['kind'] if plan['type']=='demo' else '')
-                    if animation_mode:identity+='|animation:'+animation_mode+'|context:'+str(motion_storyboard.CONTEXT_VERSION)
-                    if animation_style:identity+='|style:'+animation_style
-                    existing=next((r for r in existing_records if r.get('story_key')==identity),None)
+                    story_key=identity(plan);existing=previous_by_key.get(story_key)
                     if existing:
                         if existing['plan']['source_quote']!=plan['source_quote']:
                             existing.update(pending_proposal=plan,status='STALE · source passage changed')
+                        else:proposal['artifacts'][n]=copy.deepcopy(existing['plan'])
                         staged.append(existing);continue
-                    record=dict(id=uuid.uuid4().hex,job=key,story_key=identity,inserted=False,versions=[])
+                    record=dict(id=uuid.uuid4().hex,job=key,story_key=story_key,inserted=False,versions=[])
                     self._render_version(record,plan,assets);staged.append(record)
+                if candidate and motion_policy.candidate(self.ws.root)['version']!=candidate['version']:raise ValueError('Model candidate changed during generation; previous scenes were preserved')
                 with self.ws.lock:
                     current=self.ws.data['jobs'][key]
                     if current['revision']!=job['revision'] or current['status'] in ('Queued','Rendering'):raise ValueError('Project changed during generation; stale proposals were not applied. Generate again from the current script.')
                     for record in staged:self.records()[record['id']]=record
                     self.ws.data.setdefault('storyboards',{})[key]=proposal;self._dirty(current);self.ws.save();results.extend(staged)
-                    self.ws.data.setdefault('generation_attempts',[]).append(dict(id=uuid.uuid4().hex,job=key,mode=animation_mode or 'native',style=animation_style or 'balanced',status='GENERATED',scene_ids=[r['id'] for r in staged],wall_seconds=time.monotonic()-started,source_script_sha256=storyboard.digest(settings['script'])))
+                    self.ws.data.setdefault('generation_attempts',[]).append(dict(id=uuid.uuid4().hex,job=key,mode=animation_mode or 'native',style=animation_style or 'balanced',intro_layout=intro_layout or 'full',status='GENERATED',scene_ids=[r['id'] for r in staged],wall_seconds=time.monotonic()-started,source_script_sha256=storyboard.digest(settings['script'])))
                     self.ws.save()
             except Exception as error:
                 with self.ws.lock:
-                    self.ws.data.setdefault('generation_attempts',[]).append(dict(id=uuid.uuid4().hex,job=key,mode=animation_mode or 'native',style=animation_style or 'balanced',status='REJECTED',error=str(error),wall_seconds=time.monotonic()-started,source_script_sha256=storyboard.digest(job['settings']['script'])))
+                    self.ws.data.setdefault('generation_attempts',[]).append(dict(id=uuid.uuid4().hex,job=key,mode=animation_mode or 'native',style=animation_style or 'balanced',intro_layout=intro_layout or 'full',status='REJECTED',error=str(error),wall_seconds=time.monotonic()-started,source_script_sha256=storyboard.digest(job['settings']['script'])))
                     self.ws.save()
                 raise
             finally:
