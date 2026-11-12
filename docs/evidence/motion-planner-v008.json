@@ -264,5 +264,73 @@
   "repair_minutes_per_finished_minute": null,
   "production_promotion": false,
   "library_admission": false,
-  "app_tests": 258
+  "app_tests": 258,
+  "dev21_ui_controls": {
+    "status": "PASS",
+    "cases": [
+      {
+        "case": "preserve_unspecified",
+        "version": 3,
+        "sound_plan": "unspecified",
+        "resolved_events": 0,
+        "full_decode": true
+      },
+      {
+        "case": "preserve_explicit_empty",
+        "version": 2,
+        "sound_plan": "declared",
+        "resolved_events": 0,
+        "full_decode": true
+      },
+      {
+        "case": "mute_click_keep_chime",
+        "version": 2,
+        "sound_plan": "declared",
+        "resolved_events": 1,
+        "full_decode": true
+      },
+      {
+        "case": "mute_all_explicit_empty",
+        "version": 3,
+        "sound_plan": "declared",
+        "resolved_events": 0,
+        "full_decode": true
+      },
+      {
+        "case": "restore_original_cues_json",
+        "version": 4,
+        "sound_plan": "declared",
+        "resolved_events": 2,
+        "full_decode": true
+      }
+    ],
+    "locked_scene_unchanged": true,
+    "settings_unchanged": true,
+    "previous_exports_unchanged": true,
+    "original_workspace_and_master_bytes_unchanged": true,
+    "full_watch": false,
+    "full_listen": false,
+    "production_promotion": false
+  },
+  "dev21_package_integrity": {
+    "status": "PACKAGE_INTEGRITY_PASS",
+    "package": {
+      "version": "0.14.0-dev21",
+      "package": "Talking Head Cutroom 0.14.0-dev21.zip",
+      "sha256": "a2cded4333dcdb57b358fc48802662cc30bcc88e9b3b6b44dd403f76b8e98124",
+      "bytes": 17662511,
+      "source_commit": "360bba89157e7bba029e0bdcd381564db1f1130d",
+      "source_dirty": false,
+      "source_tree_sha256": "05304398e05090c5eda79435e98037ee13f8247e1ad7a672b9ef18177d9a8f48",
+      "files": 153
+    },
+    "tested_source_ui_sha256": "65bc607e6594accb3833dd9f3f68c811fed6a2128674214ee55374ce37be393e",
+    "bundled_ui_matches_tested_source": true,
+    "renderer_and_runtime_identical_to_smoked_dev20": true,
+    "gui_launcher_tested": false,
+    "clean_windows_tested": false,
+    "full_watch": false,
+    "full_listen": false,
+    "scope": "Source UI regression plus package identity; no claim that native GUI was launched"
+  }
 }

@@ -54,6 +54,10 @@ thử có visual-only REVISE ở 00:34–00:37 vì thiếu Recordly preview capt
 Chi tiết và receipt: `MOTION-PLANNER-V008.vi.md`,
 `evidence/motion-planner-v008.json`. Các mốc lịch sử dưới đây không thay thế
 nghiệm thu còn thiếu hoặc chứng nhận mastery của user.
+Tiếp theo: dev21 giữ SFX chưa khai khi Save Controls; 5 tình huống UI có preview
+thật PASS, 258 app tests PASS. Gói mới khớp source UI đã test; không claim đã mở
+native launcher. Recordly source vẫn chưa đổi, không có raw take B mới, chưa có
+human full watch/listen hoặc câu trả lời benchmark. Goal vẫn chưa hoàn tất.
 
 - [x] User chọn MaverickGPT cho vlog hiện tại.
 - [x] Giữ v035 làm baseline: file thực tế `5 repo github cho ae edit video.mp4`,

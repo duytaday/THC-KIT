@@ -203,6 +203,14 @@ copy riêng và IDs tương ứng, không chạy trên experiment đang duyệt.
 private: `output/reference-training/reference-spec-v008/sfx-controls-ui-v001/`.
 Không đo human listening, style fidelity hoặc model gain bằng regression UI này.
 
+Gói dev21 build từ source sạch commit `360bba89157e7bba029e0bdcd381564db1f1130d`:
+153 files / 17.662.511 bytes, ZIP SHA256
+`a2cded4333dcdb57b358fc48802662cc30bcc88e9b3b6b44dd403f76b8e98124`.
+Hash UI trong ZIP bằng UI vừa test; manifest và từng ZIP entry khớp file build.
+Renderer/runtime byte-identical với dev20 đã smoke nên không render lại master
+chỉ để kiểm thay đổi UI. Đây là package integrity + source UI acceptance;
+native GUI launcher/Windows sạch vẫn chưa chạy. Giữ gói dev20 và mọi gói cũ.
+
 Evidence private trên D:`output/reference-training/reference-spec-v008/`:
 protocol, authored fixtures/project/timelines, inspections, recovery, token
 curation v001–v003, dataset-v003, preflight, Kaggle logs và preparation.
