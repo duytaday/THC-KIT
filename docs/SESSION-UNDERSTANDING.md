@@ -50,6 +50,12 @@ versioned proposals; they do not independently approve the customer master.
 Raw-model failures, compiler repairs and unverified listening stay visible so
 the buyer can understand what each success actually establishes.
 
+Current concrete case: a supplied source and its hash/range establish an
+assignment, not the truth of its result or final audibility. Legacy filename
+associations remain unverified. Capture requirements now bind to the rendered
+master's frozen profile; editing later workspace scenes cannot rewrite them.
+This implementation evidence does not answer the pending template/proof checkpoint.
+
 The current analyzer reports candidates. Training intake cannot turn an unlabeled
 interval into a deliberate presenter hold. Inference features and final-editor
 targets are separate; duplicate/creator/series/excerpt groups stay together.

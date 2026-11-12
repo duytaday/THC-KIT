@@ -29,6 +29,13 @@ class SpecIntegrationTests(unittest.TestCase):
         self.assertTrue(all(e['origin']=='animation_spec' for e in plan['events']))
         self.assertEqual(len({e['id'] for e in plan['events']}),len(plan['events']))
 
+    def test_capture_requirements_snapshot_current_proposal_not_all_old_scenes(self):
+        self.generate();current=self.ws.data['storyboards']['host'];p=copy.deepcopy(current['artifacts'][1]);p.update(kind='placeholder',title='Recordly',claim='See result',intended_visual='Review source result')
+        current['artifacts']=[p];self.ws.data['artifacts']['old']=dict(job='host',inserted=False,plan=dict(kind='placeholder',title='Wrong old scene'))
+        plan=dict(proof=[],events=[]);self.ws.artifacts.apply('host',plan)
+        self.assertEqual([r['subject'] for r in plan['capture_requirements']],['Recordly'])
+        p['title']='Later change';self.assertEqual(plan['capture_requirements'][0]['subject'],'Recordly')
+
     def test_regenerate_one_scene_preserves_locked_intro_and_old_versions(self):
         intro,demo=self.generate();self.ws.artifacts.edit(intro,dict(locked=True),1)
         with self.assertRaisesRegex(ValueError,'Unlock'):self.ws.artifacts.edit(intro,{},1)

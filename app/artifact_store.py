@@ -154,6 +154,11 @@ class ArtifactStore:
         for r in self.records().values():
             if r['job']==key and r['plan']['source_quote'] not in text:r['status']='STALE · source passage changed'
     def apply(self,key,plan):
+        script_hash=storyboard.digest(self.ws.data['jobs'][key]['settings']['script'])
+        plan['capture_requirements']=[dict(id='capture-'+p['passage_ids'][0]+'-'+storyboard.digest(p['title'])[:8],subject=p['title'],
+            claim=p['claim'],source_quote=p['source_quote'],intended_visual=p['intended_visual'])
+            for p in self.ws.data.get('storyboards',{}).get(key,{}).get('artifacts',[])
+            if p['kind']=='placeholder' and p.get('source_script_sha256')==script_hash]
         for r in self.records().values():
             if r['job']!=key or not r.get('inserted') or not r['plan'].get('enabled',True):continue
             if r['status'].startswith(('STALE','NEEDS_INPUT')):raise ValueError('Regenerate or disable scene '+r['plan']['title']+' after the script/proof change.')
@@ -170,9 +175,13 @@ class ArtifactStore:
                 if proof:
                     a=self.ws.data['assets'][proof['asset']]
                     if proof.get('source_sha256') and media.sha(a['path'])!=proof['source_sha256']:raise ValueError('Screen source changed; reassign its action/result anchors')
-                    plan['proof'].append(dict(id='motion-proof-'+r['id'],file=a['path'],start=start,end=end,source_start=proof.get('offset',0),artifact_type=scene['type'],artifact_kind='software',source_name=a['name']))
+                    binding=dict(demonstrates=proof['for_repo']) if proof.get('for_repo') else {}
+                    anchors={x['kind']:x['source_pts'] for x in entry['context']['anchors'] if x.get('source_pts') is not None and x['kind'] in ('control','contact','result')}
+                    if 'control' in anchors:anchors['target']=anchors.pop('control')
+                    plan['proof'].append(dict(id='motion-proof-'+r['id'],file=a['path'],start=start,end=end,source_start=proof.get('offset',0),artifact_type=scene['type'],artifact_kind='software',source_name=a['name'],anchors=anchors,**binding))
                 continue
-            plan['proof'].append(dict(id='artifact-'+r['id'],start=start,end=end,file=str(Path(r['folder'])/'preview.mp4'),source_start=0,artifact_id=r['id'],artifact_version=r['version'],artifact_type=scene['type'],artifact_kind=scene['kind'],source_name=scene['title']))
+            evidence=scene.get('evidence') or {};binding=dict(demonstrates=evidence['for_repo']) if scene['kind']=='software' and evidence.get('for_repo') else {}
+            plan['proof'].append(dict(id='artifact-'+r['id'],start=start,end=end,file=str(Path(r['folder'])/'preview.mp4'),source_start=0,artifact_id=r['id'],artifact_version=r['version'],artifact_type=scene['type'],artifact_kind=scene['kind'],source_name=scene['title'],**binding))
             for cue in scene.get('events',[]):
                 e=copy.deepcopy(cue);e['id']='artifact-'+r['id']+'-'+e['id'];e['anchor']['timeline_source_pts']=start+e['master_frame']/30;e['visual_disabled']=True;plan['events'].append(e)
         plan['proof'].sort(key=lambda q:q['start'])

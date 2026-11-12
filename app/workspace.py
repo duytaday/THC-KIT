@@ -269,6 +269,8 @@ class Workspace:
             from engine.layouts import options
             options(q)
             a = ref(q["asset"])
+            from proof_assignments import assignment
+            assignment(q,a)
             if not all(
                 isinstance(q.get(k), (float, int)) and math.isfinite(q[k])
                 for k in ("at", "offset", "duration")

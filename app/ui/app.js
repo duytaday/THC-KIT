@@ -320,7 +320,7 @@ function drawInserts() {
         (r, i) =>
           '<div class="insert" data-insert="' +
           i +
-          '"><select aria-label="Cutaway source" data-k="asset">' +
+          '"><label>Demo subject (optional)<input data-k="demonstrates" maxlength="140" placeholder="Remotion / Export invoice" value="'+esc(r.demonstrates||'')+'"></label><label>What must be visible<input data-k="visual_claim" maxlength="400" placeholder="Specific control, value or resulting state" value="'+esc(r.visual_claim||'')+'"></label><small>Assignment links this footage to a claim; it still needs review. An illustration cannot prove a software result.</small><select aria-label="Cutaway source" data-k="asset">' +
           options(r.asset, false) +
           `</select><img class="insert-thumb" alt="Cutaway source thumbnail" src="/assets/${r.asset}/thumb"><small>Show in video · presenter audio continues</small><label>Spoken cue (optional)<input data-k="cue" maxlength="240" placeholder="Exact words from this script" value="` +
           esc(r.cue || "") +
@@ -927,7 +927,7 @@ el("form").addEventListener("input", (e) => {
   const k = e.target.dataset.k;
   if (k) {
     const i = Number(e.target.closest("[data-insert]").dataset.insert);
-    inserts[i][k] = ["asset", "cue", "layout", "pip_corner"].includes(k)
+    inserts[i][k] = ["asset", "cue", "layout", "pip_corner", "demonstrates", "visual_claim"].includes(k)
       ? e.target.value
       : Number(e.target.value);
     if(k==='cue')delete inserts[i].occurrence;

@@ -30,6 +30,7 @@ def prepare_export(folder,host,settings,plan):
         (folder/'creator-brief.md').write_text(plan['creator'].get('brief_text') or '\n'.join(f'{k}: {v}' for k,v in plan['creator']['brief'].items()),encoding='utf-8')
     from engine.enhance import events_for,sound_asset
     dependencies={Path(__file__).parent/'engine'/name for name in ('edit.py','media.py','enhance.py','cues.py','layouts.py','planner.py')}
+    dependencies.add(Path(__file__).parent/'proof_assignments.py')
     dependencies.add(Path(__file__).parent/'fonts/DejaVuSans-Bold.ttf')
     if plan.get('motion_specs'):
         dependencies.update(Path(__file__).parent/name for name in ('motion_specs.py','motion_render.py','motion_hooks.py'))
@@ -43,7 +44,9 @@ def prepare_export(folder,host,settings,plan):
     write(folder/'render-project.json',dict(source=host['path'],source_sha256=sha(host['path']),plan=copy.deepcopy(plan),renderer=str(Path(__file__).parent/'engine/edit.py'),renderer_sha256=sha(Path(__file__).parent/'engine/edit.py'),dependencies=[dict(path=str(p),sha256=sha(p)) for p in sorted(dependencies)]))
     profile=prepare(folder,expected_frames=round(duration*30))
     profile['project_hashes']={'render-project.json':sha(folder/'render-project.json')}
-    profile['demonstrations']=[dict(id=f'cutaway-{i}',claim='Original/generated/reference explanatory illustration; not real product-action proof. Verify its correspondence to the spoken idea.' if q.get('artifact_kind') in ('process','list','generated_video','reference_excerpt') else 'Creator-assigned demonstration must show target, action and readable result.',source_asset=q['file'],source_sha256=sha(q['file']),source_range=[q['source_start'],q['source_start']+q['end']-q['start']],master_range=mapped(q['start'],q['end'])) for i,q in enumerate(plan['proof']) if q.get('artifact_type')!='introduction']
+    profile['demonstrations']=[dict(id=f'cutaway-{i}',claim='Original/generated/reference explanatory illustration; not real product-action proof. Verify its correspondence to the spoken idea.' if q.get('artifact_kind') in ('process','list','generated_video','reference_excerpt') else q.get('visual_claim') or 'Creator-assigned demonstration must show target, action and readable result.',source_asset=q['file'],source_sha256=sha(q['file']),source_range=[q['source_start'],q['source_start']+q['end']-q['start']],master_range=mapped(q['start'],q['end'])) for i,q in enumerate(plan['proof']) if q.get('artifact_type')!='introduction']
+    from proof_assignments import candidates,followups,key
+    requirements=copy.deepcopy(plan.get('capture_requirements',[]))
     import re
     if re.search(r'\b(5|năm)\s+repo',settings['script'],re.I):
         from storyboard import REPOS
@@ -52,9 +55,14 @@ def prepare_export(folder,host,settings,plan):
         promised=[repo for match,repo in sorted([(m,r) for m,r in mentions if m is not None],key=lambda item:item[0].start())]
         promised += ['UNASSIGNED REPO '+str(i+1) for i in range(len(promised),5)]
         for repo in promised:
-            candidates=[q for q in plan['proof'] if q.get('artifact_type')!='introduction' and q.get('artifact_kind') not in ('process','list','generated_video','reference_excerpt') and re.search(r'(?<!\w)'+re.escape(repo.split()[0])+r'(?!\w)',q.get('source_name',''),re.I)]
-            for i,q in enumerate(candidates or [None]):
+            if not any(key(r['subject'])==key(repo) for r in requirements):requirements.append(dict(id='promised-'+repo.replace(' ','-'),subject=repo,claim='Verify this named repository’s own promised demo.',intended_visual='Assign or capture this repository’s own relevant demonstration.'))
+            for i,q in enumerate(candidates(plan['proof'],repo) or [None]):
                 profile['demonstrations'].append(dict(id='promised-'+repo.replace(' ','-')+'-'+str(i),repo_name=repo,claim='Verify this named repository’s own promised demo; a generic animation is not product proof.',source_asset=q['file'] if q else '',source_sha256=sha(q['file']) if q else '0'*64,source_range=[q['source_start'],q['source_start']+q['end']-q['start']] if q else None,master_range=mapped(q['start'],q['end']) if q else [0,duration]))
+    for q in plan['proof']:
+        subject=q.get('demonstrates')
+        if subject and candidates([q],subject) and not any(key(r['subject'])==key(subject) for r in requirements):
+            requirements.append(dict(id='assigned-'+str(q.get('id') or len(requirements)),subject=subject,claim=q.get('visual_claim') or 'Review the explicitly assigned demonstration.',intended_visual='Review the supplied source against its declared visible claim.'))
+    profile['proof_followups']=followups(requirements,plan['proof'])
     profile['gates']['B']['evidence_ids']=[d['id'] for d in profile['demonstrations']] or ['presenter_visuals']
     profile['evidence_ranges']={d['id']:d['master_range'] for d in profile['demonstrations']}
     fx=settings.get('insert_sound','none')

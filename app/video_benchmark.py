@@ -131,7 +131,7 @@ def create(config, out):
                             path=str(path), sha256=snapshot['sha256'], bindings=dependencies,
                             controls=item.get('controls', {}), metrics=metrics,
                             coverage=item.get('coverage', 'complete_episode'), stage=item.get('stage','proposal'), group_verified=bool(item.get('group_verified')),
-                            required_beats=item.get('required_beats', []), pickups=item.get('pickups', []),
+                            required_beats=item.get('required_beats', []), pickups=item.get('pickups', []),proof_followups=item.get('proof_followups',[]),
                             quiz=item.get('quiz', [])))
     if len({r['id'] for r in records})!=len(records):raise ValueError('Export IDs must be unique')
     groups = {}
@@ -283,7 +283,7 @@ def evaluate(run, review_file):
                             repair_minutes_per_finished_minute=repair_ratio,style_median=statistics.median(ratings) if ratings else None,
                             style_dimensions_checked=len(ratings),
                             quiz_correct=quiz_correct,quiz_checked=quiz_checked,quiz_total=len([q for q in video.get('quiz',[]) if q.get('expected') is not None]),
-                            pickups=video['pickups'],issues=issues))
+                            pickups=video['pickups'],proof_followups=video.get('proof_followups',[]),issues=issues))
     counted=[r for r in results if r['coverage']=='complete_episode' and r['stage']=='proposal' and r['first_pass_accepted'] is not None]
     if len({(r['episode'],r['arm']) for r in counted})!=len(counted):raise ValueError('Count one first proposal per episode/arm; label later cuts as revisions')
     unseen=[r for r in counted if r['scope']=='locked_test']
@@ -316,6 +316,7 @@ def write_report(out, run, report):
     lines+=['', '## Cần bổ sung', '']
     for v in report['videos']:
         lines += [f"- {v['id']}: {p}" for p in v['pickups']]
+        lines += [f"- {v['id']} · {f['subject']}: {f['status']} · {len(f['sources'])} source assignment(s); editorial review remains pending." for f in v.get('proof_followups',[])]
     (Path(out)/'report.vi.md').write_text('\n'.join(lines)+'\n',encoding='utf-8')
 
 
@@ -447,7 +448,7 @@ def from_workspace(ws, ids, reference_ids=(), quiz_by_job=None):
         if type(expected_frames) is not int or expected_frames<=0:raise ValueError('The export needs its planned timeline frame count')
         encoding=read(folder/'edit-review.json').get('video_encoding',{}) if (folder/'edit-review.json').is_file() else {}
         dependencies={str(Path(d['path']).resolve()):d['sha256'] for d in recipe.get('dependencies',[])}
-        proof=[dict(sha256=dependencies.get(str(Path(q['file']).resolve())),start=q['start'],end=q['end'],source_start=q['source_start']) for q in plan.get('proof',[])]
+        proof=[dict(sha256=dependencies.get(str(Path(q['file']).resolve())),start=q['start'],end=q['end'],source_start=q['source_start'],**{k:q[k] for k in ('demonstrates','visual_claim') if k in q}) for q in plan.get('proof',[])]
         if any(not q['sha256'] for q in proof):proof=None
         brand=plan.get('branding');branding=dict(enabled=False)
         if brand:
@@ -477,12 +478,14 @@ def from_workspace(ws, ids, reference_ids=(), quiz_by_job=None):
         manually_revised=any(s.get('manual_override') for s in specs)
         questions=quizzes.get(e['job'],[dict(id='target',text='Trong demo chính, người dẫn vừa bấm nút nào?',modality='visual'),dict(id='result',text='Sau khi bấm, điều gì thay đổi?',modality='visual')])
         questions=copy.deepcopy(questions)+[dict(id='covered',text='Có chữ hoặc kết quả nào chưa kịp đọc / bị che? Ghi timecode.',modality='visual')]
+        from proof_assignments import frozen_followups
+        followups=frozen_followups(profile)
         videos.append(dict(id=e['id'],episode=family,source_group=state['jobs'][e['job']].get('parent_source') or family,
                            scope='development',arm=arm,stage='revision' if previous or manually_revised else 'proposal',manual_animation_edits=manually_revised,path=str(folder/'edit.mp4'),source_sha256=recipe['source_sha256'],controls=controls,
                            expected=dict(width=1080,height=1920,fps=30,frames=expected_frames),
                            required_beats=[p['id'] for p in profile.get('demonstrations',[])],
                            quiz=questions,
-                           pickups=[r['plan']['intended_visual'] for r in state.get('artifacts',{}).values() if r['job']==e['job'] and r['plan']['kind']=='placeholder']))
+                           proof_followups=followups,pickups=[f.get('intended_visual',f['claim']) for f in followups if f['status']=='UNASSIGNED']))
     refs=[]
     for id_ in dict.fromkeys(reference_ids):
         a=state['assets'][id_]

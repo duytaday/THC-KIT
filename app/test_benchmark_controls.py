@@ -66,6 +66,14 @@ class FrozenControlTests(unittest.TestCase):
         self.assertEqual(controls['proof'][0]['sha256'],'e'*64)
         self.assertEqual(seen[0]['videos'][0]['expected']['frames'],60)
 
+    def test_pickups_and_proof_followups_are_frozen_per_master_not_live_artifacts(self):
+        ws,_=self.workspace();file=self.root/'export/acceptance-profile.json';profile=bench.read(file)
+        profile['proof_followups']=[dict(subject='Recordly',claim='Read result',status='PROVIDED_UNVERIFIED',sources=[dict(source_sha256='f'*64)]),dict(subject='fal',claim='Read price',status='UNASSIGNED',sources=[])]
+        media.write_json(file,profile);ws.data['artifacts']={'old':dict(job='job',plan=dict(kind='placeholder',intended_visual='Wrong old capture request'))};seen=[]
+        with patch('video_benchmark.create',side_effect=lambda config,out:seen.append(config) or dict(videos=[])):bench.from_workspace(ws,['export'])
+        video=seen[0]['videos'][0];self.assertEqual(video['pickups'],['Read price']);self.assertEqual(video['proof_followups'],profile['proof_followups'])
+        self.assertNotIn('Wrong old capture request',str(video))
+
     def test_duplicate_source_job_is_not_a_new_first_pass_episode(self):
         ws,_=self.workspace();new=copy.deepcopy(ws.data['exports'][0]);new.update(id='new',job='new-job');ws.data['exports'].append(new)
         ws.data['assets']['new-job']=dict(duration=8);ws.data['jobs']['new-job']=dict(settings={});seen=[]

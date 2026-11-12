@@ -113,6 +113,11 @@ input hoặc bị từ chối chèn được ghi là thất bại; không render
 rồi tính là một đối chứng hoàn chỉnh. Export kỹ thuật đạt nhưng thiếu proof vẫn
 không đủ điều kiện so model hoặc giao khách. Bài benchmark giữ cả thất bại và
 những controls không khớp; nó không tự chọn bản thắng hay bật adapter.
+Yêu cầu quay/kiểm source lấy từ hồ sơ đã đóng băng của từng export. Cutaway có
+subject và visible claim rõ; source đã gán vẫn `PROVIDED_UNVERIFIED`. Hồ sơ cũ
+giữ `LEGACY_UNVERIFIED`, không lấy tên file làm explicit proof. Placeholder mới
+trong workspace không được sửa danh sách pickup của master cũ. Xem
+`docs/PROOF-BINDING-V001.vi.md` cho kết quả và giới hạn kiểm thử.
 Harness ghi hash mã Python và UI của lần chạy. Nếu code đổi giữa các arm,
 resume bị từ chối; mở lượt so sánh mới và giữ nguyên báo cáo cũ. Có thể tái dùng
 media đã nhập và thiết lập chung, nhưng không ghép kết quả từ hai compiler khác
