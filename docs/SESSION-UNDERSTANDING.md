@@ -1,5 +1,11 @@
 # Session understanding
 
+- [ ] Declared input versus target leakage: dev18 recovers layout only from
+  the existing canonical intent, before inspecting target labels. All18 changed
+  inputs were validation; train/RAG stayed byte-identical, so no duplicate
+  Kaggle run was launched. Four tuned native successes still include2manual
+  compiler repairs and2content omissions. No user mastery or approval inferred.
+
 - [ ] Validation diagnostic:8source-disjoint component inputs still give5base
   and6tuned native failures. Rules8/8 native does not establish coverage/style;
   post-hoc agent-label agreement is not independent human evidence. Explained

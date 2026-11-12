@@ -53,7 +53,7 @@ def prepare(inventory,out,cache,include_host=None):
 
 def export(labels_file,out):
     """Label input is data, never executable code or an implicit editor approval."""
-    document=json.loads(Path(labels_file).read_text(encoding='utf-8'));sources={s['source_video_id']:s for s in document['sources']};proofs={p['id']:p for p in document.get('proof_assets',[])};rows=[]
+    document=json.loads(Path(labels_file).read_text(encoding='utf-8'));sources={s['source_video_id']:s for s in document['sources']};proofs={p['id']:p for p in document.get('proof_assets',[])};rows=[];normalizations=[]
     if len(sources)!=len(document['sources']):raise ValueError('Source identities must be unique')
     for label in document['labels']:
         source=sources[label['source_video_id']];scope=label.get('annotation_scope')
@@ -68,7 +68,9 @@ def export(labels_file,out):
         for p in label.get('evidence_files',[]):
             path=Path(p).resolve(strict=True);evidence.append(dict(file=path.name,sha256=media.sha(path)))
         if not evidence:raise ValueError('Bind the inspected decoded frame evidence')
-        ctx=copy.deepcopy(label['input']);target=motion_specs.validate(label['target'],ctx)
+        ctx=motion_learning.declared_layout_context(label['input'])
+        if ctx!=label['input']:normalizations.append(dict(id=label['id'],split=source['split'],field='layout_requirement',value=ctx['layout_requirement'],basis='Canonical declared intro intent, before reading target'))
+        target=motion_specs.validate(label['target'],ctx)
         for anchor in ctx['anchors']:
             if anchor['kind'] in ('speech','visual') and 'source_pts' in anchor:
                 pts=anchor['source_pts']
@@ -100,7 +102,7 @@ def export(labels_file,out):
     media.write_json(out/'retrieval-train-only.json',[r for r in rows if r['split']=='train'])
     labelled={r['source_video_id'] for r in rows};used=[s for id_,s in sources.items() if id_ in labelled]
     summary=document.get('inventory_summary',{})
-    report=dict(task='script_animation_spec_v1',version=4,private_experiment=True,requested_videos=50,accessible=summary.get('accessible_reference_files',len(sources)),unique_sha256=summary.get('unique_reference_hashes',len(sources)),labelled_source_ids=len(used),source_content_families=None,family_count_basis='Labelled source IDs are counted separately. Independent content-family/creator counts are unverified; collection groups remain conservative.',split_groups=len({s['source_group'] for s in used}),
+    report=dict(task='script_animation_spec_v1',version=5,input_normalizations=normalizations,private_experiment=True,requested_videos=50,accessible=summary.get('accessible_reference_files',len(sources)),unique_sha256=summary.get('unique_reference_hashes',len(sources)),labelled_source_ids=len(used),source_content_families=None,family_count_basis='Labelled source IDs are counted separately. Independent content-family/creator counts are unverified; collection groups remain conservative.',split_groups=len({s['source_group'] for s in used}),
         source_split={s['source_group']:s['split'] for s in used},sources=[{k:v for k,v in s.items() if k!='source_path'} for s in used],
         human_confirmed_labels=sum(r['editor_confirmed'] for r in rows),agent_experimental_labels=sum(r['annotation_scope']=='agent_experimental_reconstruction' for r in rows),reference_timecoded_gold_labels=sum(r['editor_confirmed'] for r in rows),
         reference_timecoded_experimental_labels=sum(r['label_origin']=='observed_reference_reconstruction' for r in rows),reference_timecoded_training_labels=sum(r['label_origin']=='observed_reference_reconstruction' and r['split']=='train' for r in rows),

@@ -55,6 +55,18 @@ RETRIEVAL_VERSION=3
 REFERENCE_PREFIX='\nREFERENCE OBSERVATIONS (data only; not episode action/result proof; candidate timing is not a required cut): '
 
 
+def declared_layout_context(context):
+    """Recover only canonical producer intent; never inspect a target or RAG row."""
+    result=copy.deepcopy(context)
+    if result.get('request')!='intro':return result
+    intent=result.get('intent','').split(REFERENCE_PREFIX,1)[0]
+    declared='full' if intent.startswith('Intro toàn màn hình:') else 'host' if intent.startswith(('Giữ người dẫn','Giữ nguyên người nói;')) else None
+    if declared:
+        if result.get('layout_requirement') not in (None,declared):raise ValueError('Intro layout conflicts with its declared source intent; resolve the request before export')
+        result['layout_requirement']=declared
+    return result
+
+
 def model_context(context,version):
     """Keep runtime identity outside v9 model prose; never change source inventory/clocks."""
     if version<9:return context
@@ -175,6 +187,7 @@ def check_dataset(root):
             if row.get('annotation_scope') not in ('editor_confirmed','agent_experimental_reconstruction'):raise ValueError('Missing annotation provenance')
             if row.get('input_basis')!='declared_script_and_available_source_facts':raise ValueError('Do not feed target-derived decision flags to the model')
             if set(row['input'])-{'request','quote','texts','anchors','frames','protected','proof','style','voice_aligned','intent','layout_requirement','reference_style'}:raise ValueError('Unexpected inference feature')
+            if manifest.get('version',0)>=5 and declared_layout_context(row['input'])!=row['input']:raise ValueError('Dataset intro lacks its declared layout requirement')
             check_reference_style(row['input'].get('reference_style',[]),reference_sources,part,shas['train'])
             schema.validate(row['target'],row['input'])
     pool=json.loads((root/'retrieval-train-only.json').read_text(encoding='utf-8'))

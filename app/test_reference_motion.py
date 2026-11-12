@@ -61,6 +61,40 @@ class ReferenceLabelTests(unittest.TestCase):
 class ReferenceTimingTests(unittest.TestCase):
     def context(self):return dict(request='intro',texts=['Đúng vị trí'],frames=90,protected=[],anchors=[dict(id='word',kind='speech',frame=10)])
 
+    def test_layout_normalization_uses_declared_intent_only_and_keeps_source_fields(self):
+        original=dict(self.context(),intent='Intro toàn màn hình: chủ đề thật.',quote='Lời thật.',reference_style=[{'observation':'host in unrelated reference'}])
+        before=copy.deepcopy(original);result=motion_learning.declared_layout_context(original)
+        self.assertEqual(original,before);self.assertEqual(result,{**original,'layout_requirement':'full'})
+        self.assertEqual(motion_learning.declared_layout_context(result),result)
+        for intent in ('Giữ người dẫn; headline bên vai.','Giữ nguyên người nói; không thêm đồ họa.'):
+            self.assertEqual(motion_learning.declared_layout_context(dict(original,intent=intent))['layout_requirement'],'host')
+        self.assertNotIn('layout_requirement',motion_learning.declared_layout_context(dict(original,intent='Bố cục tùy chọn.')))
+        self.assertNotIn('layout_requirement',motion_learning.declared_layout_context(dict(original,request='demo')))
+        with self.assertRaisesRegex(ValueError,'conflicts'):motion_learning.declared_layout_context(dict(original,layout_requirement='host'))
+
+    def test_new_export_normalizes_before_target_validation_without_rewriting_the_label(self):
+        case=ReferenceLabelTests();case.setUp();self.addCleanup(case.temp.cleanup)
+        case.label['input']['intent']='Intro toàn màn hình: ví dụ thật.';before=copy.deepcopy(case.label)
+        with patch('reference_motion.motion_learning.check_dataset'):report=case.export()
+        row=json.loads((case.root/'dataset/train.jsonl').read_text(encoding='utf8'))
+        self.assertEqual(row['input']['layout_requirement'],'full');self.assertEqual(case.label,before)
+        self.assertEqual(report['version'],5);self.assertEqual(report['input_normalizations'][0]['id'],'real-label')
+
+    def test_dataset_v5_rejects_missing_declared_layout_but_retains_legacy_readability(self):
+        with tempfile.TemporaryDirectory() as d:
+            root=Path(d);train=[]
+            for part,count,digest in [('train',20,'a'),('validation',5,'b'),('test',10,'c')]:
+                rows=[dict(id=part+str(i),source_video_id=part,source_group=part,source_sha256=digest*64,split=part,annotation_scope='agent_experimental_reconstruction',input_basis='declared_script_and_available_source_facts',input=dict(self.context(),intent='Intro toàn màn hình: ví dụ.'),target={}) for i in range(count)]
+                (root/(part+'.jsonl')).write_text('\n'.join(json.dumps(r) for r in rows),encoding='utf8')
+                if part=='train':train=rows
+            (root/'retrieval-train-only.json').write_text(json.dumps(train),encoding='utf8')
+            manifest=dict(task='script_animation_spec_v1',private_experiment=True,files={},version=4)
+            (root/'manifest.json').write_text(json.dumps(manifest),encoding='utf8')
+            with patch('motion_learning.schema.validate'):
+                motion_learning.check_dataset(root)
+                manifest['version']=5;(root/'manifest.json').write_text(json.dumps(manifest),encoding='utf8')
+                with self.assertRaisesRegex(ValueError,'declared layout'):motion_learning.check_dataset(root)
+
     def test_anticipation_keeps_real_word_anchor_and_supports_hard_hold(self):
         ctx=self.context();spec=motion_specs.rules(ctx);obj=spec['objects'][0]
         obj.update(lead_frames=10,exit_frames=0,theme='paper',hold_frames=80)

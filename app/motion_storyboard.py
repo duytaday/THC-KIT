@@ -61,7 +61,8 @@ def context(plan,host,assets,transcript=None):
                     frame=round((matches[0]['start']-at)*30)
                     if 0<frame<frames-30:ctx['texts'].append(text);ctx['anchors'].append(dict(id='state-'+str(i),frame=frame,kind='speech',text=text))
             ctx['anchors'].sort(key=lambda a:a['frame'])
-    return ctx,at
+    import motion_learning
+    return motion_learning.declared_layout_context(ctx),at
 
 
 def source_description(ctx):
