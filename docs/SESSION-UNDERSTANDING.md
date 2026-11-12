@@ -1,5 +1,10 @@
 # Session understanding
 
+- [ ] Validation diagnostic:8source-disjoint component inputs still give5base
+  and6tuned native failures. Rules8/8 native does not establish coverage/style;
+  post-hoc agent-label agreement is not independent human evidence. Explained
+  this distinction in the progress update; no new user answer/mastery recorded.
+
 - [ ] Same-video model comparison: actual v007 base/tuned exports have the same
   MP4 hash, while real training/loading succeeded. Asked whether that proves
   fine-tuning improved picture/sound or requires a new blind episode and measured

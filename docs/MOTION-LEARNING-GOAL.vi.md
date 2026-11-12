@@ -1,5 +1,12 @@
 # Goal — học cách dựng intro/demo theo reference
 
+Snapshot mới: v007 đã train/reload thật; dev17 thêm promise theo tập và giữ
+reference guidance đã duyệt. Dataset hiện dùng32train/33validation/10regression,
+không thay lịch sử216nhãn bên dưới. Lượt chẩn đoán8component/4validation sources
+có lỗi captions/hold; chưa đủ whole-video hoặc independent creator evidence.
+Xem [diagnostic v001](VALIDATION-DIAGNOSTIC-V001.vi.md) và
+[intro promise](INTRO-PROMISE-V001.vi.md). Goal vẫn chưa hoàn tất; không promote.
+
 Goal đang ACTIVE theo yêu cầu user. Với vlog dọc5repo, user chọn phong cách
 MaverickGPT: nhịp gọn, chữ nhấn và nhiều chuyển cảnh có mục đích. Tutorial dài
 có thể dùng profile khác; không ép tất cả reference vào cùng một nhịp.
