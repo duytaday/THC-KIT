@@ -1,0 +1,268 @@
+{
+  "scope": "Development experiment; no human approval or independent full-episode quality claim",
+  "dataset_fingerprint": "58f891bd45e9b12f27d0f97da3b7f33d36e3dd6c189cd76379be384ea7fed788",
+  "training": {
+    "status": "COMPLETE",
+    "actual_optimizer_steps": 64,
+    "training_wall_seconds": 75.35017684299999,
+    "weight_update_l2": 2.5267248153686523,
+    "gpus": [
+      "Tesla T4",
+      "Tesla T4"
+    ],
+    "training_device": "cuda:0",
+    "peak_gpu_bytes": 8676733440,
+    "validation_loss_before": 0.828360864610383,
+    "validation_loss_after": 0.7975918605472102,
+    "adapter_files": {
+      "adapter_model.safetensors": "f4ded53f3e52fb00379a9ae1e4bd6cce3975539c5e1a6dea9138ad460f14a9fc",
+      "adapter_config.json": "405aea5de7ded21a356f8ea82960b9f1ea1c532b15958bcf5d1013b14e51987d",
+      "README.md": "94e2d5b1b97dfc3d275c352836ed3504ec3c59c4d3a03333f3ef202a4e3a2e88"
+    },
+    "unique_applied_rows": 42,
+    "new_fixture_applied": 10,
+    "evaluation": {
+      "schema_success": {
+        "base_rag": {
+          "intro": 0,
+          "demo": 0
+        },
+        "fine_tuned": {
+          "intro": 0,
+          "demo": 1
+        }
+      },
+      "test_samples": 4,
+      "not_independent_creator_benchmark": true,
+      "editorial_review": "NEEDS_REVIEW"
+    }
+  },
+  "component_counts": {
+    "rules": {
+      "counts": {
+        "intro": {
+          "total": 4,
+          "valid": 4,
+          "raw_valid": 4
+        },
+        "demo": {
+          "total": 4,
+          "valid": 4,
+          "raw_valid": 4
+        }
+      },
+      "coverage": {
+        "intro": {
+          "total": 4,
+          "complete_text": 4,
+          "valid_and_complete": 4
+        },
+        "demo": {
+          "total": 4,
+          "complete_text": 0,
+          "valid_and_complete": 0
+        }
+      }
+    },
+    "base_rag": {
+      "counts": {
+        "intro": {
+          "total": 4,
+          "valid": 2,
+          "raw_valid": 0
+        },
+        "demo": {
+          "total": 4,
+          "valid": 2,
+          "raw_valid": 2
+        }
+      },
+      "coverage": {
+        "intro": {
+          "total": 4,
+          "complete_text": 4,
+          "valid_and_complete": 2
+        },
+        "demo": {
+          "total": 4,
+          "complete_text": 4,
+          "valid_and_complete": 2
+        }
+      }
+    },
+    "fine_tuned": {
+      "counts": {
+        "intro": {
+          "total": 4,
+          "valid": 2,
+          "raw_valid": 2
+        },
+        "demo": {
+          "total": 4,
+          "valid": 1,
+          "raw_valid": 1
+        }
+      },
+      "coverage": {
+        "intro": {
+          "total": 4,
+          "complete_text": 4,
+          "valid_and_complete": 2
+        },
+        "demo": {
+          "total": 4,
+          "complete_text": 4,
+          "valid_and_complete": 1
+        }
+      }
+    }
+  },
+  "paired_identity": {
+    "rows": true,
+    "base_files": true,
+    "adapter_files": true,
+    "checkpoint_sha256": true,
+    "prompt_version": true,
+    "retrieval_version": true,
+    "decode_mode": true,
+    "decoder_site": true,
+    "worker_sha256": true
+  },
+  "exports": [
+    {
+      "mode": "rules",
+      "id": "bbbe94d8589d454dadd7d3303501742f",
+      "sha256": "c4d10342a1f6219f2faf416db5227e68798d70b048e98bccdf29f86033637ba0",
+      "frames": 3543,
+      "duration": 118.1,
+      "width": 1080,
+      "height": 1920,
+      "fps": "30/1",
+      "encoder": "h264_nvenc",
+      "loudness": {
+        "integrated_lufs": -16.08,
+        "true_peak_dbtp": -1.65
+      },
+      "pcm": {
+        "channels": 2,
+        "sample_width": 2,
+        "rate": 48000,
+        "frames": 5668864,
+        "sha256": "4c5d9a7670a945d83ef3d35b99825db509268c216c096b13f68e5fa88f4766f5"
+      },
+      "dialogue_ass_sha256": "88fec3a5cde23dc3a5febdd610be3f16d79c0b849378faea0c44580dcee9463a"
+    },
+    {
+      "mode": "base_rag",
+      "id": "79ffa885e96f4b7e8185aafb6d98ec27",
+      "sha256": "3f16526606fbe5f695f79776159c61bf5efa34c9e22f681d2e414c0921833abc",
+      "frames": 3543,
+      "duration": 118.1,
+      "width": 1080,
+      "height": 1920,
+      "fps": "30/1",
+      "encoder": "h264_nvenc",
+      "loudness": {
+        "integrated_lufs": -16.08,
+        "true_peak_dbtp": -1.65
+      },
+      "pcm": {
+        "channels": 2,
+        "sample_width": 2,
+        "rate": 48000,
+        "frames": 5668864,
+        "sha256": "4c5d9a7670a945d83ef3d35b99825db509268c216c096b13f68e5fa88f4766f5"
+      },
+      "dialogue_ass_sha256": "88fec3a5cde23dc3a5febdd610be3f16d79c0b849378faea0c44580dcee9463a"
+    },
+    {
+      "mode": "fine_tuned",
+      "id": "5b01ad05312448c89989b64d48bc8ac7",
+      "sha256": "3f16526606fbe5f695f79776159c61bf5efa34c9e22f681d2e414c0921833abc",
+      "frames": 3543,
+      "duration": 118.1,
+      "width": 1080,
+      "height": 1920,
+      "fps": "30/1",
+      "encoder": "h264_nvenc",
+      "loudness": {
+        "integrated_lufs": -16.08,
+        "true_peak_dbtp": -1.65
+      },
+      "pcm": {
+        "channels": 2,
+        "sample_width": 2,
+        "rate": 48000,
+        "frames": 5668864,
+        "sha256": "4c5d9a7670a945d83ef3d35b99825db509268c216c096b13f68e5fa88f4766f5"
+      },
+      "dialogue_ass_sha256": "88fec3a5cde23dc3a5febdd610be3f16d79c0b849378faea0c44580dcee9463a"
+    },
+    {
+      "mode": "full_raw",
+      "id": "7e2b8b6d5688456dab302aca6d2def68",
+      "sha256": "957e1442c65fceac1a6e35d157ab770d59b4c9421a7c087c14aa0b4dddd87c65",
+      "frames": 3543,
+      "duration": 118.1,
+      "width": 1080,
+      "height": 1920,
+      "fps": "30/1",
+      "encoder": "h264_nvenc",
+      "loudness": {
+        "integrated_lufs": -16.08,
+        "true_peak_dbtp": -1.65
+      },
+      "pcm": {
+        "channels": 2,
+        "sample_width": 2,
+        "rate": 48000,
+        "frames": 5668864,
+        "sha256": "4c5d9a7670a945d83ef3d35b99825db509268c216c096b13f68e5fa88f4766f5"
+      },
+      "dialogue_ass_sha256": "88fec3a5cde23dc3a5febdd610be3f16d79c0b849378faea0c44580dcee9463a"
+    },
+    {
+      "mode": "full_manual",
+      "id": "8451be1f3cf748858e9df8779e84cad8",
+      "sha256": "510db2b73a92b6116b7e6eca1c3b415953da75438eaaab88a3edeca4cc207401",
+      "frames": 3543,
+      "duration": 118.1,
+      "width": 1080,
+      "height": 1920,
+      "fps": "30/1",
+      "encoder": "h264_nvenc",
+      "loudness": {
+        "integrated_lufs": -16.08,
+        "true_peak_dbtp": -1.65
+      },
+      "pcm": {
+        "channels": 2,
+        "sample_width": 2,
+        "rate": 48000,
+        "frames": 5668864,
+        "sha256": "4c5d9a7670a945d83ef3d35b99825db509268c216c096b13f68e5fa88f4766f5"
+      },
+      "dialogue_ass_sha256": "88fec3a5cde23dc3a5febdd610be3f16d79c0b849378faea0c44580dcee9463a"
+    }
+  ],
+  "same_decoded_audio_and_captions": true,
+  "status": "REVISE",
+  "confirmed_defect": {
+    "master_range": [
+      34.733333333333334,
+      37.333333333333336
+    ],
+    "inspected_time": 35.5,
+    "description": "GitHub page instead of requested real preview cutaway demonstration",
+    "recorded_revisions": 5,
+    "full_watch": false,
+    "full_listen": false
+  },
+  "blind_gallery": "/benchmarks/aa521560eb674a5283bab22981530992/index.html",
+  "reviewers": 0,
+  "first_pass_acceptance": null,
+  "repair_minutes_per_finished_minute": null,
+  "production_promotion": false,
+  "library_admission": false,
+  "app_tests": 258
+}

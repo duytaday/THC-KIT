@@ -25,6 +25,23 @@ class AnimationLibraryTests(unittest.TestCase):
         ctx=self.template();ctx['request']='demo'
         with self.assertRaisesRegex(ValueError,'scene role'):animation_library.adapt(self.root,'abc',ctx)
 
+    def test_optional_sound_state_is_preserved_when_rebinding_a_template(self):
+        ctx=self.template();path=self.root/'animations'/'abc'/'template.json'
+        original=json.loads(path.read_text(encoding='utf-8'))
+        ctx.update(texts=['Bài mới'],anchors=[dict(id='current-word',kind='speech',frame=9)])
+        for declared in (False,True):
+            with self.subTest(sound_state='muted' if declared else 'unspecified'):
+                record=copy.deepcopy(original)
+                if declared:record['template']['spec']['sfx']=[]
+                else:record['template']['spec'].pop('sfx',None)
+                encoded=json.dumps(record,ensure_ascii=False);path.write_text(encoded,encoding='utf-8')
+                result=animation_library.adapt(self.root,'abc',ctx)
+                self.assertEqual('sfx' in result['spec'],declared)
+                if declared:self.assertEqual(result['spec']['sfx'],[])
+                self.assertEqual(result['spec']['objects'][0]['text'],'Bài mới')
+                self.assertEqual(result['spec']['objects'][0]['anchor'],'current-word')
+                self.assertEqual(path.read_text(encoding='utf-8'),encoded)
+
     def test_missing_new_word_anchor_cannot_use_old_timecode(self):
         ctx=self.template();ctx['anchors']=[]
         with self.assertRaisesRegex(ValueError,'Rebind'):animation_library.adapt(self.root,'abc',ctx)

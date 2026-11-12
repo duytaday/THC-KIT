@@ -108,6 +108,6 @@ def adapt(ws_root,library_id,context):
         o.pop('emphasis_line',None)
         last=max([a['frame']]+[next(x['frame'] for x in context['anchors'] if x['id']==c['anchor']) for c in o.get('changes',[])])
         o['hold_frames']=min(o['hold_frames'],context['frames']-last-(0 if o.get('changes') else o['keyframes'][-1]['frame'])-6)
-    for s in spec['sfx']:s['anchor']=anchors[s['anchor']]['id']
+    for s in spec.get('sfx',[]):s['anchor']=anchors[s['anchor']]['id']
     spec['rationale']='Adapted native template; text, action clocks and proof rebound to this episode. Review required.'
     return dict(spec=motion_specs.validate(spec,context),model=dict(mode='library:'+library_id,weights_loaded=False,version='adapted-template-v1',source_scene_sha256=stored['scene_sha256']))

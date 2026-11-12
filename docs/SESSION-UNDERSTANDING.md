@@ -1,5 +1,23 @@
 # Session understanding
 
+- [ ] Recordly source selection: user asked “là sao”. Explained that Screen
+  selects the window to record, distinct from starting Record. Current observed
+  source is Facebook, so recording has not started. CUA activation and one fresh
+  recovery failed; asked only to select “FFmpeg preview · 5 repo GitHub”, without
+  pressing Record. Waiting for confirmation; no mastery inferred.
+
+- [ ] Optional SFX in reusable templates: dev20 fixes a real KeyError for valid
+  specs with no SFX field. Unknown sound planning stays distinct from explicit
+  empty/muted cues. The rebinding test covers both states and leaves the stored
+  template unchanged. This implementation test is not human comprehension or
+  episode audio approval.
+
+Current v008 evidence: Kaggle COMPLETE/reloaded; base/tuned full masters are
+byte-identical. The full intro manual v002 changes timing only, not model weights.
+Decoded frame35.500 confirms the FFmpeg proof pickup. All five masters have an
+agent visual-only REVISE note, and full listening is still unverified. Buyer
+quiz is prepared with zero responses; no pending learning item is marked mastered.
+
 - [ ] Silent scene versus voiced master:16authored fixtures revealed that a
   silent preview could not be produced without programme loudness. The fix
   admits measured silence only for previews, with null levels and no master
