@@ -89,6 +89,17 @@ Evidence private: `output/reference-training/layout-input-v001/`: dataset v5,
 protocol/results, worker requests/stdout/stderr, render-results, agent-repairs,
 scene JSON/timelines/MP4/QC và test logs. Files nguồn/cut/checkpoint cũ giữ riêng.
 
+Gói nội bộ dev18 được build từ commit sạch
+`f75c0517b871ff36a6a157dc5b0b8dd3bbbc3452`:
+153files/17.662.324bytes, ZIP SHA256
+`9c1a798646968de99cff36d0775081a68d23b412c7658402fd002e78cc1605f7`.
+Embedded Python3.12.10 render prefix5s/150frames/NVENC/full decode PASS.
+SHA prefix `0f1392c83f2835e5df3def9a4d9aeda5cce32f1de7f5ae290a3c9faa846dae31`
+trùng smoke dev17; actual UI contexts và prompt2–9 cũng qua kiểm bằng dữ liệu
+recipe master thật. Prefix giữ original scene level −22,58LUFS/−9,86dBTP,
+không là một whole-master loudness pass. GUI launcher/Windows sạch NOT_RUN;
+starter distribution grant chưa xác nhận, chỉ là internal candidate.
+
 ```powershell
 . .\talking-head-qc\tools\use_d_storage.ps1
 python -m unittest discover -s app -p 'test_*.py'
