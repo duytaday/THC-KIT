@@ -5,8 +5,9 @@ import motion_specs as schema
 
 
 def stamp(frame):
-    # ASS centiseconds: round so a frame onset is never shifted by > half a frame.
-    c=round(frame/30*100)
+    # Adjacent rows share a centisecond boundary no later than the sample time.
+    # Rounding made frames2/5/8 repeat the preceding pose at30fps.
+    c=frame*100//30
     return f'{c//360000}:{c//6000%60:02}:{c//100%60:02}.{c%100:02}'
 
 
@@ -32,10 +33,9 @@ def append_ass(path,entry,master_start_frame,*,show_status=False):
     for obj in spec['objects']:
         start=schema.object_start(obj,anchors);end=schema.lifetime_end(obj,ctx);exit_frames=obj.get('exit_frames',6)
         if obj['component']=='12':end=min(n,start+max(3,obj['hold_frames']))
-        x,y,w,h=obj['rect'];changes=sorted(obj.get('changes',[]),key=lambda c:anchors[c['anchor']]['frame']);label=obj.get('text','');emphasis=obj.get('emphasis_line')
+        label=obj.get('text','')
         for frame in range(start,end):
-            for change in changes:
-                if anchors[change['anchor']]['frame']<=frame:label=change['text'];emphasis=change.get('emphasis_line')
+            label,(x,y,w,h),emphasis=schema.object_state(obj,anchors,frame)
             state=schema.pose(obj['keyframes'],frame-start)
             opacity=state['opacity']*(min(1,max(0,(end-frame)/exit_frames)) if exit_frames else 1)
             if opacity<=0:continue
@@ -58,7 +58,10 @@ def append_ass(path,entry,master_start_frame,*,show_status=False):
                     yy=ty+(emphasis+1)*fs*1.18
                     underline=r'{\an7\pos('+f'{px+18:.2f},{yy:.2f}'+r')'+turn+r'\p1\bord0\shad0\1c&H28F1E8&}m 0 0 l '+f'{pw-36:.2f} 0 {pw-36:.2f} 5 0 5'+r'{\p0}'
                     rows.append(dialogue(3,begin,begin+1,underline))
-        bounds.append(dict(id=obj['id'],source_anchor=obj['anchor'],rect=obj['rect'],font_size=obj.get('font_size'),last_state=label,theme=obj.get('theme','brand'),lead_frames=obj.get('lead_frames',0),exit_frames=exit_frames))
+        record=dict(id=obj['id'],source_anchor=obj['anchor'],rect=obj['rect'],font_size=obj.get('font_size'),last_state=label,theme=obj.get('theme','brand'),lead_frames=obj.get('lead_frames',0),exit_frames=exit_frames)
+        if any('rect' in c for c in obj.get('changes',[])):
+            record['state_rectangles']=[dict(frame=t,rect=schema.object_state(obj,anchors,t)[1]) for t in [start]+[anchors[c['anchor']]['frame'] for c in obj['changes']]]
+        bounds.append(record)
     if show_status and not ctx.get('voice_aligned',False):
         footer=r'{\an5\pos(540,1780)\fs30\bord3\shad0\1c&HFFFFFF&\3c&H101010&}STORYBOARD · CẦN THU / CĂN LỜI'
         rows.append(dialogue(9,master_start_frame,master_start_frame+n,footer))
@@ -71,7 +74,7 @@ def sound_events(entry):
     for i,s in enumerate(entry['spec'].get('sfx',[])):
         a=anchors[s['anchor']];at=entry['source_start']+a['frame']/30
         proof=ctx.get('proof',{});observed=a.get('source_pts',proof.get('offset',0)+a['frame']/30) if proof else at
-        events.append(dict(id='motion-'+entry['id']+'-'+str(i),kind='contact' if s['id']=='click' else 'result' if s['id']=='chime' else 'chapter',anchor=dict(asset=proof.get('asset',entry.get('source_asset')),source_pts=observed,timeline_source_pts=at,type=a['kind']),hold_frames=12,visual_disabled=True,origin='animation_spec',sound=dict(id=s['id'],muted=False,gain_db=s.get('gain_db',-26),offset_frames=0)))
+        events.append(dict(id='motion-'+entry['id']+'-'+str(i),kind='contact' if s['id']=='click' else 'result' if s['id']=='chime' else 'chapter',anchor=dict(asset=proof.get('asset',entry.get('source_asset')),source_pts=observed,timeline_source_pts=at,type=a['kind']),hold_frames=12,visual_disabled=True,origin='animation_spec',sound=dict(id='chime_fast' if s['id']=='chime' else s['id'],muted=False,gain_db=s.get('gain_db',-26),offset_frames=0)))
     return events
 
 

@@ -10,6 +10,12 @@ separate reference-training intake. See [the app guide](app/README.md) and
 `python app/app.py --data .\output\cutroom-workspace` from this D checkout (Python3.11+).
 The built-in path requires no model checkpoint or paid agent credentials.
 
+The [multi-turn editing workflow](docs/EDITING-EVALS.vi.md) adds persisted public
+requests/tool history, retry-safe feedback, selected style locks, export-clock
+hook review and explicit master-bound approval. See the
+[v005 model/render results](docs/MOTION-PLANNER-V005.vi.md): the adapter was really
+trained and loaded, but no quality improvement or production promotion is claimed.
+
 Optional [pinned video skills](talking-head-qc/integrations/video-skill-set.md)
 add HyperFrames HTML animations, Claude editing style adapters and a searchable
 catalog. See the [local architecture decision](docs/ARCHITECTURE-RESEARCH.vi.md)

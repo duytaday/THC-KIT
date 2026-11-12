@@ -33,6 +33,21 @@ def wrap(value,width,font_size):
     return lines
 
 
+def validate_box(box):
+    if not isinstance(box,list) or len(box)!=4:raise ValueError('Use a normalized [x,y,width,height] rectangle')
+    for value in box:finite(value,0,1,'Rectangle')
+    if min(box[2:])<.008 or box[0]+box[2]>1.000001 or box[1]+box[3]>1.000001:raise ValueError('Component rectangle extends beyond the canvas')
+    return box
+
+
+def object_state(obj,anchors,frame):
+    text=obj.get('text','');box=obj['rect'];emphasis=obj.get('emphasis_line')
+    for change in obj.get('changes',[]):
+        if anchors[change['anchor']]['frame']>frame:break
+        text=change['text'];box=change.get('rect',box);emphasis=change.get('emphasis_line')
+    return text,box,emphasis
+
+
 def validate(spec,context,*,check_hold=True):
     if not isinstance(spec,dict) or set(spec)-{'v','scene_type','layout','objects','sfx','evidence','missing','rationale'}:
         raise ValueError('Unknown animation-spec fields')
@@ -85,32 +100,30 @@ def validate(spec,context,*,check_hold=True):
         if obj['component'] in ('12','13'):
             required='contact' if obj['component']=='12' else 'result'
             if anchor['kind']!=required or not context.get('proof'):raise ValueError('Contact/result must come from actual screen evidence')
-        box=obj.get('rect')
-        if not isinstance(box,list) or len(box)!=4:raise ValueError('Use a normalized [x,y,width,height] rectangle')
-        for v in box:finite(v,0,1,'Rectangle')
-        if min(box[2:])<.008 or box[0]+box[2]>1.000001 or box[1]+box[3]>1.000001:raise ValueError('Component rectangle extends beyond the canvas')
+        box=validate_box(obj.get('rect'))
         if obj['component'] in ('11','12','13'):
+            if obj.get('changes'):raise ValueError('A proof marker cannot replace its text or source geometry')
             roi=anchor.get('roi')
             if not roi or any(abs(a-b)>.015 for a,b in zip(box,roi)):raise ValueError('The marker must follow the verified source ROI')
         else:
             obj['text']=clean_text(obj.get('text'))
             if obj['text'] not in available:raise ValueError('Component text is not in the recorded/declared source text inventory')
             fs=finite(obj.get('font_size',58),38,92,'Font size');obj['font_size']=fs
-            states=[obj['text']]
+            states=[(obj['text'],box,obj.get('emphasis_line'))]
             changes=obj.get('changes',[])
             if not isinstance(changes,list) or len(changes)>8:raise ValueError('Use up to8 source-linked state changes')
             last=anchor['frame']
             for change in changes:
-                if set(change)-{'anchor','text','emphasis_line'} or change.get('anchor') not in anchors:raise ValueError('Unknown replacement anchor')
+                if set(change)-{'anchor','text','emphasis_line','rect'} or change.get('anchor') not in anchors:raise ValueError('Unknown replacement anchor')
                 when=anchors[change['anchor']]['frame']
                 if when<=last:raise ValueError('Replacement cues must be chronological and distinct')
                 change['text']=clean_text(change.get('text'))
                 if change['text'] not in available:raise ValueError('Replacement text was not supplied in this scene')
-                states.append(change['text']);last=when
-            for index,text in enumerate(states):
-                lines=wrap(text,box[2],fs)
-                if len(lines)*(fs*1.18)+36>box[3]*1920:raise ValueError('Card needs more height at the unchanged font size')
-                emphasis=(obj if index==0 else changes[index-1]).get('emphasis_line')
+                state_box=validate_box(change['rect']) if 'rect' in change else states[-1][1]
+                states.append((change['text'],state_box,change.get('emphasis_line')));last=when
+            for text,state_box,emphasis in states:
+                lines=wrap(text,state_box[2],fs)
+                if len(lines)*(fs*1.18)+36>state_box[3]*1920:raise ValueError('Card needs more height at the unchanged font size')
                 if emphasis is not None and (type(emphasis) is not int or not 0<=emphasis<len(lines)):raise ValueError('Emphasis line does not exist')
         hold=obj.get('hold_frames',30)
         if type(hold) is not int or not 12<=hold<=180:raise ValueError('Readable hold must be12–180frames')
@@ -130,16 +143,19 @@ def validate(spec,context,*,check_hold=True):
         if obj['component'] in ('11','12','13') and any(k['x'] or k['y'] or k['scale']!=1 or k.get('rotation',0) for k in keys):raise ValueError('A proof marker must stay on the observed source target')
         # Check the swept geometry at output frames, not just the final card position.
         if obj['component'] not in ('11','12','13'):
-            for frame in range(keys[-1]['frame']+1):
+            start=object_start(obj,anchors);active={}
+            for frame in range(frames-start):
                 state=pose(keys,frame)
                 if state['opacity']<=.05:continue
-                moved=pose_bounds(box,state)
+                _,state_box,_=object_state(obj,anchors,start+frame)
+                moved=pose_bounds(state_box,state)
                 for protected in context.get('protected',[]):
                     if protected.get('kind')=='face' and result['scene_type']=='intro' and result['layout']=='full':continue
                     if overlap(moved,protected['rect']):raise ValueError('Animation covers a protected '+protected['kind']+' region')
+                if frame>=keys[-1]['frame']:active[start+frame]=state_box
             for other in settled:
-                if overlap(box,other):raise ValueError('Final text cards overlap; choose separate slots')
-            settled.append(box)
+                if any(overlap(active[t],other[t]) for t in active.keys()&other.keys()):raise ValueError('Final text cards overlap; choose separate slots')
+            settled.append(active)
     sounds=result.get('sfx',[])
     if not isinstance(sounds,list) or len(sounds)>12:raise ValueError('Use up to12 independent SFX cues')
     for sound in sounds:

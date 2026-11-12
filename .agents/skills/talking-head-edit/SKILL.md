@@ -28,6 +28,9 @@ read `docs/FULL-VIDEO-BENCHMARK.vi.md`. Exports → Benchmark full videos measur
 complete masters and opens a blinded, source-bound review. Scene/spec scores do
 not replace full viewing/listening; development corrections cannot remain unseen
 test examples after entering training or RAG.
+For a multi-turn editing conversation, read `docs/EDITING-EVALS.vi.md`. Hook
+review uses [0.000, 3.000) on the exported MP4 clock, including titles/silence;
+save the viewer's expectation before revealing the rest, then locate the payoff.
 
 Use the real recorded presenter and voice. “Avatar” means PiP of that recording.
 Do not synthesize a presenter, replace speech, or call generated imagery software

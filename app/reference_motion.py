@@ -100,7 +100,7 @@ def export(labels_file,out):
     media.write_json(out/'retrieval-train-only.json',[r for r in rows if r['split']=='train'])
     labelled={r['source_video_id'] for r in rows};used=[s for id_,s in sources.items() if id_ in labelled]
     summary=document.get('inventory_summary',{})
-    report=dict(task='script_animation_spec_v1',version=3,private_experiment=True,requested_videos=50,accessible=summary.get('accessible_reference_files',len(sources)),unique_sha256=summary.get('unique_reference_hashes',len(sources)),source_content_families=len(used),split_groups=len({s['source_group'] for s in used}),
+    report=dict(task='script_animation_spec_v1',version=4,private_experiment=True,requested_videos=50,accessible=summary.get('accessible_reference_files',len(sources)),unique_sha256=summary.get('unique_reference_hashes',len(sources)),labelled_source_ids=len(used),source_content_families=None,family_count_basis='Labelled source IDs are counted separately. Independent content-family/creator counts are unverified; collection groups remain conservative.',split_groups=len({s['source_group'] for s in used}),
         source_split={s['source_group']:s['split'] for s in used},sources=[{k:v for k,v in s.items() if k!='source_path'} for s in used],
         human_confirmed_labels=sum(r['editor_confirmed'] for r in rows),agent_experimental_labels=sum(r['annotation_scope']=='agent_experimental_reconstruction' for r in rows),reference_timecoded_gold_labels=sum(r['editor_confirmed'] for r in rows),
         reference_timecoded_experimental_labels=sum(r['label_origin']=='observed_reference_reconstruction' for r in rows),reference_timecoded_training_labels=sum(r['label_origin']=='observed_reference_reconstruction' and r['split']=='train' for r in rows),

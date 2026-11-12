@@ -20,6 +20,11 @@ class SourceGrammarTests(unittest.TestCase):
     def test_editable_graphic_rotation_remains_expressible(self):
         c=self.context();s=motion_specs.rules(c);s['objects'][0]['keyframes'][0]['rotation']=12
         self.assertTrue(self.accepts(s,c));motion_specs.validate(s,c)
+
+    def test_replacement_geometry_is_optional_and_source_bound(self):
+        c=self.context();c['anchors'].append(dict(id='replacement',kind='visual',frame=70,source_pts=7/3));s=motion_specs.rules(c);s['objects']=s['objects'][:1]
+        s['objects'][0]['changes']=[dict(anchor='replacement',text=c['texts'][1],rect=[.1,.1,.8,.15])]
+        self.assertTrue(self.accepts(s,c));motion_specs.validate(s,c)
     def test_borrowed_reference_text_and_early_lead_are_rejected(self):
         c=self.context();s=motion_specs.rules(c)
         for field,value in [('text','A borrowed reference claim'),('lead_frames',10)]:

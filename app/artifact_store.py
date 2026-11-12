@@ -16,6 +16,10 @@ class ArtifactStore:
         job.update(revision=job['revision']+1,status='Draft',stage='Scene changed; render a new export for review.')
     def _render_version(self,record,plan,assets=None):
         version=record.get('version',0)+1;folder=self.ws.root/'artifacts'/record['id']/f'v{version:03d}'
+        # A crash before the atomic workspace commit can leave an uncommitted
+        # render folder. Retain it and allocate the next version on retry.
+        while folder.exists():
+            version+=1;folder=self.ws.root/'artifacts'/record['id']/f'v{version:03d}'
         folder.resolve().relative_to((self.ws.root/'artifacts').resolve())
         assets=assets if assets is not None else self.ws.data['assets']
         generated=artifacts.render(plan,folder,assets[record['job']],assets)

@@ -52,7 +52,7 @@ def suggest(settings,proof,reference):
         if not q.get('anchors'):continue
         a=q['anchors'];roi=a.get('roi');base=q.get('id',f'insert-{index}');source=q['source_start'];start=q['start']
         evidence=[dict(reference_id=reference.get('source_sha256'),source_range=o['source_range'],observation=o['observation'],status=o['status'],confidence=o['confidence']) for o in (reference or {}).get('observations',[])[:1]]
-        for kind,key,sound,hold in [('ui_focus','target',None,30),('contact','contact','click',12),('result','result','chime',45)]:
+        for kind,key,sound,hold in [('ui_focus','target',None,30),('contact','contact','click',12),('result','result','chime_fast',45)]:
             pts=a.get(key)
             if pts is None:continue
             if kind=='ui_focus':

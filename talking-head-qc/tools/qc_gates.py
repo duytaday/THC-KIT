@@ -105,15 +105,25 @@ def cue_measure(video,profile,cue,cache,duration):
     fps=profile['specs']['fps'];event=cue['visual_frame']/fps;window=cue.get('window_seconds',.12)
     result={'id':cue['id'],'visual_assigned_frame':cue['visual_frame'],'landmark':cue.get('landmark','peak_abs'),'timebase':'decoded master seconds, frame zero','master_range':[max(0,event-window),min(duration,event+window)]}
     try:
-        if cue.get('landmark','peak_abs')!='peak_abs':raise ValueError('Unsupported acoustic landmark; specify peak_abs or add a measured implementation')
+        if cue.get('landmark','peak_abs') not in ('peak_abs','onset_rel_0.01'):raise ValueError('Unsupported acoustic landmark')
         stem=Path(cue['stem_path'])
         if sha(stem)!=cue['stem_sha256']:raise ValueError('Isolated stem bytes changed')
         key=str(stem.resolve())
         if key not in cache:cache[key]=pcm(stem)
         data=cache[key];offset=cue.get('stem_master_offset_seconds',0);lo=max(0,round((event-offset-window)*48000));hi=min(len(data),round((event-offset+window)*48000))
         if hi<=lo or max(map(abs,data[lo:hi]),default=0)<1e-6:raise ValueError('No isolated acoustic landmark in assigned window')
-        index=max(range(lo,hi),key=lambda i:abs(data[i]));peak=index/48000+offset
-        delta=(peak-event)*fps;result.update(isolated_peak_seconds=peak,offset_frames=delta,isolated_peak_dbfs=20*math.log10(abs(data[index])))
+        if cue.get('landmark')=='onset_rel_0.01':
+            left,right=cue.get('retained_source_samples',[0,len(data)])
+            if type(left) is not int or type(right) is not int or not 0<=left<right<=len(data):raise ValueError('Invalid retained source samples for onset')
+            maximum=max(abs(v) for v in data[left:right]);threshold=max(1e-6,maximum*.01)
+            index=next((i for i in range(left,right) if abs(data[i])>=threshold),None)
+            if index is None:raise ValueError('No acoustic onset above 1% of retained asset peak')
+            result.update(onset_definition='First retained sample >=1% of retained asset absolute peak; acoustic proxy, not perceptual audibility',onset_source_sample=index)
+        else:index=max(range(lo,hi),key=lambda i:abs(data[i]))
+        peak=index/48000+offset
+        delta=(peak-event)*fps;result.update(offset_frames=delta)
+        if cue.get('landmark')=='onset_rel_0.01':result.update(isolated_onset_seconds=peak,isolated_onset_dbfs=20*math.log10(abs(data[index])))
+        else:result.update(isolated_peak_seconds=peak,isolated_peak_dbfs=20*math.log10(abs(data[index])))
         intended=cue.get('expected_offset_frames',0)
         if intended and not cue.get('editorial_exception'):intended=0
         result.update(expected_offset_frames=intended,deviation_frames=delta-intended)
@@ -212,7 +222,7 @@ def assess(folder,profile,bundle,info,technical_failures,review,decode_failures=
     for cue in profile.get('motion_cues',[]):
         if not cue.get('frame_locked'):continue
         result=cue_measure(video,profile,cue,cache,duration);cue_results.append(result)
-        ok={'PASS':True,'FAIL':False}.get(result['status']);add('D',measurement('sfx:'+cue['id'],{'tolerance_frames':profile['thresholds']['sfx_tolerance_frames'],'visual_frame':cue['visual_frame']},result,ok,result['master_range'],'Peak measured from isolated stem, checked against decoded output timebase.'))
+        ok={'PASS':True,'FAIL':False}.get(result['status']);add('D',measurement('sfx:'+cue['id'],{'tolerance_frames':profile['thresholds']['sfx_tolerance_frames'],'visual_frame':cue['visual_frame']},result,ok,result['master_range'],'Declared acoustic landmark from isolated source, cross-checked against decoded MP4. Audibility still requires listening.'))
         if result.get('final_mix_crosscheck','').startswith('UNVERIFIED'):add('D',measurement('mix_offset:'+cue['id'],'cross-check isolated cue in final mix',result,None,result['master_range']))
     metrics['cue_offsets']=cue_results
     loud=command(['ffmpeg','-hide_banner','-nostdin','-i',video,'-map','0:a:0','-vn','-af','loudnorm=I=-16:TP=-1:LRA=11:print_format=json','-f','null','-']) if audio else None

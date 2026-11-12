@@ -90,7 +90,7 @@ def adapt(ws_root,library_id,context):
     # New source facts are mandatory; no media, source times or claims are inherited.
     if spec['evidence']=='real_screen' and context.get('proof',{}).get('data_class')!='real_screen':raise ValueError('This demo template needs actual screen proof from this episode')
     anchors={}
-    for kind in ('speech','control','contact','result'):
+    for kind in ('speech','visual','control','contact','result'):
         previous=[a for a in old['anchors'] if a['kind']==kind];current=[a for a in context['anchors'] if a['kind']==kind]
         if len(previous)>len(current):raise ValueError('Rebind '+kind+' anchors for this episode before reusing the template')
         anchors.update({a['id']:b for a,b in zip(previous,current)})

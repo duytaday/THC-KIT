@@ -80,6 +80,8 @@ def main():
             for i,q in enumerate(config['captures']):
                 page.locator('#addInsert').click();row=page.locator(f'[data-insert="{i}"]');row.locator('[data-k="asset"]').select_option(capture_ids[q['id']])
                 for k in ('at','offset','duration'):row.locator(f'[data-k="{k}"]').fill(str(q[k]))
+                for k in ('demonstrates','visual_claim'):
+                    if q.get(k):row.locator(f'[data-k="{k}"]').fill(q[k])
             save_settings();report['manual_inserts_saved']=True;save()
         page.locator('[data-panel="look"]').click();page.locator('#style_ref').select_option(style);page.locator('#motion_profile').select_option(config.get('motion_profile','baseline'));page.locator('#music_mode').select_option('off')
         if brand:

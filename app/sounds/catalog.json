@@ -46,5 +46,16 @@
     "marker_status": "measured_candidate_audition_pending",
     "source": "Original deterministic synthesis in author_audio.py",
     "license": "Original project asset; no external recordings or model weights"
+  },
+  "chime_fast": {
+    "samples": 18240,
+    "sample_rate": 48000,
+    "marker_sample": 193,
+    "marker_kind": "peak_abs",
+    "marker_status": "measured_candidate_audition_pending",
+    "source": "Original deterministic synthesis in author_audio.py",
+    "license": "Original project asset; no external recordings or model weights",
+    "purpose": "Confirmation on actual visible result",
+    "audibility": "UNVERIFIED until a capable reviewer listens"
   }
 }

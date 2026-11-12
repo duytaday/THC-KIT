@@ -12,6 +12,11 @@ action and readable result; for five promised repos require all five own demos.
 Record the frames/words/cues actually checked, source and master timecodes, who
 watched and listened, and what remains uncertain. No decoded audio input means
 audibility UNVERIFIED. A signed form or detector pass is not proof of listening.
+Review the opening as [0.000, 3.000) from the exported first frame, counting
+titles and silence. Record the viewer's expectation before the body and the later
+payoff time. Approval requires an explicit full-watch/listen attestation bound to
+the current run, MP4 digest, reviewer, coverage and decision. A test-only validation
+never records customer approval.
 REVISE requires a confirmed defect; render a new version while preserving the old
 cut. NEEDS_REVIEW covers missing editorial evidence. BLOCKED covers a checker
 that cannot run. READY requires all applicable gates and exact-master evidence.

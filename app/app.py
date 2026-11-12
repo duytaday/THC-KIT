@@ -42,6 +42,7 @@ class Handler(BaseHTTPRequestHandler):
         pass
 
     def send_bytes(self, code, body, kind):
+        self._response_code=code
         self.send_response(code)
         self.send_header("Content-Type", kind)
         self.send_header("Content-Length", str(len(body)))
@@ -119,6 +120,10 @@ class Handler(BaseHTTPRequestHandler):
             ws = self.server.ws
             if p == "/api/state":
                 return self.result({**ws.snapshot(), "key": self.server.secret})
+            if p=='/api/evals/gallery/search':
+                return self.result(ws.evaluation_access.search(urllib.parse.parse_qs(u.query).get('q',[''])[0]))
+            if p.startswith('/api/evals/gallery/clip/'):
+                return self.file(ws.evaluation_access.clip(p.rsplit('/',1)[-1]))
             if p == '/api/components':
                 from components import inventory
                 return self.result(inventory())
@@ -145,6 +150,7 @@ class Handler(BaseHTTPRequestHandler):
                 _, _, aid, view = p.split("/")
                 assert view in ("thumb", "media")
                 a = ws.data["assets"][aid]
+                ws.evaluation_access.asset(a)
                 f = Path(a["path"])
                 return self.file(ws.root/'assets'/(aid+'.jpg') if view == "thumb" else f)
             if p == "/downloads/latest.zip":
@@ -177,6 +183,10 @@ class Handler(BaseHTTPRequestHandler):
             if p.startswith("/exports/"):
                 _, _, eid, kind = p.split("/")
                 entry = ws.export(eid)
+                if kind=='hook':
+                    import hook_review
+                    with ws.archive_lock:f=hook_review.render(entry)
+                    return self.file(f)
                 if kind in ('audition-voice','audition-voice_sfx','audition-full'):
                     import audition
                     with ws.archive_lock:f=audition.render(Path(entry['folder']),kind.removeprefix('audition-'))
@@ -197,6 +207,8 @@ class Handler(BaseHTTPRequestHandler):
             self.send_bytes(200, f.read_bytes(), MIME[f.suffix])
         except (BrokenPipeError, ConnectionResetError, ConnectionAbortedError):
             pass
+        except PermissionError as e:
+            self.result({'error':str(e)},403)
         except (ValueError, KeyError, AssertionError, FileNotFoundError, StopIteration):
             self.result({"error": "Item not found or invalid request"}, 404)
 
@@ -205,6 +217,9 @@ class Handler(BaseHTTPRequestHandler):
             self.local(True)
             ws = self.server.ws
             u = urllib.parse.urlsplit(self.path)
+            if self.headers.get('X-Cutroom-Turn') and not u.path.startswith('/api/conversations/'):
+                import editing_conversations
+                self._public_turn=self.headers['X-Cutroom-Turn'];self._before_turn=editing_conversations.require_open(ws,self._public_turn)
             p = u.path
             n = int(self.headers.get("Content-Length", "-1"))
             if p=='/api/generative-package':
@@ -263,8 +278,30 @@ class Handler(BaseHTTPRequestHandler):
             if not 0 <= n <= 2 * 1024**2:
                 raise ValueError("Request is too large.")
             b = json.loads(self.rfile.read(n) or "{}")
+            self._turn_request=b
             if p == "/api/update":
                 ws.update(b["ids"], b["changes"])
+            elif p=='/api/feedback':
+                import revisions
+                return self.result(revisions.submit(ws,b))
+            elif p=='/api/conversations/begin':
+                import editing_conversations
+                return self.result(editing_conversations.begin(ws,b))
+            elif p=='/api/conversations/complete':
+                import editing_conversations
+                return self.result(editing_conversations.complete(ws,b['turn']))
+            elif p=='/api/style-locks':
+                import revisions
+                return self.result(revisions.lock_style(ws,b['job'],b['fields'],b['revision']))
+            elif p=='/api/style-transfer':
+                import revisions
+                return self.result(revisions.transfer_style(ws,b['source'],b['targets']))
+            elif p=='/api/hook-response':
+                import hook_review
+                return self.result(hook_review.answer(ws,b))
+            elif p=='/api/hook-payoff':
+                import hook_review
+                return self.result(hook_review.payoff(ws,b))
             elif p=='/api/generative-scene':
                 return self.result({'id':ws.generative.create_scene(b['run'],b['video'],b['job'],b['passage'],b['at'],b['title'])})
             elif p=='/api/generative-passages':
@@ -413,7 +450,7 @@ class Handler(BaseHTTPRequestHandler):
             elif p == "/api/match":
                 return self.result({"matches": ws.match(b["ids"])})
             elif p == "/api/review":
-                ws.review(b)
+                return self.result(ws.review(b) or {'ok':True})
             elif p == "/api/setup":
                 ws.install()
             elif p == "/api/check":
@@ -427,6 +464,10 @@ class Handler(BaseHTTPRequestHandler):
             else:
                 return self.result({"error": "Not found"}, 404)
             self.result({"ok": True})
+        except PermissionError as e:
+            self.result({'error':str(e)},403)
+        except __import__('revisions').Conflict as e:
+            self.result({'error':str(e)},409)
         except (ValueError, TypeError, KeyError, StopIteration, IndexError) as e:
             self.result({"error": str(e) or "Invalid request"}, 400)
         except (BrokenPipeError, ConnectionResetError):
@@ -434,6 +475,10 @@ class Handler(BaseHTTPRequestHandler):
         except Exception as e:
             logging.exception("Local request failed")
             self.result({"error": str(e)}, 500)
+        finally:
+            if getattr(self,'_public_turn',None) and hasattr(self,'_before_turn'):
+                import editing_conversations
+                editing_conversations.trace(ws,self._public_turn,u.path,getattr(self,'_turn_request',{'uploaded_bytes':locals().get('n',0)}),getattr(self,'_response_code',500),self._before_turn)
 
 
 def run():

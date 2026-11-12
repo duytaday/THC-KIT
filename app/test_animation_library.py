@@ -29,6 +29,26 @@ class AnimationLibraryTests(unittest.TestCase):
         ctx=self.template();ctx['anchors']=[]
         with self.assertRaisesRegex(ValueError,'Rebind'):animation_library.adapt(self.root,'abc',ctx)
 
+    def visual_template(self):
+        self.template();path=self.root/'animations'/'abc'/'template.json'
+        record=json.loads(path.read_text(encoding='utf-8'));old=record['template']['context']
+        old.update(texts=['AI','Dựng video'],anchors=[dict(id='old-start',kind='visual',frame=0,source_pts=0),dict(id='old-change',kind='visual',frame=45,source_pts=1.5)])
+        spec=motion_specs.rules(old);obj=spec['objects'][0]
+        obj.update(text='AI',rect=[.35,.08,.3,.1],hold_frames=60,exit_frames=0,changes=[dict(anchor='old-change',text='Dựng video',rect=[.15,.08,.7,.12])])
+        record['template']['spec']=motion_specs.validate(spec,old);path.write_text(json.dumps(record),encoding='utf-8')
+        return copy.deepcopy(old)
+
+    def test_visual_replacements_rebind_to_current_episode_not_old_clock(self):
+        ctx=self.visual_template();ctx.update(texts=['Mới','Tập mới'],anchors=[dict(id='new-start',kind='visual',frame=9,source_pts=7),dict(id='new-change',kind='visual',frame=72,source_pts=9.1)])
+        result=animation_library.adapt(self.root,'abc',ctx);obj=result['spec']['objects'][0]
+        self.assertEqual(obj['anchor'],'new-start');self.assertEqual(obj['text'],'Mới')
+        self.assertEqual(obj['changes'],[dict(anchor='new-change',text='Tập mới',rect=[.15,.08,.7,.12])])
+        self.assertNotIn('old-change',json.dumps(result))
+
+    def test_visual_template_without_new_replacement_anchor_requires_rebinding(self):
+        ctx=self.visual_template();ctx['anchors']=[dict(id='new-start',kind='visual',frame=0,source_pts=7)]
+        with self.assertRaisesRegex(ValueError,'Rebind visual'):animation_library.adapt(self.root,'abc',ctx)
+
     def test_reference_excerpt_is_not_admitted_without_inspection(self):
         ws=SimpleNamespace(data=dict(animation_library={'clip':dict(kind='reference_excerpt',watermark_review=None)}))
         with self.assertRaisesRegex(ValueError,'Inspect'):animation_library.import_illustration(ws,'clip')

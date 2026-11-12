@@ -4,7 +4,7 @@ from pathlib import Path
 from engine import media
 from version import VERSION
 
-MODULES='animation_library app artifact_store artifacts asr_setup assignments audition author_audio benchmark_ui components creator editing_styles encoder_setup generative generative_data generative_infer generative_package generative_train hyperframes_bridge learning learning_inventory motion_decode motion_hooks motion_learning motion_policy motion_render motion_specs motion_storyboard motion_worker openings planner_policy planner_worker qc_bridge reference_motion revision_cache speech speech_worker storyboard train_motion train_planner version video_benchmark viewer_quiz workspace'.split()
+MODULES='animation_library app artifact_store artifacts asr_setup assignments audition author_audio benchmark_ui components creator editing_conversations editing_evals editing_styles encoder_setup evaluation_access generative generative_data generative_infer generative_package generative_train hook_review hyperframes_bridge learning learning_inventory motion_decode motion_hooks motion_learning motion_policy motion_render motion_specs motion_storyboard motion_worker openings planner_policy planner_worker qc_bridge reference_motion review_attestation revision_cache revisions speech speech_worker storyboard train_motion train_planner version video_benchmark viewer_quiz workspace'.split()
 ENGINE='__init__ cues edit enhance layouts media planner references'.split()
 UI='app.js benchmark-review.html benchmark-review.js DM-Sans-LICENSE.txt dm-sans.woff2 icon.svg index.html style.css'.split()
 STAMP=(2026,11,12,0,0,0)
@@ -45,7 +45,7 @@ def main():
     for name in MODULES:copy(repo/'app'/(name+'.py'),'app/'+name+'.py')
     for name in ENGINE:copy(repo/'app/engine'/(name+'.py'),'app/engine/'+name+'.py')
     for name in UI:copy(repo/'app/ui'/name,'app/ui/'+name)
-    for directory,names in [('fonts',['DejaVuSans-Bold.ttf','LICENSE.txt']),('sounds',['catalog.json','peaks.json','chapter.wav','chime.wav','click.wav','slide.wav','tap.wav']),('music',['catalog.json','calm.wav','tutorial.wav']),('benchmarks',['full-video-v1.json'])]:
+    for directory,names in [('fonts',['DejaVuSans-Bold.ttf','LICENSE.txt']),('sounds',['catalog.json','peaks.json','chapter.wav','chime.wav','chime_fast.wav','click.wav','slide.wav','tap.wav']),('music',['catalog.json','calm.wav','tutorial.wav']),('benchmarks',['full-video-v1.json'])]:
         for name in names:copy(repo/'app'/directory/name,'app/'+directory+'/'+name)
     copy(repo/'app/THIRD_PARTY.txt','THIRD_PARTY.txt')
     runtime=a.starter/'runtime'
@@ -63,6 +63,8 @@ def main():
     copy(repo/'docs/CREATOR-QUICKSTART.vi.md','START_HERE.md')
     copy(repo/'docs/TALKING-HEAD-PRODUCTION-CONTRACT.vi.md','docs/PRODUCTION-CONTRACT.vi.md')
     copy(repo/'docs/FULL-VIDEO-BENCHMARK.vi.md','docs/BENCHMARK.vi.md')
+    copy(repo/'docs/EDITING-EVALS.vi.md','docs/EDITING-EVALS.vi.md')
+    copy(repo/'docs/MOTION-PLANNER-V005.vi.md','docs/MOTION-PLANNER-V005.vi.md')
     executable=a.starter/'Cutroom.exe';binary=executable.read_bytes()
     with zipfile.ZipFile(executable) as z:offset=z.getinfo('__main__.py').header_offset
     prefix=binary[:offset]

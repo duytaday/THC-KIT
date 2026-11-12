@@ -33,6 +33,13 @@ chọn; script, source, crop, cue, scene khóa và chỉnh tay không bị ghi �
 | Reference | Ghi file/hash, timecode, điều quan sát, cách quan sát và tham số suy ra để thử. | Frame tĩnh không chứng minh cadence hoặc âm thanh. |
 | Học máy | Chỉ output spec dữ liệu có thể sửa; qua cùng validator/renderer như rules. Ghi model/checkpoint/hash. | Model lỗi phải báo; fallback rules phải được ghi rõ, không tính là inference thành công. |
 
+Clock hook là **[0.000, 3.000)** tính từ frame đầu được trình chiếu của MP4,
+tính cả title và khoảng lặng. Người xem chỉ xem đoạn đó ở 1×/khung điện thoại,
+ghi điều họ kỳ vọng trước khi xem thân bài, rồi đánh dấu payoff. Vấn đề hiện ở
+giây hai có thể được giải ở giây tám; câu nói được phép kết thúc sau giây ba.
+Bốn giây branding chung không đủ cho hook. Xem `EDITING-EVALS.vi.md` cho replay
+nhiều lượt, feedback retry và chuyển style đã chọn giữa hai tập.
+
 ## 3. Workflow cho một tập mới
 
 1. **Intake:** import A-roll, mic rời, script và reference riêng; hash/probe,

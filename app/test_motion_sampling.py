@@ -26,6 +26,12 @@ class DecisionSamplingTests(unittest.TestCase):
         row=self.row('test');row['split']='test'
         with self.assertRaisesRegex(ValueError,'Only train'):learning.training_schedule([row],4)
 
+    def test_source_replacements_have_a_distinct_sampling_bucket(self):
+        static=self.row('headline');changing=self.row('replacement');changing['target']['objects'][0]['changes']=[dict(anchor='next',text='New source state')]
+        schedule=learning.training_schedule([static,changing],8)
+        self.assertEqual(schedule['version'],2);self.assertEqual(sorted(schedule['planned_steps'].values()),[4,4])
+        self.assertTrue(any(k.endswith('|changing') for k in schedule['source_rows']))
+
     def test_retrieval_three_uses_input_proof_and_style_before_word_similarity(self):
         query=dict(request='demo',quote='Recordly',texts=[],proof={'asset':'new real run'},style='maverick_fast')
         rows=[dict(id='wrong',input=dict(query,proof=None),target={}),dict(id='right',input=dict(query,quote='A different screen command'),target={})]

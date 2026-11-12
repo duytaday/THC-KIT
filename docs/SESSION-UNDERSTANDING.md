@@ -1,5 +1,13 @@
 # Session understanding
 
+- [ ] Logical feedback retry: user initially chose two notes for a single click
+  retried by the network. Explained one deliberate submission vs transport retry,
+  and why a relative change must not execute twice. Mastery is not yet demonstrated;
+  use the actual lost-response UI test as the next concrete teaching example.
+  That UI test now passed: first response deliberately lost, same request retried,
+  exactly one note remained. A follow-up asks whether the ID represents a deliberate
+  user request or each arriving packet. No answer has been recorded yet.
+
 - [x] Reusable production contract: the user explicitly distinguished customer
   script, industry, B-roll/footage, logo/branding, then chose full blinded review,
   QC, viewer answers and repair time before enabling a candidate. Earlier shared

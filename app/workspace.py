@@ -71,12 +71,15 @@ class Workspace:
         self.archive_lock = threading.Lock()
         self.doc = self.root / "workspace.json"
         self.lock = threading.RLock()
+        from evaluation_access import Access
+        self.evaluation_access=Access(self.root)
         self.data = (
             json.loads(self.doc.read_text(encoding="utf8"))
             if self.doc.exists()
             else {"assets": {}, "jobs": {}, "exports": []}
         )
         self.pool = ThreadPoolExecutor(max_workers=2, thread_name_prefix="cutroom")
+        for asset in self.data['assets'].values():self.evaluation_access.asset(asset)
         self.setup = ""
         self.installing = False
         for j in self.data["jobs"].values():
@@ -94,6 +97,7 @@ class Workspace:
         self.speech_setup=asr_setup.Setup(self.root)
 
     def save(self):
+        if getattr(self,'_save_deferred',False):return
         atomic(self.doc, self.data)
 
     def snapshot(self):
@@ -126,6 +130,7 @@ class Workspace:
             }
 
     def import_asset(self, path, name, kind, parent_source=None, collection='',source_role=None,owners=()):
+        self.evaluation_access.import_media(path)
         if source_role not in (None,'broll','style_reference'):raise ValueError('Choose B-roll or style reference')
         with self.lock:
             if parent_source and (kind!='host' or parent_source not in self.data['jobs']):raise ValueError('Choose an existing source recording for a new take.')
@@ -261,8 +266,8 @@ class Workspace:
 
         if opts["style_ref"]:
             ref(opts["style_ref"])
-        if not isinstance(opts["inserts"], list) or len(opts["inserts"]) > 12:
-            raise ValueError("Use up to 12 cutaways per video.")
+        if not isinstance(opts["inserts"], list) or len(opts["inserts"]) > 32:
+            raise ValueError("Use up to 32 cutaways per video.")
         end = 0
         length = self.data["assets"][j["id"]]["duration"]
         for q in sorted(opts["inserts"], key=lambda x: x["at"]):
@@ -297,6 +302,8 @@ class Workspace:
             for j in jobs:
                 if j["status"] in ACTIVE:
                     raise ValueError("A queued or rendering clip is locked until it finishes.")
+                if any(k in j.get('style_locks',{}) and changes[k]!=j['style_locks'][k] for k in changes):
+                    raise ValueError('Unlock the selected style field before changing it')
                 opts = {**j["settings"], **copy.deepcopy(changes)}
                 for insert in opts['inserts']:insert.setdefault('id',ident())
                 self.valid(j, opts)
@@ -314,6 +321,8 @@ class Workspace:
                     )
                     if 'script' in changes:j.pop('script_issue',None)
                     if 'script' in changes:self.artifacts.invalidate_script(j['id'],opts['script'])
+                    import revisions
+                    j['manual_style_fields']=sorted(set(j.get('manual_style_fields',[])) | (set(changes)&set(revisions.STYLE_FIELDS)))
             self.save()
 
     def assign_scripts(self,ids,scripts):
@@ -615,8 +624,16 @@ class Workspace:
             if verdict == "READY" and not all(checks.get(k) is True for k in required):
                 raise ValueError("Complete all four viewing and listening checks before approving.")
             if verdict=='READY':
+                if entry.get('verdict')=='REVISE' or any(r.get('verdict')=='REVISE' for r in report.get('reviews',[])):
+                    raise ValueError('A confirmed defect remains on this master; render and review a new version')
                 current=self.data['jobs'][entry['job']]
                 if current['revision']!=entry['revision']:raise ValueError('The project changed after this export. Render the current revision before release; the prior cut is preserved.')
+                if body.get('validate_only') is True:
+                    import review_attestation
+                    review_attestation.validate(folder,body,run_id=entry['id'],allow_test=True)
+                    import qc_bridge
+                    qc_bridge.verify_dependencies(folder)
+                    return dict(validated=True,approval_recorded=False,release=entry['verdict'],scope='Validation only; no human sign-off or release receipt')
                 import qc_bridge
                 result=qc_bridge.approve(folder,body)
                 report['kit_qc']={k:result.get(k) for k in ('status','gates','issues','pending','measurements')}
@@ -630,6 +647,7 @@ class Workspace:
                 "reviewer": body.get('reviewer','Local operator'),
                 "checks": {k: checks.get(k) is True for k in required},
                 "note": note,
+                "attestation": copy.deepcopy(body.get('attestation')),
             }
             report.setdefault("reviews", []).append(record)
             report["verdict"] = verdict

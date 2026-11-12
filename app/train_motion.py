@@ -11,6 +11,7 @@ def run(dataset,out,steps=128):
     out=Path(out);out.mkdir(parents=True,exist_ok=False)
     receipt=dict(task='script_animation_spec_lora_v1',status='RUNNING',base_model=schema.BASE_MODEL,base_revision=schema.BASE_REVISION,dataset_fingerprint=manifest['dataset_fingerprint'],label_scope=manifest['dataset_kind'],human_confirmed_labels=manifest['human_confirmed_labels'],agent_experimental_labels=manifest['agent_experimental_labels'],source_families=manifest['source_content_families'],actual_optimizer_steps=0,training_completed=False,production_eligible=False,code_sha256=media.sha(__file__),style='maverick_fast',full_master_listening='UNVERIFIED')
     receipt['prompt_version']=data.PROMPT_VERSION;receipt['retrieval_version']=data.RETRIEVAL_VERSION;receipt['training_device']='cuda:0'
+    receipt['labelled_source_ids']=manifest.get('labelled_source_ids',len(manifest['sources']));receipt['family_count_basis']=manifest.get('family_count_basis','Legacy receipt counted source IDs under a family label; independent creators remain unverified.')
     receipt['source_groups']={part:sorted({r['source_group'] for r in rs}) for part,rs in rows.items()}
     receipt['source_hashes']={part:sorted({r['source_sha256'] for r in rs}) for part,rs in rows.items()}
     receipt['reference_timecoded_experimental_labels']=manifest.get('reference_timecoded_experimental_labels',0)

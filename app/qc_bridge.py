@@ -76,6 +76,8 @@ def prepare_export(folder,host,settings,plan):
         if sound.get('muted') or not sound.get('id'):continue
         stem,marker,left,right=sound_asset(sound);offset=sound.get('offset_frames',0)
         profile['motion_cues'].append(dict(id=e['id'],frame_locked=True,visual_frame=e['master_frame'],stem_path=str(stem),stem_sha256=sha(stem),stem_master_offset_seconds=e['sample']/48000+offset/30-marker/48000,window_seconds=max(.12,abs(offset)/30+.12),expected_offset_frames=offset if sound.get('offset_reason') else 0,editorial_exception=sound.get('offset_reason',''),landmark='peak_abs'))
+        if e['kind'] in ('contact','result'):
+            onset=copy.deepcopy(profile['motion_cues'][-1]);onset.update(id=e['id']+':onset',landmark='onset_rel_0.01',retained_source_samples=[left,right]);profile['motion_cues'].append(onset)
     write(folder/'acceptance-profile.json',profile)
 
 def verify_reproduction(folder,host,plan,render):
@@ -100,6 +102,9 @@ def verify_dependencies(folder):
 def check(folder):return inspect_and_save(folder,SKILL)
 
 def approve(folder,body):
+    import review_attestation
+    attestation=review_attestation.validate(folder,body)
+    verify_dependencies(folder)
     report=json.loads((folder/'qc.json').read_text(encoding='utf-8'));profile=json.loads((folder/'acceptance-profile.json').read_text(encoding='utf-8'));duration=report['duration_seconds']
     reviewer=str(body.get('reviewer','')).strip()
     if not reviewer:raise ValueError('Enter the name of the person who actually watched and listened.')
@@ -108,7 +113,7 @@ def approve(folder,body):
     for k in 'ABCDEF':
         if not isinstance(notes.get(k),str) or len(notes[k].strip())<12 or not re.search(r'\b\d{1,2}:[0-5]\d\b',notes[k]):raise ValueError('Add a timestamp and what you verified for each of the six review gates.')
     review=json.loads((folder/'review-form.json').read_text(encoding='utf-8'))
-    review.update(reviewer=dict(id=reviewer,runtime='Cutroom local human review',can_watch=True,can_listen=True),viewing=dict(speed=1,width_px=360),listening_speed=1,watched_ranges=[[0,duration]],listened_ranges=[[0,duration]],approved_by=reviewer)
+    review.update(reviewer=dict(id=reviewer,runtime='Cutroom local human review · self-attested identity',can_watch=attestation['full_watch'],can_listen=attestation['full_listen']),viewing=dict(speed=attestation['speed'],width_px=attestation['width_px']),listening_speed=attestation['speed'],watched_ranges=attestation['watched_ranges'],listened_ranges=attestation['listened_ranges'],approved_by=reviewer,attestation=attestation)
     for k in 'ABCDEF':
         ids=profile['gates'][k].get('evidence_ids',[]) or ['export']
         review['gates'][k]=dict(status='PASS',evidence=[dict(id=id_,master_range=[0,duration],expected='Gate '+k+' acceptance goal',actual=notes[k],evidence='Explicit human observation entered in Cutroom') for id_ in ids])

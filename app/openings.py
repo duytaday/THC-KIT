@@ -46,7 +46,7 @@ def render(ws,job):
     if media.sha(prior/'edit.mp4')!=entry['sha256']:raise ValueError('The rendered master changed. Render a new version first.')
     plan=saved['plan'];candidate=proof(plan,assets)
     if not candidate:raise ValueError('No assigned usable result with a two-second hold. Use host-first; capture the missing result with Recordly.')
-    start=(plan.get('keep') or [[0,host['duration']]])[0][0];length=min(4.,entry['duration'])
+    start=(plan.get('keep') or [[0,host['duration']]])[0][0];length=min(3.,entry['duration'])
     if any(q['start']<start+length and q['end']>start for q in plan['proof']) or any(q['source_start']<start+length and q['source_end']>start for q in plan.get('motion_specs',[])):
         raise ValueError('The current opening contains an assigned scene. Keep it or adjust it explicitly before auditioning a replacement.')
     run=uuid.uuid4().hex;folder=ws.root/'openings'/run;folder.mkdir(parents=True);began=time.monotonic()

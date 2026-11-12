@@ -6,6 +6,17 @@ def save(path,data):
     samples=array.array('h',(round(max(-.99,min(.99,x))*32767) for x in data))
     with wave.open(str(path),'wb') as w:w.setnchannels(1);w.setsampwidth(2);w.setframerate(RATE);w.writeframes(samples.tobytes())
     peak=max(range(len(samples)),key=lambda i:abs(samples[i]));return dict(samples=len(samples),sample_rate=RATE,marker_sample=peak,marker_kind='peak_abs',marker_status='measured_candidate_audition_pending',source='Original deterministic synthesis in author_audio.py',license='Original project asset; no external recordings or model weights')
+
+def confirmation():
+    """Short original bell; onset and peak both fit the contact frame tolerance."""
+    sounds=ROOT/'sounds';sounds.mkdir(exist_ok=True)
+    data=[]
+    for i in range(round(.38*RATE)):
+        t=i/RATE;attack=min(1,t/.004)
+        data.append(.12*attack*math.exp(-16*t)*(math.sin(2*math.pi*1046.5*t)+.35*math.sin(2*math.pi*1568*t))/1.35)
+    info=save(sounds/'chime_fast.wav',data);info.update(purpose='Confirmation on actual visible result',audibility='UNVERIFIED until a capable reviewer listens')
+    path=sounds/'catalog.json';catalog=json.loads(path.read_text()) if path.exists() else {};catalog['chime_fast']=info;path.write_text(json.dumps(catalog,indent=2),encoding='utf-8')
+    return info
 def main():
     directory=ROOT/'music';directory.mkdir(exist_ok=True);catalog={}
     for name,frequencies,bpm,gain in [('calm',[130.8128,164.8138,195.9977],60,.12),('tutorial',[146.8324,184.9972,220.0],90,.1)]:
@@ -23,4 +34,5 @@ def main():
         rng=random.Random(42);data=[.12*math.sin(2*math.pi*freq*i/RATE)*math.exp(-i/RATE*35)+.015*rng.uniform(-1,1)*math.exp(-i/RATE*80) for i in range(round(duration*RATE))]
         palette[name]=save(sounds/(name+'.wav'),data)
     (sounds/'catalog.json').write_text(json.dumps(palette,indent=2),encoding='utf-8')
+    confirmation()
 if __name__=='__main__':main()
