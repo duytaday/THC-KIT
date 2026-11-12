@@ -44,6 +44,17 @@ thì master NEEDS_REVIEW. Giữ mọi model/cut cũ và lặp sửa theo lỗi x
 
 ## Mốc phải đạt
 
+Snapshot ngày 13/11: v008 Kaggle COMPLETE, 64 bước và checkpoint đã reload.
+Thêm 16 original intro fixtures; 258 app tests PASS, package dev20 chạy prefix,
+silent-preview rejection và actual-template rebind bằng embedded runtime PASS.
+Ba bản toàn tập qua UI: base/tuned cùng hash, chưa có chất lượng cải thiện được
+chứng minh. Intro full v002 là sửa timing bằng tay, giữ bản trước. Cả năm master
+thử có visual-only REVISE ở 00:34–00:37 vì thiếu Recordly preview capture; full
+1× listening và tập B mới còn thiếu. Không promote model/library/default.
+Chi tiết và receipt: `MOTION-PLANNER-V008.vi.md`,
+`evidence/motion-planner-v008.json`. Các mốc lịch sử dưới đây không thay thế
+nghiệm thu còn thiếu hoặc chứng nhận mastery của user.
+
 - [x] User chọn MaverickGPT cho vlog hiện tại.
 - [x] Giữ v035 làm baseline: file thực tế `5 repo github cho ae edit video.mp4`,
   SHAca15d2c90348ddfa33d46e2504516075689179f31e5c1d3729deffb745603c09.

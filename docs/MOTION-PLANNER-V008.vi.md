@@ -153,7 +153,30 @@ library adapter truy cập bắt buộc gây KeyError. Dev20 sửa iteration dù
 field; giữ khác biệt “chưa khai âm thanh” với “mute []”, rebind text/anchor và giữ
 template nguồn. Test có cả hai nhánh, **258 app tests PASS**. Không đổi renderer,
 checkpoint hay ba arm đã freeze. Source UI của trial vẫn là dev19; package mới
-cần receipt riêng, không tự coi giao diện đang mở đã được thay.
+có receipt riêng, không tự coi giao diện đang mở đã được thay.
+
+### Gói dev20 đã thử bằng runtime bên trong gói
+
+Build từ commit `be1eb3a4e4976275a3f167e11049564075eb0e37`, source sạch,
+153 files / 17.662.500 bytes. ZIP SHA256
+`92dccceb68d7d2bea6224a2417c9f23f74d6326273916daf8643608a74f8f5c5`.
+
+- Embedded CPython 3.12.10 render thật prefix có lời/subtitles 5 giây:
+  150 frames, NVENC, full decode PASS; SHA `0f1392c83f2835e5df3def9a4d9aeda5cce32f1de7f5ae290a3c9faa846dae31`,
+  bằng các prefix trước. Mức −22,58 LUFS/−9,86 dBTP là original-level scene preview,
+  không phải master mix pass. Master nguồn không đổi.
+- Preview im lặng thật 4,8 giây / 144 frames PASS; measured levels null,
+  `master_loudness_verified=false`; strict master vẫn từ chối và không tạo file.
+- Rebind chính intro sáu text vừa dựng qua module library của gói PASS:
+  đổi anchors, giữ text, giữ SFX chưa khai báo và template gốc. Đây là test riêng,
+  không phải episode mới hoặc admission vào library dùng cho khách.
+- Chưa chạy native GUI launcher/Windows sạch. Starter redistribution grant chưa
+  chốt; đây là internal candidate. Không thay GUI đang chạy.
+
+Known UI limitation: save bằng Controls hiện có thể chuyển SFX chưa khai báo thành
+`[]`. Lượt sửa intro này dùng Advanced JSON và xác nhận field vẫn vắng mặt, nên
+không bị ảnh hưởng. Cần sửa và test luồng Controls trước khi coi reuse/edit audio
+đã hoàn tất; không suy từ test adapter rằng UI cũng giữ đúng trạng thái.
 
 Evidence private trên D:`output/reference-training/reference-spec-v008/`:
 protocol, authored fixtures/project/timelines, inspections, recovery, token
@@ -163,6 +186,16 @@ curation v001–v003, dataset-v003, preflight, Kaggle logs và preparation.
 . .\talking-head-qc\tools\use_d_storage.ps1
 kaggle kernels status duytruyenthong/talking-head-spec-training-58f891bd45e9
 python -m unittest discover -s app -p 'test_*.py'
+```
+
+Trên máy này dùng Python runtime đã cài thay cho alias `python` nếu alias không có
+interpreter. Lệnh launch source (không thay GUI/EXE đang mở):
+
+```powershell
+. .\talking-head-qc\tools\use_d_storage.ps1
+$taskPython='C:\Users\Acer\.cache\codex-runtimes\codex-primary-runtime\dependencies\python\python.exe'
+& $taskPython -X utf8 -m unittest discover -s app -p 'test_*.py'
+& $taskPython -X utf8 app\app.py --help
 ```
 
 Còn cần capture preview FFmpeg, tập B hoàn chỉnh, người có khả năng nghe xem toàn
