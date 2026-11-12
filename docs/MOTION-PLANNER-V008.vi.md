@@ -173,10 +173,35 @@ Build từ commit `be1eb3a4e4976275a3f167e11049564075eb0e37`, source sạch,
 - Chưa chạy native GUI launcher/Windows sạch. Starter redistribution grant chưa
   chốt; đây là internal candidate. Không thay GUI đang chạy.
 
-Known UI limitation: save bằng Controls hiện có thể chuyển SFX chưa khai báo thành
-`[]`. Lượt sửa intro này dùng Advanced JSON và xác nhận field vẫn vắng mặt, nên
-không bị ảnh hưởng. Cần sửa và test luồng Controls trước khi coi reuse/edit audio
-đã hoàn tất; không suy từ test adapter rằng UI cũng giữ đúng trạng thái.
+UI limitation tìm thấy ở dev20: save bằng Controls chuyển SFX chưa khai báo thành
+`[]`. Lượt sửa intro dùng Advanced JSON và field vẫn vắng mặt nên không bị ảnh
+hưởng. **Dev21 đã sửa luồng Controls**, chỉ ghi lại danh sách cue khi nó đã được
+khai báo; không tự tạo quyết định mute khi buyer chỉ sửa hình. Đây là sửa trạng
+thái biên tập, không phải khẳng định master cũ bị mất giọng.
+
+### Dev21: kiểm thao tác UI và trạng thái âm thanh
+
+Mở server source riêng ở 59521 với bản sao metadata development workspace trên D;
+không thay GUI đang chạy hoặc sửa experiment ba arm đã freeze. Kiểm bằng normal
+UI thật, mỗi Save render preview và giữ history:
+
+1. Intro sáu text chưa khai SFX: Save Controls giữ spec nguyên vẹn, field vẫn vắng.
+2. Rules intro đã chọn `[]`: Save giữ explicit silence.
+3. Recordly demo chưa khóa: tắt click, đổi chime sang −30 dB; chỉ còn một result cue.
+4. Tắt cue còn lại: lưu `[]`, không còn resolved event.
+5. Advanced JSON khôi phục chính hai cue gốc từ version trước; không sửa anchors,
+   source observations hoặc checkpoint provenance.
+
+Cả năm preview full-decode PASS; reload giữ trạng thái. Cảnh Recordly đã khóa
+không sửa được và record giữ nguyên; job settings, voice/caption timing và mọi
+export trước giữ nguyên. Hash workspace gốc và byte của cả năm master gốc không
+đổi. Không page error. Test save-handler thật còn kiểm omission/empty/active/muted
+và không mutate object gốc; toàn bộ **258 app tests PASS**, Node syntax PASS.
+
+Harness tái chạy: `app/motion_sound_controls_acceptance.py --help`; cần workspace
+copy riêng và IDs tương ứng, không chạy trên experiment đang duyệt. Evidence
+private: `output/reference-training/reference-spec-v008/sfx-controls-ui-v001/`.
+Không đo human listening, style fidelity hoặc model gain bằng regression UI này.
 
 Evidence private trên D:`output/reference-training/reference-spec-v008/`:
 protocol, authored fixtures/project/timelines, inspections, recovery, token

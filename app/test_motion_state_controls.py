@@ -24,15 +24,19 @@ const fs=require('fs'),vm=require('vm'),assert=require('assert');
 const source=fs.readFileSync(process.argv[1],'utf8');
 const handler=source.slice(source.indexOf('if(b.dataset.saveMotion){'),source.indexOf('if(b.dataset.motionLock){'));
 (async()=>{
- for(const supplied of [undefined,[{anchor:'contact',id:'click',gain_db:-24}]]){
+ for(const [supplied,checked] of [[undefined,true],[[],true],[[{anchor:'contact',id:'click',gain_db:-24}],true],[[{anchor:'contact',id:'click',gain_db:-24}],false]]){
   const animation={spec:{objects:[]},model:{checkpoint_sha256:'unchanged'},context:{anchors:[{id:'contact',frame:30}]}};
-  if(supplied)animation.spec.sfx=supplied;
-  const sent=[];const context={b:{dataset:{saveMotion:'scene'}},state:{artifacts:{scene:{id:'scene',version:1,plan:{animation}}}},el:id=>id==='motionEditMode'?{value:'controls'}:{close(){}},document:{querySelector:s=>s.includes('gain')?{value:'-28'}:{checked:true}},req:async(path,body)=>sent.push({path,body}),refresh:async()=>{}};
+  if(supplied!==undefined)animation.spec.sfx=supplied;
+  const before=JSON.stringify(animation);
+  const sent=[];const context={b:{dataset:{saveMotion:'scene'}},state:{artifacts:{scene:{id:'scene',version:1,plan:{animation}}}},el:id=>id==='motionEditMode'?{value:'controls'}:{close(){}},document:{querySelector:s=>s.includes('gain')?{value:'-28'}:{checked}},req:async(path,body)=>sent.push({path,body}),refresh:async()=>{}};
   vm.createContext(context);await vm.runInContext('(async()=>{'+handler+'})()',context);
   assert.equal(sent.length,1);assert.equal(sent[0].path,'/api/artifacts/edit');
   assert.equal(JSON.stringify(sent[0].body.changes.animation.model),JSON.stringify(animation.model));
-  assert.equal(sent[0].body.changes.animation.spec.sfx.length,supplied?1:0);
-  if(supplied)assert.equal(sent[0].body.changes.animation.spec.sfx[0].gain_db,-28);
+  const saved=sent[0].body.changes.animation;
+  assert.equal('sfx' in saved.spec,supplied!==undefined);
+  if(supplied!==undefined)assert.equal(saved.spec.sfx.length,checked?supplied.length:0);
+  if(supplied?.length&&checked)assert.equal(saved.spec.sfx[0].gain_db,-28);
+  assert.equal(JSON.stringify(animation),before);
  }
 })().catch(e=>{console.error(e);process.exitCode=1});
 '''

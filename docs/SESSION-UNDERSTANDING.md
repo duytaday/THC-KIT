@@ -11,6 +11,10 @@
   empty/muted cues. The rebinding test covers both states and leaves the stored
   template unchanged. This implementation test is not human comprehension or
   episode audio approval.
+  Dev21 also preserves this distinction in Controls Save. Five real UI cases
+  passed on an isolated workspace, including cue removal/restoration and locked
+  scene protection. Asked which sound state Save should keep when only moving
+  a card; no answer yet. Neither tests nor an unanswered quiz establish mastery.
 
 Current v008 evidence: Kaggle COMPLETE/reloaded; base/tuned full masters are
 byte-identical. The full intro manual v002 changes timing only, not model weights.
