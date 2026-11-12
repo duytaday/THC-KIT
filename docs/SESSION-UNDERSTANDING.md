@@ -1,5 +1,11 @@
 # Session understanding
 
+- [ ] Silent scene versus voiced master:16authored fixtures revealed that a
+  silent preview could not be produced without programme loudness. The fix
+  admits measured silence only for previews, with null levels and no master
+  loudness attestation; real master normalization still rejects it. Explained
+  the distinction during work; no human answer or mastery inferred.
+
 - [ ] Declared input versus target leakage: dev18 recovers layout only from
   the existing canonical intent, before inspecting target labels. All18 changed
   inputs were validation; train/RAG stayed byte-identical, so no duplicate

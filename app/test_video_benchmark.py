@@ -89,5 +89,27 @@ class FullVideoBenchmarkTests(unittest.TestCase):
         with patch.object(media,'loudness',side_effect=[dict(input_i=-21,input_tp=-2.1,input_lra=3,input_thresh=-30,target_offset=0),dict(input_i=-20.81,input_tp=-2.2)]),patch.object(media,'ff'),patch.object(media,'stream',return_value=dict(duration=2.6)):
             with self.assertRaisesRegex(ValueError,'Final loudness'):media.finish_audio(self.file,self.root/'master.mp4')
 
+    def test_silent_preview_has_null_levels_and_never_certifies_a_master(self):
+        silent=dict(input_i=None,input_tp=None,silent=True)
+        with patch.object(media,'loudness',side_effect=[silent,silent]) as measure,patch.object(media,'ff'):
+            result=media.preview_audio(self.file,self.root/'preview.mp4')
+        self.assertEqual(result['purpose'],'scene_preview_silent');self.assertIsNone(result['integrated_lufs']);self.assertIsNone(result['true_peak_dbtp'])
+        self.assertFalse(result['master_loudness_verified']);self.assertTrue(all(c.kwargs=={'allow_silent':True} for c in measure.call_args_list))
+        with patch.object(media,'loudness',side_effect=[dict(input_i=-20,input_tp=-3),silent]),patch.object(media,'ff'):
+            with self.assertRaisesRegex(ValueError,'unexpectedly changed'):media.preview_audio(self.file,self.root/'lost-audio.mp4')
+
+    def test_only_measured_digital_silence_can_be_allowed_for_preview(self):
+        import types
+        def response(tp):return types.SimpleNamespace(returncode=0,stderr=json.dumps(dict(input_i='-inf',input_tp=tp,input_lra='0.0',input_thresh='-70',target_offset='inf')).encode())
+        with patch.object(media.subprocess,'run',return_value=response('-inf')):
+            with self.assertRaisesRegex(ValueError,'No measurable'):media.finish_audio(self.file,self.root/'master.mp4')
+            measured=media.loudness(self.file,allow_silent=True)
+            self.assertTrue(measured['silent']);self.assertIsNone(measured['input_i'])
+        with patch.object(media.subprocess,'run',return_value=response('-100')):
+            with self.assertRaisesRegex(ValueError,'No measurable'):media.loudness(self.file,allow_silent=True)
+        failed=response('-inf');failed.returncode=1
+        with patch.object(media.subprocess,'run',return_value=failed):
+            with self.assertRaisesRegex(ValueError,'Could not measure'):media.loudness(self.file,allow_silent=True)
+
 
 if __name__=='__main__':unittest.main()

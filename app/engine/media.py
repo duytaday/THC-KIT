@@ -80,7 +80,7 @@ def duration(s):
     return v
 
 
-def loudness(path):
+def loudness(path, *, allow_silent=False):
     proc = subprocess.run(
         [
             "ffmpeg",
@@ -98,6 +98,7 @@ def loudness(path):
         capture_output=True,
         **launch_options(),
     )
+    if proc.returncode:raise ValueError('Could not measure the audio loudness.')
     text = proc.stderr.decode(errors="replace")
     try:
         raw = json.loads(text[text.rindex("{") : text.rindex("}") + 1])
@@ -107,6 +108,8 @@ def loudness(path):
         }
     except (KeyError, ValueError):
         raise ValueError("Could not measure the audio loudness.")
+    if allow_silent and data['input_i']==-math.inf and data['input_tp']==-math.inf:
+        return {**{k:v if math.isfinite(v) else None for k,v in data.items()},'silent':True}
     if not all(math.isfinite(n) for n in data.values()):
         raise ValueError(
             "No measurable programme audio. Check the microphone track and recording length."
@@ -155,12 +158,14 @@ def finish_audio(source, target):
 
 def preview_audio(source, target):
     """Keep source-level scene auditions. Integrated programme targets belong to masters."""
-    before=loudness(source)
-    gain=min(0.,-2.-before['input_tp'])
+    before=loudness(source,allow_silent=True)
+    gain=0. if before.get('silent') else min(0.,-2.-before['input_tp'])
     ff('-i',source,'-map','0:v:0','-map','0:a:0','-c:v','copy',
        '-af',f'volume={gain}dB','-c:a','aac','-ar','48000','-b:a','192k',
        '-movflags','+faststart',target)
-    after=loudness(target)
+    after=loudness(target,allow_silent=True)
+    if bool(before.get('silent'))!=bool(after.get('silent')):raise ValueError('Scene preview unexpectedly changed whether source audio is silent')
+    if after.get('silent'):return dict(integrated_lufs=None,true_peak_dbtp=None,purpose='scene_preview_silent',gain_db=0.,master_loudness_verified=False)
     if after['input_tp']>-1:raise ValueError('Scene preview exceeds the true-peak ceiling; inspect its source/mix')
     return dict(integrated_lufs=after['input_i'],true_peak_dbtp=after['input_tp'],
                 purpose='scene_preview_original_level',gain_db=gain,master_loudness_verified=False)

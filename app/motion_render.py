@@ -103,7 +103,7 @@ def preview(plan,folder,host,assets):
         a=assets[proof['asset']];render_plan['proof']=[dict(id='motion-proof',file=a['path'],start=at,end=at+duration,source_start=proof.get('offset',0),**({'crop':proof['crop']} if proof.get('crop') else {}))]
     edit.render(Path(host['path']),render_plan,folder,scene_preview=True)
     (folder/'edit.mp4').rename(folder/'preview.mp4');media.ff('-ss',min(.8,duration/2),'-i',folder/'preview.mp4','-frames:v','1','-vf','scale=270:480',folder/'thumbnail.jpg')
-    result=copy.deepcopy(plan);result.update(duration=duration,preview_frames=entry['context']['frames'],preview_audio='Original source voice; no synthesis. Source/script alignment is recorded separately.',events=[])
-    media.write_json(folder/'scene.json',result);media.write_json(folder/'timeline.json',dict(schema_version=2,animation=entry,episode_audio='Original narration continues; SFX routed once on episode bus'))
+    result=copy.deepcopy(plan);result.update(duration=duration,preview_frames=entry['context']['frames'],preview_audio='Original source audio; no synthesis. Source/script alignment is recorded separately.',events=[])
+    media.write_json(folder/'scene.json',result);media.write_json(folder/'timeline.json',dict(schema_version=2,animation=entry,episode_audio='Original source audio continues; SFX routed once on episode bus'))
     media.write_json(folder/'receipt.json',dict(sha256=media.sha(folder/'preview.mp4'),model=entry.get('model',{}),source_sha256=media.sha(host['path']),data_class='source_aligned' if entry['context'].get('voice_aligned') else 'storyboard_pickup',frames=entry['context']['frames']))
     return result
