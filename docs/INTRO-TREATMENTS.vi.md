@@ -134,3 +134,72 @@ prompt8 và retrieval3, không retrain hay mở final cohort. Hai điều kiện
 trên development5repo, không phải hai lượt benchmark unseen. Notes do agent đã
 thấy proposals tạo, không blind/human gold; audio và full1×master còn chờ review.
 242app tests PASS gồm grammar runtime thật trước khi freeze implementation.
+
+### Kết quả thực tế của hai điều kiện
+
+Code commit`f6166f5`, source dev14. A ở59516/workspace`cutroom-source-context-001`;
+B ở59517/workspace`cutroom-source-context-002`. Hai condition có cùng code/media/
+model package hashes. Trong từng condition, base/tuned nhận cùng context và đúng
+các train-only examples; receipt xác nhận worker CUDA, adapter tắt/bật đúng mode.
+
+|Điều kiện|Rules|Base + RAG|V006 + cùng RAG|
+|---|---|---|---|
+|A: vùng mặt đã kiểm, reference guidance OFF|full export|full export|full export; panel còn lệch reference|
+|B: cùng vùng mặt, guidance ON|full export|full export; vẫn chọn panel|intro bị guard từ chối; demo compiled valid; không xuất master thiếu intro|
+
+Năm exports đều118,1s/3543frames,1080×1920/30, full decode PASS,
+`h264_nvenc`, −16,08LUFS/−1,65dBTP. Voice WAV/SRT và PCM audio mix sau decode
+cùng hash giữa cả năm. ASR thực tếCUDA/float16 trên RTX3070Ti Laptop8GB. Không
+nghe hoặc ký master từ các kiểm tự động này. SFX isolated peak/onset proxy đạt
+frame gate; alignment/audibility trên final mix vẫn cần nghe.
+
+A rules SHA4f705c2f… giữ nguyên byte so dev13; base cedb25ec…; tuned5b08061c….
+B rules vẫn4f705c2f…; base f8ee5660…. Raw tunedB đặt graphic rect bằng chính
+protected face rect[.16,.29,.68,.44], nên validator chặn đúng. Rationale của model
+còn suy diễn reference/voice; đó là output cần phê bình, không phải evidence thật.
+Chưa chứng minh thêm notes giúp model tốt hơn. Không có train mới trong lượt này.
+
+A/B nhập ở workspace riêng có UUID asset khác, nên proof context còn khác UUID
+ngoài biến reference intent. Vì vậy đây là diagnostic input-contract, không phải
+causal quality ablation sạch. `inference-input-comparison.json` ghi diff thực tế;
+trước lượt train/eval sau cần ổn định role/source identity mà model nhận. Cùng
+condition thì base/tuned vẫn có context và retrieval giống nhau.
+
+Lỗi hạ tầng`ui-B-v001` được giữ: harness dùng lại workspace A và thêm cutaways lần
+nữa; service từ chối overlap trước generation. `ui-B-v002` chạy cùng inputs/code
+trong workspace mới. Không tính lỗi này thành lỗi model, không mở final cohort.
+Gallery A có3arms; B có2arms và thiếu tuned, không coi là comparison hoàn chỉnh.
+
+Kiểm decoded phone frames xác nhận tunedA dùng panel trắng lớn và lấn tóc ở
+0,2s, thay vì nền ôm chữ như sampled reference0–2,25s. Có sheet78frame intro cho
+rules/base/tunedA và baseB. Không suy ra nghe/full1×watch từ sheet. Headline hiện
+chỉ nói “5 repo GitHub”, chưa mô tả rõ lợi ích edit video bằng AI; đây là thiếu
+sót nội dung hook cần xử lý ở proposal, không chữa bằng thêm animation tùy ý.
+
+Gói internal dev14 build từf6166f5/source_dirty=false,153files/17.659.588bytes,
+ZIP SHA61fac7b677788b5ce871845f403fb573ad34701d411915b90ca61a409a2cbdc5.
+EmbeddedPython3.12.10 render đúng backend package, prefix5s/150frames/NVENC/
+decode PASS, SHA8e4f3f90…. Đây là scene-preview level nguồn−22,58LUFS/−9,86dBTP,
+không phải master mix pass. GUI launcher/Windows sạch chưa chạy; grant của starter
+cho public distribution chưa chốt. Bản dev13/weights/cut v035 giữ nguyên.
+
+Evidence chi tiết:`output/reference-training/source-context-v001/actual-results.json`,
+`inference-input-comparison.json`, `infrastructure-failure.json`, hai UI results và
+`packaged-smoke.json`. Chưa admit clip mới vào usable library; model quality vẫn
+INCONCLUSIVE. Fresh episode B thật, blind whole-video reviews và phút sửa vẫn thiếu.
+
+### Dev15 — lỗi Save của spec không có SFX
+
+Thử sửa tunedA qua control Text background phát hiện nút Save không gửi request:
+spec hợp lệ có thể bỏ trường SFX, nhưng handler gọi thẳng `spec.sfx.filter`.
+Dev15 dùng mảng rỗng cho trường optional bị thiếu. Regression thực thi chính
+save-handler với cả spec thiếu SFX và spec có click, xác nhận gửi đúng một request
+và giữ model receipt. **243app tests PASS**, có grammar runtime thật; node syntax
+check PASS. A/B giữ nguyên revision dev14, không resume/regrade bằng code mới.
+
+Thao tác UI sau sửa tạo scene v002 thật. Harness đầu tiên báo lỗi vì so byte spec
+không tính normalization từ absent SFX sang mảng rỗng; không mất dữ liệu hay tạo
+scene v003. Đã kiểm diff thực tế rồi tiếp tục từ v002 để queue export riêng. Ngoài
+box_style panel→lines và normalization mảng SFX rỗng, source context/spec/model
+receipt được giữ. Bản sửa là agent manual repair, không phải kết quả raw model
+và chưa là nhãn human-approved. Các script lỗi và v001 được giữ cạnh evidence.

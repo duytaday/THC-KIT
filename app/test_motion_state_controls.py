@@ -4,6 +4,27 @@ from pathlib import Path
 
 @unittest.skipUnless(shutil.which('node'),'Native editor control test needs Node')
 class StateControlTests(unittest.TestCase):
+    def test_real_save_handler_accepts_a_model_spec_without_optional_sfx(self):
+        script=r'''
+const fs=require('fs'),vm=require('vm'),assert=require('assert');
+const source=fs.readFileSync(process.argv[1],'utf8');
+const handler=source.slice(source.indexOf('if(b.dataset.saveMotion){'),source.indexOf('if(b.dataset.motionLock){'));
+(async()=>{
+ for(const supplied of [undefined,[{anchor:'contact',id:'click',gain_db:-24}]]){
+  const animation={spec:{objects:[]},model:{checkpoint_sha256:'unchanged'},context:{anchors:[{id:'contact',frame:30}]}};
+  if(supplied)animation.spec.sfx=supplied;
+  const sent=[];const context={b:{dataset:{saveMotion:'scene'}},state:{artifacts:{scene:{id:'scene',version:1,plan:{animation}}}},el:id=>id==='motionEditMode'?{value:'controls'}:{close(){}},document:{querySelector:s=>s.includes('gain')?{value:'-28'}:{checked:true}},req:async(path,body)=>sent.push({path,body}),refresh:async()=>{}};
+  vm.createContext(context);await vm.runInContext('(async()=>{'+handler+'})()',context);
+  assert.equal(sent.length,1);assert.equal(sent[0].path,'/api/artifacts/edit');
+  assert.equal(JSON.stringify(sent[0].body.changes.animation.model),JSON.stringify(animation.model));
+  assert.equal(sent[0].body.changes.animation.spec.sfx.length,supplied?1:0);
+  if(supplied)assert.equal(sent[0].body.changes.animation.spec.sfx[0].gain_db,-28);
+ }
+})().catch(e=>{console.error(e);process.exitCode=1});
+'''
+        result=subprocess.run([shutil.which('node'),'-e',script,str(Path(__file__).parent/'ui/app.js')],capture_output=True,text=True)
+        self.assertEqual(result.returncode,0,result.stderr)
+
     def test_controls_save_per_state_geometry_and_keep_source_clock_and_model(self):
         script=r'''
 const fs=require('fs'),vm=require('vm'),assert=require('assert');
