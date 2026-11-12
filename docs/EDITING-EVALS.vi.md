@@ -143,11 +143,20 @@ và source paths nên là dữ liệu project riêng, không đưa vào training
 Các lệnh harness chạy trong checkout phát triển. Người mua EXE không cần cài
 Playwright để dựng và duyệt video của họ.
 
-Lượt này:219app tests,54QC tests,39reference regressions PASS;3skills sửa đổi
+Lượt này:219app tests cộng2packaging regressions,54QC tests,39reference
+regressions PASS;3skills sửa đổi
 qua validator. UI lost-response/state/hook test hoàn tất sau khi sửa selector của
 harness; lỗi cũ được giữ, không khai cold-run PASS. Model v005 đã có ba full
 exports kiểm kỹ thuật; base/tuned trùng hash, không có quality gain được chứng minh.
 Chi tiết device/codec/weights và các giới hạn ở`MOTION-PLANNER-V005.vi.md`.
+
+Kiểm EXE thực tế phát hiện gói dev9 thiếu deferred import`proof_assignments.py`;
+render bị chặn trước khi có master. Gói lỗi được giữ. Dev10 bổ sung module và
+preflight kiểm closure của các app-owned imports trước build; regression cố ý bỏ
+module đó phải thất bại. Receipt của lần chạy binary nằm riêng ở
+`output/editing-evals/v001/packaged-runtime.json`; source-test PASS không tự thay
+cho kết quả binary. Bản EXE là internal development build, không chứng nhận
+Windows sạch hoặc human editorial release.
 
 Còn cần: raw tập B mới/script/branding riêng, reviewer xem/nghe trọn exact MP4,
 câu trả lời hook/payoff và quiz không gợi đáp án, lựa chọn style, timer sửa thực

@@ -1,13 +1,23 @@
 """Allowlisted, deterministic Windows x64 internal candidate. No customer media."""
-import argparse,hashlib,io,json,shutil,subprocess,zipfile
+import argparse,ast,hashlib,io,json,shutil,subprocess,zipfile
 from pathlib import Path
 from engine import media
 from version import VERSION
 
-MODULES='animation_library app artifact_store artifacts asr_setup assignments audition author_audio benchmark_ui components creator editing_conversations editing_evals editing_styles encoder_setup evaluation_access generative generative_data generative_infer generative_package generative_train hook_review hyperframes_bridge learning learning_inventory motion_decode motion_hooks motion_learning motion_policy motion_render motion_specs motion_storyboard motion_worker openings planner_policy planner_worker qc_bridge reference_motion review_attestation revision_cache revisions speech speech_worker storyboard train_motion train_planner version video_benchmark viewer_quiz workspace'.split()
+MODULES='animation_library app artifact_store artifacts asr_setup assignments audition author_audio benchmark_ui components creator editing_conversations editing_evals editing_styles encoder_setup evaluation_access generative generative_data generative_infer generative_package generative_train hook_review hyperframes_bridge learning learning_inventory motion_decode motion_hooks motion_learning motion_policy motion_render motion_specs motion_storyboard motion_worker openings planner_policy planner_worker proof_assignments qc_bridge reference_motion review_attestation revision_cache revisions speech speech_worker storyboard train_motion train_planner version video_benchmark viewer_quiz workspace'.split()
 ENGINE='__init__ cues edit enhance layouts media planner references'.split()
 UI='app.js benchmark-review.html benchmark-review.js DM-Sans-LICENSE.txt dm-sans.woff2 icon.svg index.html style.css'.split()
 STAMP=(2026,11,12,0,0,0)
+
+
+def validate_modules(repo):
+    """Catch missing app-owned imports, including imports deferred inside a render."""
+    app=Path(repo)/'app';missing=set()
+    for file in [app/(n+'.py') for n in MODULES]+[app/'engine'/(n+'.py') for n in ENGINE]:
+        for node in ast.walk(ast.parse(file.read_text(encoding='utf-8'))):
+            names=[a.name.split('.')[0] for a in node.names] if isinstance(node,ast.Import) else [node.module.split('.')[0]] if isinstance(node,ast.ImportFrom) and not node.level and node.module else []
+            missing.update(n for n in names if (app/(n+'.py')).is_file() and n not in MODULES)
+    if missing:raise ValueError('Release allowlist misses app-owned imports: '+', '.join(sorted(missing)))
 
 BOOTSTRAP='''import os,sys
 from pathlib import Path
@@ -38,6 +48,7 @@ def archive_files(destination,files):
 def main():
     p=argparse.ArgumentParser(description=__doc__);p.add_argument('--starter',type=Path,required=True);p.add_argument('--qc-skill',type=Path,required=True);p.add_argument('--out',type=Path,required=True);a=p.parse_args()
     repo=Path(__file__).resolve().parents[1];out=a.out.resolve()
+    validate_modules(repo)
     if out.drive.upper()!='D:':raise ValueError('This session stores builds on D:')
     out.mkdir(parents=True,exist_ok=False)
     def copy(source,name):
