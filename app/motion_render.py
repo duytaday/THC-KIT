@@ -20,12 +20,20 @@ def rectangle(w,h,r=14):
     return f'm {r:.2f} 0 l {w-r:.2f} 0 b {w-r+k:.2f} 0 {w:.2f} {r-k:.2f} {w:.2f} {r:.2f} l {w:.2f} {h-r:.2f} b {w:.2f} {h-r+k:.2f} {w-r+k:.2f} {h:.2f} {w-r:.2f} {h:.2f} l {r:.2f} {h:.2f} b {r-k:.2f} {h:.2f} 0 {h-r+k:.2f} 0 {h-r:.2f} l 0 {r:.2f} b 0 {r-k:.2f} {r-k:.2f} 0 {r:.2f} 0'
 
 
-def dialogue(layer,start,end,body):
-    return f'Dialogue: {layer},{stamp(start)},{stamp(end)},Motion,,0,0,0,,{body}'
+def dialogue(layer,start,end,body,style='Motion'):
+    return f'Dialogue: {layer},{stamp(start)},{stamp(end)},{style},,0,0,0,,{body}'
 
 
 def append_ass(path,entry,master_start_frame,*,show_status=False):
     ctx=entry['context'];spec=schema.validate(entry['spec'],ctx);n=ctx['frames'];anchors={a['id']:a for a in ctx['anchors']};rows=[]
+    if any(o.get('box_style')=='lines' for o in spec['objects']):
+        # libass measures each glyph run, so short lines get short backgrounds.
+        # Keep one style per file and one event per line; no guessed glyph widths.
+        content=Path(path).read_text(encoding='utf-8')
+        if 'Style: MotionLine,' not in content:
+            if '[Events]' not in content:raise ValueError('Per-line backgrounds require an ASS style header')
+            style='Style: MotionLine,DejaVu Sans,54,&H00FFFFFF,&H00FFFFFF,&H00101010,&H00101010,-1,0,0,0,100,100,0,0,3,4,0,8,0,0,0,1\n'
+            Path(path).write_text(content.replace('[Events]',style+'[Events]',1),encoding='utf-8')
     if spec['scene_type']=='intro' and spec['layout']=='full':
         body=r'{\an7\pos(0,0)\p1\bord0\shad0\1c&HEBF4F8&}m 0 0 l 1080 0 1080 1920 0 1920'+r'{\p0}'
         rows.append(dialogue(-2,master_start_frame,master_start_frame+n,body))
@@ -47,18 +55,25 @@ def append_ass(path,entry,master_start_frame,*,show_status=False):
                 prefix+=r'\1a&HFF&\3a&H'+f'{alpha:02X}'+r'&\bord5\3c&H28F1E8&}'
             else:prefix+=turn+r'\bord0\1c&H'+{'brand':'BA0021','paper':'FFFFFF','charcoal':'1B1510'}[obj.get('theme','brand')]+r'&}'
             begin=master_start_frame+frame
-            rows.append(dialogue(1,begin,begin+1,prefix+rectangle(pw,ph)+r'{\p0}'))
+            line_background=not marker and obj.get('box_style')=='lines'
+            if not line_background:rows.append(dialogue(1,begin,begin+1,prefix+rectangle(pw,ph)+r'{\p0}'))
             if not marker:
                 fs=obj['font_size']*state['scale'];lines=schema.wrap(label,w,obj['font_size']);text='\n'.join(lines)
                 ty=py+(ph-len(lines)*fs*1.18)/2
                 text_color='1B1510' if obj.get('theme')=='paper' else 'FFFFFF'
                 tag=r'{\an8\pos('+f'{px+pw/2:.2f},{ty:.2f}'+r')'+turn+r'\fs'+f'{fs:.2f}'+r'\bord0\shad0\1c&H'+text_color+r'&\1a&H'+f'{alpha:02X}'+r'&}'
-                rows.append(dialogue(2,begin,begin+1,tag+escaped(text)))
+                if line_background:
+                    background={'brand':'BA0021','paper':'FFFFFF','charcoal':'1B1510'}[obj.get('theme','brand')]
+                    padding=min(4,obj['font_size']*.06)*state['scale']
+                    for i,line in enumerate(lines):
+                        tag=r'{\an8\q2\pos('+f'{px+pw/2:.2f},{ty+i*fs*1.18:.2f}'+r')'+turn+r'\fs'+f'{fs:.2f}'+r'\bord'+f'{padding:.2f}'+r'\shad0\1c&H'+text_color+r'&\3c&H'+background+r'&\1a&H'+f'{alpha:02X}'+r'&\3a&H'+f'{alpha:02X}'+r'&}'
+                        rows.append(dialogue(2,begin,begin+1,tag+escaped(line),'MotionLine'))
+                else:rows.append(dialogue(2,begin,begin+1,tag+escaped(text)))
                 if emphasis is not None and 0<=emphasis<len(lines):
                     yy=ty+(emphasis+1)*fs*1.18
                     underline=r'{\an7\pos('+f'{px+18:.2f},{yy:.2f}'+r')'+turn+r'\p1\bord0\shad0\1c&H28F1E8&}m 0 0 l '+f'{pw-36:.2f} 0 {pw-36:.2f} 5 0 5'+r'{\p0}'
                     rows.append(dialogue(3,begin,begin+1,underline))
-        record=dict(id=obj['id'],source_anchor=obj['anchor'],rect=obj['rect'],font_size=obj.get('font_size'),last_state=label,theme=obj.get('theme','brand'),lead_frames=obj.get('lead_frames',0),exit_frames=exit_frames)
+        record=dict(id=obj['id'],source_anchor=obj['anchor'],rect=obj['rect'],font_size=obj.get('font_size'),last_state=label,theme=obj.get('theme','brand'),box_style=obj.get('box_style','panel'),lead_frames=obj.get('lead_frames',0),exit_frames=exit_frames)
         if any('rect' in c for c in obj.get('changes',[])):
             record['state_rectangles']=[dict(frame=t,rect=schema.object_state(obj,anchors,t)[1]) for t in [start]+[anchors[c['anchor']]['frame'] for c in obj['changes']]]
         bounds.append(record)

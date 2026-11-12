@@ -19,6 +19,11 @@ For persisted revision requests and style transfer, follow
 
 Use individual Edit/Regenerate actions. Preserve other scenes, manual overrides,
 previous exports and each recording’s script. A deleted anchor requires reassignment.
+For a reference with backgrounds hugging individual text lines, use native
+`box_style: lines` / Text background in the scene editor. Keep `panel` for one
+enclosing card. Do not invent an entrance for a label already visible in the
+source interval. Preserve source timing/words and inspect the decoded phone-size
+frames; matching this component does not establish full-episode style fidelity.
 Missing product proof remains a capture placeholder; an original diagram must be
 labeled as an illustration. Export scene JSON and timeline with the preview.
 For a frozen episode recipe: `python app/cli.py render render-project.json --out NEW-VERSION`.

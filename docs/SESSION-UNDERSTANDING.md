@@ -60,6 +60,11 @@ voice, locked edits and QC. Optional HTML renderers and model workers produce
 versioned proposals; they do not independently approve the customer master.
 Raw-model failures, compiler repairs and unverified listening stay visible so
 the buyer can understand what each success actually establishes.
+The v006 component pilot now demonstrates a specific reference mismatch: one
+large text panel versus backgrounds sized per line. UI/decoded evidence and equal
+audio/caption hashes establish the controlled visual change, not style preference,
+audibility, a successful model train or whole-episode improvement. No new mastery
+is inferred from these automated results; pending questions remain pending.
 
 Current concrete case: a supplied source and its hash/range establish an
 assignment, not the truth of its result or final audibility. Legacy filename

@@ -39,7 +39,8 @@ changes[{anchor,text,rect?,emphasis_line?}] dùng anchor nguồn tăng dần. Re
 Marker11/12/13 theo ROI hiện tại, không lead/xê dịch/xoay/đổi rect. Click chỉ contact thật; chime chỉ result thật. sfx[{anchor,id,gain_db}] dùng slide/chapter/click/chime/tap, gain[-60,-6]; âm thanh chưa quan sát thì bỏ sfx, không gán mute có chủ đích.
 evidence code/real_screen/reconstruction/presenter mô tả nguồn hiện tại. Proof real_screen đã có thì không báo thiếu lại tên repo/anchor ấy. Không tạo asset hay thành công giả. missing chỉ input/pickup thật sự thiếu của cảnh hiện tại.
 House fixture dạy contract, không phải project gốc của reference. Icon/ảnh/counter ngoài native text: mô tả giới hạn trong rationale, không xin pickup reference không được brief yêu cầu. Provenance weights/QC do runtime ghi, không tự nhận trong rationale.'''
-PROMPT_VERSION=7
+SYSTEMS[8]=SYSTEMS[7]+'''\nText object có thể có box_style panel/lines; mặc định panel. lines tạo nền ôm riêng từng dòng theo glyph thực, không tạo một thẻ lớn. Chọn theo reference/intent; không tự tăng entrance. Theme giữ brand/paper/charcoal. Không dùng box_style cho marker11/12/13. Proof có nguồn màn hình phải dùng layout demo vì ROI được bind trên canvas full-demo; host/PiP là control riêng.'''
+PROMPT_VERSION=8
 RETRIEVAL_VERSION=3
 
 

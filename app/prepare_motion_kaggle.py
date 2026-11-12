@@ -14,23 +14,19 @@ def prepare(dataset,out,owner,steps=128):
     for name in ('manifest.json','train.jsonl','validation.jsonl','test.jsonl','retrieval-train-only.json'):
         shutil.copy2(Path(dataset)/name,upload/name)
     for name in ('motion_specs.py','motion_learning.py','train_motion.py'):shutil.copy2(root/name,upload/name)
-    (upload/'engine').mkdir();(upload/'engine/__init__.py').write_text('',encoding='utf-8');shutil.copy2(root/'engine/media.py',upload/'engine/media.py')
+    # The CLI skips directories; Kaggle also auto-extracts ZIPs on ingestion.
+    # Training uses only `from engine import media`, so use two flat modules.
+    (upload/'engine.py').write_text('import cutroom_media as media\n',encoding='utf-8')
+    shutil.copy2(root/'engine/media.py',upload/'cutroom_media.py')
     slug='talking-head-animation-spec-'+manifest['dataset_fingerprint'][:12]
     media.write_json(upload/'dataset-metadata.json',dict(title='Talking Head Animation Spec '+manifest['dataset_fingerprint'][:12],id=owner+'/'+slug,licenses=[dict(name='other')]))
     media.write_json(kernel/'kernel-metadata.json',dict(id=owner+'/talking-head-spec-training-'+manifest['dataset_fingerprint'][:12],title='Talking Head Spec Training '+manifest['dataset_fingerprint'][:12],code_file='train.py',language='python',kernel_type='script',is_private=True,enable_gpu=True,machine_shape='NvidiaTeslaT4',enable_internet=True,dataset_sources=[owner+'/'+slug],competition_sources=[],kernel_sources=[]))
     (kernel/'train.py').write_text("""from pathlib import Path
-import json,subprocess,sys,zipfile
+import json,subprocess,sys
 roots=[p.parent for p in Path('/kaggle/input').rglob('manifest.json') if json.loads(p.read_text()).get('task')=='script_animation_spec_v1']
 assert len(roots)==1,'Attach exactly one animation spec dataset'
 root=roots[0];sys.path.insert(0,str(root))
-if not (root/'engine/media.py').exists():
-    support=Path('/kaggle/working/motion-support');(support/'engine').mkdir(parents=True,exist_ok=True)
-    (support/'engine/__init__.py').write_text('')
-    with zipfile.ZipFile(root/'engine.zip') as z:
-        (support/'engine/media.py').write_bytes(z.read(next(n for n in z.namelist() if n.endswith('media.py'))))
-    sys.path.insert(0,str(support))
-    import os
-    os.environ['PYTHONPATH']=str(support)
+assert (root/'engine.py').is_file() and (root/'cutroom_media.py').is_file(),'Missing flat training support'
 from motion_learning import check_dataset
 check_dataset(root)
 subprocess.run([sys.executable,'-m','pip','install','transformers==4.51.3','peft==0.15.2','accelerate==1.6.0','safetensors>=0.4.3,<0.9'],check=True)

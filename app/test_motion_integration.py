@@ -47,9 +47,11 @@ class SpecIntegrationTests(unittest.TestCase):
 
     def test_manually_edited_spec_survives_regeneration(self):
         intro,_=self.generate();record=self.ws.data['artifacts'][intro];animation=copy.deepcopy(record['plan']['animation']);animation['spec']['objects'][0]['keyframes'][-1]['frame']=12
+        animation['spec']['objects'][0]['box_style']='lines'
         self.ws.artifacts.edit(intro,dict(animation=animation),1)
         with patch('motion_policy.infer',side_effect=AssertionError('Manual spec must be preserved')):self.ws.artifacts.edit(intro,{},2)
         self.assertEqual(record['plan']['animation']['spec']['objects'][0]['keyframes'][-1]['frame'],12)
+        self.assertEqual(record['plan']['animation']['spec']['objects'][0]['box_style'],'lines')
 
     def test_failed_model_is_not_a_successful_rules_fallback(self):
         with patch('motion_policy.infer',side_effect=ValueError('Rejected model output')):

@@ -28,7 +28,7 @@ def schema(context):
                   lead_frames=enum(range(min(30,anchor['frame'])+1)),exit_frames=enum(range(31)),hold_frames=enum(range(12,181)),theme=enum(('brand','paper','charcoal')))
         if texts:
             change=obj(dict(anchor=enum(later),text=enum(texts),emphasis_line=enum(range(3)),rect=box),['anchor','text']) if later else None
-            branches.append(obj(dict(base,component=enum(c for c in motion_specs.COMPONENTS if c not in ('11','12','13')),text=enum(texts),font_size=number(38,92),
+            branches.append(obj(dict(base,component=enum(c for c in motion_specs.COMPONENTS if c not in ('11','12','13')),text=enum(texts),font_size=number(38,92),box_style=enum(('panel','lines')),
                 emphasis_line=enum(range(3)),changes=array(change or {},0,8 if later else 0)),['id','component','text','rect','anchor','keyframes']))
         if anchor.get('roi') and context.get('proof') and anchor['kind'] in ('control','contact','result'):
             component={'control':'11','contact':'12','result':'13'}[anchor['kind']]

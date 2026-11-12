@@ -17,6 +17,7 @@ class SourceGrammarTests(unittest.TestCase):
         return p.can_end()
     def test_full_native_intro_with_vietnamese_is_expressible(self):
         c=self.context();s=motion_specs.rules(c);self.assertTrue(self.accepts(s,c))
+        s['objects'][0]['box_style']='lines';self.assertTrue(self.accepts(s,c))
     def test_editable_graphic_rotation_remains_expressible(self):
         c=self.context();s=motion_specs.rules(c);s['objects'][0]['keyframes'][0]['rotation']=12
         self.assertTrue(self.accepts(s,c));motion_specs.validate(s,c)
