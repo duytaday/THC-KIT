@@ -75,6 +75,39 @@ class SpecIntegrationTests(unittest.TestCase):
         self.assertEqual(self.ws.data['artifacts'][original[0]]['plan']['animation']['context']['style'],'balanced')
         self.assertEqual(self.ws.data['artifacts'][fast[0]]['plan']['animation']['context']['style'],'maverick_fast')
 
+    def test_declared_intro_promise_changes_only_intro_and_keeps_locked_demo_and_source_speech(self):
+        import motion_policy
+        intro,demo=self.generate();self.ws.artifacts.edit(demo,dict(locked=True),1)
+        old={i:copy.deepcopy(self.ws.data['artifacts'][i]) for i in (intro,demo)}
+        settings=copy.deepcopy(self.ws.data['jobs']['host']['settings']);infer=motion_policy.infer;seen=[]
+        def inspect(root,contexts,*args):seen.extend(contexts);return infer(root,contexts,*args)
+        with patch('motion_policy.infer',side_effect=inspect):
+            ids=self.ws.artifacts.generate(['host'],animation_mode='rules',intro_headline='Dựng video AI rõ ý hơn')
+        self.assertEqual(len(seen),1);self.assertEqual(seen[0]['texts'][0],'Dựng video AI rõ ý hơn')
+        self.assertEqual(ids[1],demo);self.assertNotEqual(ids[0],intro)
+        self.assertEqual({i:self.ws.data['artifacts'][i] for i in (intro,demo)},old)
+        self.assertEqual(self.ws.data['artifacts'][ids[0]]['plan']['source_quote'],old[intro]['plan']['source_quote'])
+        self.assertEqual(self.ws.data['jobs']['host']['settings'],settings)
+        with patch('motion_policy.infer',side_effect=AssertionError('Same promise must reuse its own scene')):
+            self.assertEqual(self.ws.artifacts.generate(['host'],animation_mode='rules',intro_headline='Dựng video AI rõ ý hơn'),ids)
+        other=self.ws.artifacts.generate(['host'],animation_mode='rules',intro_headline='Một lời hứa khác')
+        self.assertNotEqual(other[0],ids[0]);self.assertEqual(other[1],demo)
+
+    def test_intro_promise_cannot_be_broadcast_to_unrelated_recordings_or_truncated(self):
+        for ids,text in [(['host','another'],'Một lời hứa'),(['host'],'x'*141),(['host'],42)]:
+            with self.subTest(text=text),patch('motion_policy.infer') as infer:
+                with self.assertRaises(ValueError):self.ws.artifacts.generate(ids,animation_mode='rules',intro_headline=text)
+                infer.assert_not_called()
+
+    def test_model_prose_cannot_replace_source_description_or_claim_actual_proof(self):
+        import motion_specs
+        c=dict(request='demo',texts=[],frames=90,anchors=[dict(id='contact',kind='contact',frame=3,roi=[.2,.3,.01,.01]),dict(id='result',kind='result',frame=40,roi=[.1,.4,.3,.04])],proof=dict(data_class='real_screen'),protected=[])
+        spec=motion_specs.rules(c);spec['rationale']='Synthetic fixture; all QC approved by a person.'
+        p=dict(type='demo',passage_ids=['p'],source_quote='Bấm vào đây.',intended_visual='Assigned real source')
+        result=motion_storyboard.attach(p,c,0,dict(spec=spec,model=dict(mode='rules')))
+        self.assertIn('Assigned screen capture',result['intended_visual'])
+        self.assertNotIn('approved',result['intended_visual']);self.assertEqual(result['animation']['spec']['rationale'],spec['rationale'])
+
     def test_full_intro_constraint_is_input_and_does_not_reuse_a_legacy_context(self):
         ids=self.generate();record=self.ws.data['artifacts'][ids[0]]
         self.assertEqual(record['plan']['animation']['context']['layout_requirement'],'full')

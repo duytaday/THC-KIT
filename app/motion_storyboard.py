@@ -64,10 +64,16 @@ def context(plan,host,assets,transcript=None):
     return ctx,at
 
 
+def source_description(ctx):
+    if ctx.get('proof'):return 'Assigned screen capture: control, contact and result; inspect readability on the export.' if ctx['proof'].get('data_class')=='real_screen' else 'Declared visual illustration; it is not proof of a software result.'
+    if ctx['request']=='intro':return 'Headline with presenter preserved; verify the declared promise and placement.' if ctx.get('layout_requirement')=='host' else 'Full-screen introduction from this episode’s declared text.'
+    return 'Declared explanatory graphic; it is not a recording of a software result.'
+
+
 def attach(plan,ctx,at,prediction):
     result=copy.deepcopy(plan);spec=motion_specs.validate(prediction['spec'],ctx)
     result.update(kind='animation_spec',duration=ctx['frames']/30,at=at,origin='animation_'+prediction['model']['mode'],
-        intended_visual=spec.get('rationale','Editable source-linked animation'),
+        intended_visual=source_description(ctx),
         status='NEEDS_REVIEW' if ctx.get('voice_aligned') else 'STORYBOARD · NARRATION PICKUP',
         animation=dict(id='scene-'+plan['passage_ids'][0]+'-'+plan['type'],context_version=CONTEXT_VERSION,context=copy.deepcopy(ctx),spec=spec,model=prediction['model']))
     facts={}

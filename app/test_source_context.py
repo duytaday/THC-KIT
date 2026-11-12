@@ -62,7 +62,7 @@ class SourceObservationTests(unittest.TestCase):
     def test_reference_observations_reach_intent_without_becoming_episode_proof(self):
         observed=self.observed(self.ref);observed['notes']='Two separate white line backgrounds; visible at interval start. Sound not inspected.'
         facts=self.prepare(dict(reference=observed));plan=source_context.bind(self.plan,facts,self.host,self.settings['fit']);c,_=motion_storyboard.context(plan,self.host,self.assets)
-        self.assertIn(observed['notes'],c['intent']);self.assertIn('measured_candidate',c['intent']);self.assertIn('UNVERIFIED',c['intent'])
+        self.assertIn(observed['notes'],c['intent']);self.assertNotIn('measured_candidate',c['intent']);self.assertIn('UNVERIFIED',c['intent'])
         self.assertNotIn('proof',c);self.assertEqual(c['texts'],[self.plan['title']]);self.assertEqual(facts['reference'][-1]['source_sha256'],observed['source_sha256'])
         self.assertNotIn('Unit test observer',c['intent'])
 
@@ -74,8 +74,19 @@ class SourceObservationTests(unittest.TestCase):
         c,_=motion_storyboard.context(plan,self.host,self.assets)
         self.assertNotIn('REFERENCE OBSERVATIONS',c['intent'])
         self.assertTrue(self.ws.data['reference_observations'])
-        enabled=self.prepare();self.assertEqual(len(enabled['reference']),2)
+        enabled=self.prepare();self.assertEqual(len(enabled['reference']),1)
         self.assertNotEqual(source_context.identity(plan),source_context.identity(source_context.bind(self.plan,enabled,self.host,self.settings['fit'])))
+
+    def test_late_automatic_analysis_cannot_change_reviewed_guidance_or_scene_identity(self):
+        observed=self.observed(self.ref);self.ref.pop('analysis')
+        first=self.prepare(dict(reference=observed))
+        self.ref['analysis']=dict(source_sha256=media.sha(self.ref['path']),observations=[dict(source_range=[0,8],observation='Late automatic candidate')],profile=dict(settle_frames=9))
+        reopened=self.prepare()
+        self.assertEqual(first['reference'],reopened['reference'])
+        a=source_context.bind(self.plan,first,self.host,self.settings['fit'])
+        b=source_context.bind(self.plan,reopened,self.host,self.settings['fit'])
+        self.assertEqual(source_context.identity(a),source_context.identity(b))
+        self.assertEqual(self.ref['analysis']['observations'][0]['observation'],'Late automatic candidate')
 
     def test_changed_reference_is_rejected_before_any_observation_is_stored(self):
         value=self.observed(self.host,True);self.ref['analysis']['source_sha256']='a'*64

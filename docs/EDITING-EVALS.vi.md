@@ -1,5 +1,11 @@
 # Talking Head Cutroom — nghiệm thu nhiều lượt
 
+Lượt tiếp theo dev17 bổ sung lời hứa mở đầu theo từng recording và sửa lỗi
+analysis reference chạy muộn làm đổi guidance đã duyệt. UI run đầu bị assertion
+chặn trước khi thay demo khóa; recovery và 252 tests được ghi riêng tại
+[Intro promise](INTRO-PROMISE-V001.vi.md). Đây là kiểm runtime trên tập phát
+triển cũ, không thay kết quả chất lượng unseen hoặc human sign-off bên dưới.
+
 ## Kiểm lại file người dùng cung cấp — 12/11/2026, lượt v002
 
 Đã đọc trực tiếp file ở thư mục project gốc. SHA256 vẫn là

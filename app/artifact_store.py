@@ -27,12 +27,17 @@ class ArtifactStore:
         record.update(version=version,folder=str(folder),sha256=media.sha(folder/'preview.mp4'),plan=generated,status=generated['status'])
         record.pop('pending_proposal',None)
         return record
-    def generate(self,ids,evidence=None,spoken_confirmed=False,design=None,animation_mode=None,animation_style=None,intro_layout=None,observations=None,reference_guidance=True):
+    def generate(self,ids,evidence=None,spoken_confirmed=False,design=None,animation_mode=None,animation_style=None,intro_layout=None,observations=None,reference_guidance=True,intro_headline=None):
         if animation_style not in (None,'balanced','maverick_fast'):raise ValueError('Choose a supported animation style')
         if intro_layout not in (None,'full','host'):raise ValueError('Choose full or host for the intro')
         if intro_layout=='host' and not animation_mode:raise ValueError('Choose an editable animation planner for the host intro')
         if type(reference_guidance) is not bool:raise ValueError('Choose whether reference observations guide these proposals')
         if observations and len(set(ids))!=1:raise ValueError('Record source observations on one recording at a time; they are never copied across a batch')
+        if isinstance(intro_headline,str) and not intro_headline.strip():intro_headline=None
+        if intro_headline is not None:
+            import motion_specs
+            intro_headline=motion_specs.clean_text(intro_headline)
+            if len(set(ids))!=1:raise ValueError('Declare the intro promise for one recording at a time')
         results=[]
         for key in dict.fromkeys(ids):
             started=time.monotonic()
@@ -65,6 +70,7 @@ class ArtifactStore:
                 for plan in proposal['artifacts']:
                     plan['passage_ids']=[mapping.get(id_,id_) for id_ in plan['passage_ids']]
                     if plan['type']=='introduction' and intro_layout=='host':plan['intro_layout']='host'
+                    if plan['type']=='introduction' and intro_headline is not None:plan.update(title=intro_headline,headline_origin='declared_visual_promise')
                 proposal['artifacts']=[source_context.bind(plan,facts,host,settings['fit']) for plan in proposal['artifacts']]
                 candidate=None
                 if animation_mode in ('base_rag','fine_tuned'):
@@ -78,6 +84,7 @@ class ArtifactStore:
                         value+='|animation:'+animation_mode+'|context:'+str(motion_storyboard.CONTEXT_VERSION)
                     if animation_style:value+='|style:'+animation_style
                     if plan['type']=='introduction' and intro_layout=='host':value+='|intro:host'
+                    if plan.get('headline_origin')=='declared_visual_promise':value+='|headline:'+storyboard.digest(plan['title'])
                     if candidate:value+='|weights:'+candidate['checkpoint_sha256']+'|dataset:'+candidate['dataset_fingerprint']
                     value+=source_context.identity(plan)
                     return value

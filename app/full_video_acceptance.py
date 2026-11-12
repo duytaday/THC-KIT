@@ -124,6 +124,7 @@ def main():
             print('GENERATE',mode,flush=True);started=time.monotonic();before=state()
             page.locator('[data-panel="script"]').click();page.locator('#generateArtifacts').click();page.locator('#animationMode').select_option(mode);page.locator('#animationStyle').select_option('maverick_fast')
             page.locator('#introLayout').select_option(config.get('intro_layout','full'))
+            if config.get('intro_headline'):page.locator('#introHeadline').fill(config['intro_headline'])
             fill_observations(page,config)
             page.locator('.scene-evidence summary').click();page.locator('#sceneEvidence').select_option(proof);page.locator('#sceneEvidenceRepo').select_option('Recordly')
             for k,value in dict(target=0,contact=1.476,result=4.5).items():page.locator(f'[data-scene-evidence="{k}"]').fill(str(value))

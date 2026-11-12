@@ -11,6 +11,12 @@
   tránh đặt thẻ; không được chép nó làm khung thẻ.” This demonstrates the
   exclusion-zone concept; it does not approve any current master or model.
 
+  Applied example: current headline uses the measured source face exclusion.
+  A late-analysis regression was caught by the UI assertion before replacing
+  the locked demo. Its fix preserves reviewed reference guidance; 252 tests
+  establish runtime behavior only. No further human mastery or sign-off is
+  inferred from that result.
+
 - [ ] Prompt recheck 12/11 v002: distinguish a passing mechanical replay from
   independent episode quality. Current 24 targeted tests and a synthetic gallery
   process prove software contracts only. Asked the pending retry question again

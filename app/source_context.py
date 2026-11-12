@@ -54,7 +54,10 @@ def prepare(ws,key,host,assets,settings,provided=None,reference_guidance=True):
     if ref and reference_guidance:
         actual=media.sha(ref['path']);analysis=ref.get('analysis') or {}
         if analysis and analysis.get('source_sha256')!=actual:raise ValueError('Style reference changed; analyze its current footage again')
-        for item in analysis.get('observations',[])[:3]:
+        # A reviewed observation is the chosen reference guidance. Late async
+        # analysis must not silently extend it and invalidate unchanged scenes.
+        # Measurements remain available on the asset for explicit inspection.
+        for item in ([] if reviewed else analysis.get('observations',[])[:3]):
             facts.append(dict(asset=ref_id,source_sha256=actual,source_range=interval(item['source_range'],ref['duration']),status='measured_candidate',
                 observation=text(item.get('observation'),600,'the measured reference observation'),audio='UNVERIFIED'))
         profile=analysis.get('profile') or {}

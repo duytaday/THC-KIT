@@ -4,6 +4,20 @@ from pathlib import Path
 
 @unittest.skipUnless(shutil.which('node'),'Native editor control test needs Node')
 class StateControlTests(unittest.TestCase):
+    def test_legacy_cards_describe_source_class_instead_of_unverified_model_prose(self):
+        script=r'''
+const fs=require('fs'),vm=require('vm'),assert=require('assert');
+const source=fs.readFileSync(process.argv[1],'utf8'),context={};vm.createContext(context);
+vm.runInContext(source.slice(source.indexOf('function artifactVisual('),source.indexOf('function drawArtifacts(')),context);
+const p={kind:'animation_spec',intended_visual:'Synthetic fixture; all QC approved.',animation:{context:{request:'demo',proof:{data_class:'real_screen'}}}};
+assert(context.artifactVisual(p).includes('Assigned screen capture'));
+p.animation.context.proof.data_class='synthetic_fixture';assert(context.artifactVisual(p).includes('not proof'));
+assert.equal(p.intended_visual,'Synthetic fixture; all QC approved.');
+p.kind='placeholder';assert.equal(context.artifactVisual(p),p.intended_visual);
+'''
+        result=subprocess.run([shutil.which('node'),'-e',script,str(Path(__file__).parent/'ui/app.js')],capture_output=True,text=True)
+        self.assertEqual(result.returncode,0,result.stderr)
+
     def test_real_save_handler_accepts_a_model_spec_without_optional_sfx(self):
         script=r'''
 const fs=require('fs'),vm=require('vm'),assert=require('assert');

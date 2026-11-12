@@ -313,7 +313,7 @@ class Handler(BaseHTTPRequestHandler):
             elif p=='/api/generative-check':
                 return self.result(ws.generative.check(b['id']))
             elif p == '/api/artifacts/generate':
-                return self.result({'ids':ws.artifacts.generate(b['ids'],b.get('evidence'),bool(b.get('spoken_confirmed',False)),b.get('design'),b.get('animation_mode'),b.get('animation_style'),b.get('intro_layout'),b.get('observations'),b.get('reference_guidance',True))})
+                return self.result({'ids':ws.artifacts.generate(b['ids'],b.get('evidence'),bool(b.get('spoken_confirmed',False)),b.get('design'),b.get('animation_mode'),b.get('animation_style'),b.get('intro_layout'),b.get('observations'),b.get('reference_guidance',True),b.get('intro_headline'))})
             elif p == '/api/benchmarks/create':
                 import video_benchmark
                 return self.result(video_benchmark.from_workspace(ws,b['ids'],b.get('references',[]),b.get('quiz_by_job')))
