@@ -10,6 +10,22 @@ def implementation_identity(root=None):
         if p.is_file() and p.suffix in ('.py','.js','.html','.css') and not p.name.startswith('test_')}
 
 
+def fill_observations(page,config):
+    page.locator('#useReferenceObservations').set_checked(config.get('reference_guidance',True))
+    observations=config.get('observations') or {}
+    if not observations:return
+    reviewer={v['reviewer'] for v in observations.values()};basis={v['basis'] for v in observations.values()}
+    if len(reviewer)!=1 or len(basis)!=1:raise ValueError('This dialog records one observer and basis per submission')
+    page.locator('#observePresenter').locator('xpath=ancestor::details').locator('summary').first.click()
+    page.locator('#sourceObserver').fill(next(iter(reviewer)));page.locator('#sourceObservationBasis').select_option(next(iter(basis)))
+    for kind,observation in observations.items():
+        page.locator('#observePresenter' if kind=='presenter' else '#observeReference').check()
+        for i,value in enumerate(observation['source_range']):page.locator(f'[data-observation-range="{kind}"][data-coordinate="{i}"]').fill(str(value))
+        page.locator('#presenterObservationNotes' if kind=='presenter' else '#referenceObservationNotes').fill(observation['notes'])
+        if kind=='presenter':
+            for i,value in enumerate(observation['rect']):page.locator(f'[data-observed-face="{i}"]').fill(str(value))
+
+
 def main():
     from playwright.sync_api import sync_playwright
     p=argparse.ArgumentParser(description=__doc__);p.add_argument('--url',required=True);p.add_argument('--config',type=Path,required=True);p.add_argument('--out',type=Path,required=True);p.add_argument('--resume',action='store_true');p.add_argument('--modes',nargs='+',choices=('rules','base_rag','fine_tuned'),default=['rules','base_rag','fine_tuned']);a=p.parse_args()
@@ -108,6 +124,7 @@ def main():
             print('GENERATE',mode,flush=True);started=time.monotonic();before=state()
             page.locator('[data-panel="script"]').click();page.locator('#generateArtifacts').click();page.locator('#animationMode').select_option(mode);page.locator('#animationStyle').select_option('maverick_fast')
             page.locator('#introLayout').select_option(config.get('intro_layout','full'))
+            fill_observations(page,config)
             page.locator('.scene-evidence summary').click();page.locator('#sceneEvidence').select_option(proof);page.locator('#sceneEvidenceRepo').select_option('Recordly')
             for k,value in dict(target=0,contact=1.476,result=4.5).items():page.locator(f'[data-scene-evidence="{k}"]').fill(str(value))
             for k,values in dict(target_roi=[145,402,178,54],contact_point=[204,425],result_roi=[45,315,310,50]).items():

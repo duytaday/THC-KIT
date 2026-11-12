@@ -1,5 +1,11 @@
 # Session understanding
 
+- [ ] Prompt recheck 12/11 v002: distinguish a passing mechanical replay from
+  independent episode quality. Current 24 targeted tests and a synthetic gallery
+  process prove software contracts only. Asked the pending retry question again
+  with one Send / one request ID / one click-gain change; no answer recorded yet.
+  Do not count test success or this document as demonstrated human mastery.
+
 - [ ] New model versus cached scene: a checkpoint can change while the menu still
   says Fine-tuned. A focused multiple-choice checkpoint asks which evidence proves
   the new model generated the preview, separately from whether its quality is

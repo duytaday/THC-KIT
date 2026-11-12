@@ -1,6 +1,6 @@
 """Translate current-project passages/proof to model inputs; no reference timings copied."""
 import copy,math
-import motion_specs,speech
+import motion_specs,speech,source_context
 CONTEXT_VERSION=4
 
 
@@ -23,8 +23,9 @@ def context(plan,host,assets,transcript=None):
     # Reject an oversized label explicitly; never silently remove its last words.
     texts=[motion_specs.clean_text(text) for text in texts]
     ctx=dict(request='intro' if plan['type']=='introduction' else 'demo',quote=plan['source_quote'],texts=texts,anchors=[],frames=frames,
-        protected=[dict(kind='face',rect=[.1,.15,.8,.4]),dict(kind='captions',rect=[.02,.77,.96,.15])],style=plan.get('motion_style','balanced'),voice_aligned=False)
+        protected=[dict(kind='face',rect=source_context.face(plan,host,at,frames)),dict(kind='captions',rect=[.02,.77,.96,.15])],style=plan.get('motion_style','balanced'),voice_aligned=False)
     ctx['intent']=('Intro toàn màn hình: giới thiệu chủ đề và các mục cần nhớ.' if intro_layout=='full' else 'Giữ người dẫn; headline giới thiệu chủ đề, không xếp danh sách lên mặt.') if plan['type']=='introduction' else 'Hướng mắt vào nút, click thật, rồi giữ kết quả.' if proof else 'Giải thích một ý cạnh vai, giữ người dẫn.'
+    ctx['intent']+=source_context.reference_intent(plan)
     # The explicit buyer treatment is shared by all planner arms, not a learned
     # decision. Default full preserves the existing episode's chosen treatment.
     if plan['type']=='introduction':ctx['layout_requirement']=intro_layout
@@ -69,5 +70,9 @@ def attach(plan,ctx,at,prediction):
         intended_visual=spec.get('rationale','Editable source-linked animation'),
         status='NEEDS_REVIEW' if ctx.get('voice_aligned') else 'STORYBOARD · NARRATION PICKUP',
         animation=dict(id='scene-'+plan['passage_ids'][0]+'-'+plan['type'],context_version=CONTEXT_VERSION,context=copy.deepcopy(ctx),spec=spec,model=prediction['model']))
+    facts={}
+    if plan.get('presenter_observation'):facts['presenter']=copy.deepcopy(plan['presenter_observation'])
+    if plan.get('planner_reference_facts'):facts['reference']=copy.deepcopy(plan['planner_reference_facts'])
+    if facts:result['animation']['source_observations']=facts
     if spec.get('missing'):result['status']='NEEDS_INPUT · '+ '; '.join(spec['missing'])
     return result

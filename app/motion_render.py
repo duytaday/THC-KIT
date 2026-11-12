@@ -96,7 +96,7 @@ def sound_events(entry):
 def preview(plan,folder,host,assets):
     from engine import media,edit
     folder=Path(folder).resolve();folder.mkdir(parents=True,exist_ok=False);shutil.copytree(Path(__file__).parent/'fonts',folder/'fonts')
-    entry=copy.deepcopy(plan['animation']);schema.validate(entry['spec'],entry['context']);duration=entry['context']['frames']/30;at=plan['at'];entry.update(source_start=at,source_end=at+duration)
+    entry=copy.deepcopy(plan['animation']);schema.validate(entry['spec'],entry['context']);duration=entry['context']['frames']/30;at=plan['at'];entry.update(source_start=at,source_end=at+duration,source_asset=host.get('id'))
     render_plan=dict(keep=[[at,at+duration]],fit=plan.get('fit','contain'),caption_mode='guide',captions=[],proof=[],punches=[],motion_profile='focus',events=sound_events(entry),music=dict(mode='off'),motion_specs=[entry])
     proof=entry['context'].get('proof')
     if proof:

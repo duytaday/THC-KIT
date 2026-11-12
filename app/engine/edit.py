@@ -46,6 +46,10 @@ def render(source, plan, out, *, scene_preview=False, verify_decode=True, prefix
     if plan.get('motion_specs'):
         import motion_hooks
         motion_hooks.before_render(plan,input_seconds,FPS)
+        import source_context
+        for entry in plan['motion_specs']:source_context.verify_entry(entry,source,input_seconds,plan.get('fit','contain'),plan.get('punches',[]))
+        for dependency in plan.get('style_dependencies',[]):
+            if sha(dependency['file'])!=dependency['source_sha256']:raise ValueError('Style reference changed after its source observations; inspect it again')
     graph, clock = [], []
     total = 0.0
     for i, (start, end) in enumerate(spans):

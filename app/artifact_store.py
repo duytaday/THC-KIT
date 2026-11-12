@@ -1,7 +1,7 @@
 """Per-recording artifact versions and bounded insertion; no agent credentials required."""
 import copy,json,re,time,uuid
 from pathlib import Path
-import artifacts,storyboard
+import artifacts,storyboard,source_context
 from engine import media
 
 def plain(script):return ' '.join(line.strip() for line in script.replace('\r','').splitlines() if line.strip() and not line.strip().isdigit() and '-->' not in line)
@@ -27,10 +27,12 @@ class ArtifactStore:
         record.update(version=version,folder=str(folder),sha256=media.sha(folder/'preview.mp4'),plan=generated,status=generated['status'])
         record.pop('pending_proposal',None)
         return record
-    def generate(self,ids,evidence=None,spoken_confirmed=False,design=None,animation_mode=None,animation_style=None,intro_layout=None):
+    def generate(self,ids,evidence=None,spoken_confirmed=False,design=None,animation_mode=None,animation_style=None,intro_layout=None,observations=None,reference_guidance=True):
         if animation_style not in (None,'balanced','maverick_fast'):raise ValueError('Choose a supported animation style')
         if intro_layout not in (None,'full','host'):raise ValueError('Choose full or host for the intro')
         if intro_layout=='host' and not animation_mode:raise ValueError('Choose an editable animation planner for the host intro')
+        if type(reference_guidance) is not bool:raise ValueError('Choose whether reference observations guide these proposals')
+        if observations and len(set(ids))!=1:raise ValueError('Record source observations on one recording at a time; they are never copied across a batch')
         results=[]
         for key in dict.fromkeys(ids):
             started=time.monotonic()
@@ -42,6 +44,7 @@ class ArtifactStore:
             try:
                 settings=job['settings'];staged=[]
                 if not settings['script'].strip():raise ValueError('Attach this recording’s script first.')
+                facts=source_context.prepare(self.ws,key,host,assets,settings,observations,reference_guidance)
                 proof=copy.deepcopy(evidence)
                 if proof:
                     asset=assets.get(proof.get('asset'))
@@ -62,6 +65,7 @@ class ArtifactStore:
                 for plan in proposal['artifacts']:
                     plan['passage_ids']=[mapping.get(id_,id_) for id_ in plan['passage_ids']]
                     if plan['type']=='introduction' and intro_layout=='host':plan['intro_layout']='host'
+                proposal['artifacts']=[source_context.bind(plan,facts,host,settings['fit']) for plan in proposal['artifacts']]
                 candidate=None
                 if animation_mode in ('base_rag','fine_tuned'):
                     import motion_policy
@@ -75,6 +79,7 @@ class ArtifactStore:
                     if animation_style:value+='|style:'+animation_style
                     if plan['type']=='introduction' and intro_layout=='host':value+='|intro:host'
                     if candidate:value+='|weights:'+candidate['checkpoint_sha256']+'|dataset:'+candidate['dataset_fingerprint']
+                    value+=source_context.identity(plan)
                     return value
                 previous_by_key={r.get('story_key'):r for r in existing_records}
                 if animation_mode:
@@ -103,11 +108,11 @@ class ArtifactStore:
                     if current['revision']!=job['revision'] or current['status'] in ('Queued','Rendering'):raise ValueError('Project changed during generation; stale proposals were not applied. Generate again from the current script.')
                     for record in staged:self.records()[record['id']]=record
                     self.ws.data.setdefault('storyboards',{})[key]=proposal;self._dirty(current);self.ws.save();results.extend(staged)
-                    self.ws.data.setdefault('generation_attempts',[]).append(dict(id=uuid.uuid4().hex,job=key,mode=animation_mode or 'native',style=animation_style or 'balanced',intro_layout=intro_layout or 'full',status='GENERATED',scene_ids=[r['id'] for r in staged],wall_seconds=time.monotonic()-started,source_script_sha256=storyboard.digest(settings['script'])))
+                    self.ws.data.setdefault('generation_attempts',[]).append(dict(id=uuid.uuid4().hex,job=key,mode=animation_mode or 'native',style=animation_style or 'balanced',intro_layout=intro_layout or 'full',reference_guidance=reference_guidance,status='GENERATED',scene_ids=[r['id'] for r in staged],wall_seconds=time.monotonic()-started,source_script_sha256=storyboard.digest(settings['script'])))
                     self.ws.save()
             except Exception as error:
                 with self.ws.lock:
-                    self.ws.data.setdefault('generation_attempts',[]).append(dict(id=uuid.uuid4().hex,job=key,mode=animation_mode or 'native',style=animation_style or 'balanced',intro_layout=intro_layout or 'full',status='REJECTED',error=str(error),wall_seconds=time.monotonic()-started,source_script_sha256=storyboard.digest(job['settings']['script'])))
+                    self.ws.data.setdefault('generation_attempts',[]).append(dict(id=uuid.uuid4().hex,job=key,mode=animation_mode or 'native',style=animation_style or 'balanced',intro_layout=intro_layout or 'full',reference_guidance=reference_guidance,status='REJECTED',error=str(error),wall_seconds=time.monotonic()-started,source_script_sha256=storyboard.digest(job['settings']['script'])))
                     self.ws.save()
                 raise
             finally:
@@ -130,6 +135,7 @@ class ArtifactStore:
                 import motion_policy,motion_specs
                 if 'animation' in changes:
                     if changes['animation'].get('model')!=record['plan']['animation'].get('model'):raise ValueError('Model provenance is immutable; edit the scene specification instead')
+                    if changes['animation'].get('source_observations')!=record['plan']['animation'].get('source_observations'):raise ValueError('Source observations are immutable in scene edits; review the source in Generate intro & demos')
                     plan['animation']['manual_override']=True
                 if any(k in changes and changes[k]!=record['plan'].get(k) for k in ('at','source_quote')) and 'animation' not in changes:raise ValueError('Reassign animation source anchors when moving it to another spoken passage')
                 if not changes and 'animation' not in record.get('manual_fields',[]):
@@ -192,6 +198,11 @@ class ArtifactStore:
                 import motion_render
                 if any(start<e['source_end'] and end>e['source_start'] for e in plan.get('motion_specs',[])):raise ValueError('Animation scenes overlap; move or disable one before rendering')
                 entry=copy.deepcopy(scene['animation']);entry.update(id=r['id'],source_start=start,source_end=end,source_asset=key,artifact_version=r['version'])
+                for fact in entry.get('source_observations',{}).get('reference',[]):
+                    reference=self.ws.data['assets'][fact['asset']]
+                    if media.sha(reference['path'])!=fact['source_sha256']:raise ValueError('Style reference changed; recheck its source observations')
+                    dependency=dict(file=reference['path'],source_sha256=fact['source_sha256'])
+                    if dependency not in plan.setdefault('style_dependencies',[]):plan['style_dependencies'].append(dependency)
                 plan.setdefault('motion_specs',[]).append(entry)
                 plan['events'].extend(motion_render.sound_events(entry))
                 proof=entry['context'].get('proof')

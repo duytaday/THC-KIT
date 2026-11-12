@@ -25,6 +25,14 @@ proposals, not automatic replacements of locked/manual scenes. Model identity
 includes checkpoint and retrieval dataset; do not reuse a same-mode scene as proof
 that a newly imported checkpoint ran. See `docs/INTRO-TREATMENTS.vi.md` for the
 current conservative face-region and reference-context limitations.
+In Generate intro & demos, checked source observations can replace the assumed
+face region for one take, source interval and static framing. Record observer,
+basis and inspected frames; agent frame inspection remains experimental and
+does not attest listening. Recheck after changing take, fit or overlapping
+punch-ins. Reference guidance passes source-bound measured candidates and checked
+visual notes to the planner; it never makes reference content episode proof.
+Disable that guidance explicitly for an input-isolation comparison. Review the
+new proposals before insertion; saved observations do not approve a master.
 For a reference with backgrounds hugging individual text lines, use native
 `box_style: lines` / Text background in the scene editor. Keep `panel` for one
 enclosing card. Do not invent an entrance for a label already visible in the

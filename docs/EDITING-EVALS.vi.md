@@ -1,5 +1,42 @@
 # Talking Head Cutroom — nghiệm thu nhiều lượt
 
+## Kiểm lại file người dùng cung cấp — 12/11/2026, lượt v002
+
+Đã đọc trực tiếp file ở thư mục project gốc. SHA256 vẫn là
+`049fb1b32ec36b52e806502e7c3a0f7306f64a8dec2649705857f845f63e1fd2`,
+khớp đặc tả đang được triển khai. Không cần tạo thêm Studio/service hoặc chép
+lại toàn bộ prompt thành một skill trùng chức năng.
+
+Lượt kiểm này chạy mới **14 tests trong test_revisions.py và 10 tests trong
+test_editing_*.py, tất cả PASS**. Bao gồm retry đồng thời/sau restart, payload
+conflict, giữ riêng nội dung tập khi chuyển style, attestation và protocol đánh
+giá. Gallery acceptance chạy service/process optimizer thật với marker tổng hợp:
+development search/direct được phép; sealed search không trả clip và direct ID
+trả 403; actual-read log chỉ có digest development. Không mở final cohort thật.
+Giới hạn vẫn là application/API capability, không phải Windows sandbox.
+
+Evidence mới: `output/editing-evals/prompt-recheck-20261112-v002/`.
+Đây là kiểm tra tập trung, **không phải** chạy lại whole-conversation render,
+kiểm full mix, train model hoặc benchmark chất lượng. Các replay T1–T8 bên dưới
+là kết quả lịch sử, không được tính lại thành kết quả mới. Source hiện có thay
+đổi dev14 chưa commit; receipt lưu HEAD và hash file thực tế để phân biệt.
+
+Ba điểm cần làm rõ khi dùng prompt để chốt release:
+
+1. Tập B phải có footage/script mới. Excerpt từ tập A chỉ kiểm mechanics và
+   regression; không chứng minh style transfer sang một tập chưa từng dùng.
+2. “Isolate” cần ghi threat model. Hiện đạt kiểm API và actual reads; nếu muốn
+   ngăn arbitrary code cùng tài khoản mở file sealed, cần tài khoản/ACL hoặc
+   process/container boundary riêng trước khi công bố đạt mức đó.
+3. Chọn trước mốc âm thanh cần khóa: onset hay peak. Prompt này yêu cầu onset;
+   brief trước nói intended peak. Cue sheet phải ghi mốc và kiểm decoded audio
+   theo mốc ấy; một fixture đúng timing không chứng nhận nghe rõ lời.
+
+Không sửa tiêu chuẩn chỉ để model được bật: READY vẫn cần người thật xác nhận
+xem/nghe exact master; quality promotion vẫn INCONCLUSIVE khi thiếu paired unseen
+families, câu trả lời viewer và phút sửa. Bước tiếp theo có giá trị nhất là bổ
+sung một tập B độc lập, rồi chạy T1–T8 và review toàn tập theo protocol đã freeze.
+
 Yêu cầu gốc: `Cutroom-Full-Audited-Codex-Prompt.txt`, SHA256
 `049fb1b32ec36b52e806502e7c3a0f7306f64a8dec2649705857f845f63e1fd2`.
 Checkout không có Studio/spec003 riêng trước lượt này. Triển khai dùng batch

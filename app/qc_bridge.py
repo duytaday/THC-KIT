@@ -33,8 +33,9 @@ def prepare_export(folder,host,settings,plan):
     dependencies.add(Path(__file__).parent/'proof_assignments.py')
     dependencies.add(Path(__file__).parent/'fonts/DejaVuSans-Bold.ttf')
     if plan.get('motion_specs'):
-        dependencies.update(Path(__file__).parent/name for name in ('motion_specs.py','motion_render.py','motion_hooks.py'))
+        dependencies.update(Path(__file__).parent/name for name in ('motion_specs.py','motion_render.py','motion_hooks.py','source_context.py'))
     dependencies.update(Path(q['file']) for q in plan['proof'])
+    dependencies.update(Path(d['file']) for d in plan.get('style_dependencies',[]))
     # Runtime changes invalidate cached frames just like changed source code.
     dependencies.update(Path(p).resolve() for name in ('ffmpeg','ffprobe') if (p:=shutil.which(name)))
     if plan.get('branding'):dependencies.add(Path(plan['branding']['file']))

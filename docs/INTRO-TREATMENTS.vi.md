@@ -105,3 +105,32 @@ Config có `intro_layout: "host"` hoặc `"full"`; API `/api/artifacts/generate`
 nhận cùng field. Không sửa frozen source/implementation rồi resume cùng trial.
 Giữ6615bd3/dev12 và v006 weights để rollback; không auto-promote model từ các
 kiểm thử này. Fresh episode B và capable human review vẫn cần trước release claim.
+
+## Dev14 — quan sát gắn với nguồn
+
+Generate intro & demos có phần Checked source observations. Vùng mặt được ghi
+cho một asset/hash, source interval và kiểu fit trên canvas1080×1920. UI cho xem
+video cùng hình chữ nhật; người quan sát phải ghi mình đã kiểm gì. Không có face
+detector hoặc suy luận nghe trong bước này. Không cung cấp quan sát thì guard giả
+định cũ vẫn được dùng; không được gọi guard đó là vị trí mặt đã đo.
+
+Quan sát đã lưu chỉ áp dụng intro host của take ấy. Thay byte nguồn, fit, kéo
+scene vượt interval đã kiểm hoặc thêm punch-in giao với scene sẽ bị từ chối.
+Muốn đổi vùng phải kiểm lại qua Generate, không sửa metadata vùng mặt bên trong
+scene editor để qua guard. Retry nội dung y hệt không tạo thêm history; thay đổi
+thật giữ bản quan sát trước. Cảnh/model/master cũ không bị tự thay.
+
+Reference guidance đưa tối đa ba measured candidates cùng visual notes đã ghi
+vào intent của planner, có hash/source interval và nhãn audio UNVERIFIED. Không
+đưa tên người duyệt làm đặc trưng model. Các notes là dữ liệu tham khảo, không
+là proof của tập hiện tại, không tự đổi câu nói hoặc sao chép ảnh/chữ reference.
+Reference bytes cũng nằm trong dependencies của frozen recipe/QC. Đổi reference
+sau khi tạo cảnh cần kiểm lại. Buyer có thể tắt guidance mà không xóa notes cũ.
+
+Điều kiện thử đã ghi trước ở `output/reference-training/source-context-v001/`:
+A thay vùng giả định bằng quan sát nguồn, reference guidance OFF; B giữ nguyên
+vùng đó và bật guidance, thêm notes từ reference-1 ở sampled0–2,25s. Cùng v006,
+prompt8 và retrieval3, không retrain hay mở final cohort. Hai điều kiện là debug
+trên development5repo, không phải hai lượt benchmark unseen. Notes do agent đã
+thấy proposals tạo, không blind/human gold; audio và full1×master còn chờ review.
+242app tests PASS gồm grammar runtime thật trước khi freeze implementation.
