@@ -236,3 +236,39 @@ python app/full_video_acceptance.py --url http://127.0.0.1:59518 --config output
 
 Giữ f6166f5/dev14 để kiểm lại raw A/B; f2058b2/dev15 cho sửa scene thiếu SFX.
 Không dùng các correction từ development5repo làm test unseen ở lượt train sau.
+
+## Dev16 / v007 — source facts và nhãn nhất quán
+
+Sau lỗi tunedB chép protected face thành graphic, prompt9 nói rõ protected là
+vùng cấm đặt thẻ. `model_context` chỉ cho version9 tách reference observations
+thành dữ liệu `reference_style` và thay proof import UUID bằng source hash. Nó
+giữ nguyên vùng bảo vệ, chữ và source anchors cho validator/renderer. Version2–8
+giữ nguyên nội dung prompt/context để không viết lại hợp đồng của checkpoint cũ.
+Reimport cùng media không được làm prompt9 khác chỉ vì UUID; đổi media hash vẫn
+phải làm prompt khác. Đây là sửa tính lặp lại của input, không là quality gain.
+
+Đã đối chiếu29sampled frames gắn label/source/hash/PTS trong v007. Sửa21nhãn train
+headline/step sang nền ôm dòng, có source-style observation và constraint giữ
+presenter. Các state/cue/word/font/keys/hold được giữ. Bỏ `ref-11-021`: partial
+hierarchy target từng thêm panel trắng không có ở chữ BAD/GOOD/GREAT trong nguồn;
+các nhãn motion khác của source này vẫn được giữ. Không suy thêm animation/SFX
+từ một frame. Các ảnh mới chỉ củng cố nhãn visual, không là full1×motion review.
+
+Dataset311219a04a95… có32train/33validation/10regression; train-only RAG32rows.
+Conservative collection groups/splits không đổi; human gold0, independent family
+count chưa xác minh. Không đưa các bản sửa5repo vào train/RAG. Input mới có guard
+hash/span/provenance/field allowlist; training không được đọc style facts của
+source thuộc partition khác. Không bỏ input-leak guard để dataset qua kiểm.
+
+247app tests PASS, grammar runtime thật; token preflight75rows/max2757/3072,
+không truncate. Lượt export đầu bị strict allowlist từ chối feature mới; giữ
+failure và thêm validation riêng trước upload. Sampler lần đầu dùng implicit font
+gặp FFmpeg crash; dùng bundled font rõ ràng thì29samples đạt, log được giữ.
+
+Private Kaggle version1 đã QUEUED:
+`duytruyenthong/talking-head-spec-training-311219a04a95`. Một run/tối đa64optimizer
+steps từ fresh pinned base, validation loss hai lần đã khai trước. Dataset listing
+thật xác nhận10file phẳng, không raw media. Chưa gọi QUEUED là train xong. Compare
+base/tuned sau train phải dùng cùng prompt9/RAG3/decoder và code renderer; các case
+regression từng dùng không trở thành final cohort mới. Không dùng riêng thay đổi
+loss hoặc layout validation để bật model cho khách.

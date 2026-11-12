@@ -377,7 +377,7 @@ function drawForm() {
   const active = ids.some((id) => locked(state.jobs[id]));
   el('makeFirstCut').disabled=!ids.length||active;
   drawCreator(ids);
-  if(ids.length===1&&state.jobs[ids[0]].creator&&!el('openingAuditions'))el('creatorPanel').insertAdjacentHTML('beforeend',`<div id="openingAuditions"><button class="soft" type="button" data-audition-openings="${ids[0]}">Compare 4-second openings</button><small>Host-first / assigned result-first. Same master audio; body stays fixed. Requires a rendered current cut and real result footage.</small></div>`);
+  if(ids.length===1&&state.jobs[ids[0]].creator&&!el('openingAuditions'))el('creatorPanel').insertAdjacentHTML('beforeend',`<div id="openingAuditions"><button class="soft" type="button" data-audition-openings="${ids[0]}">Compare 3-second openings</button><small>Host-first / assigned result-first. Same master audio; body stays fixed. Requires a rendered current cut and real result footage.</small></div>`);
   el("target").textContent = single
     ? 'Editing '+state.assets[ids[0]].name
     : ids.length

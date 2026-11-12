@@ -1,5 +1,10 @@
 # Session understanding
 
+- [ ] Source protection: asked what `protected: face [x,y,w,h]` means when placing
+  a graphic, with three choices. The question follows the actual v006 failure
+  that copied this rectangle into a card. Awaiting an answer; tests and the
+  agent's data curation do not establish the user's understanding.
+
 - [ ] Prompt recheck 12/11 v002: distinguish a passing mechanical replay from
   independent episode quality. Current 24 targeted tests and a synthetic gallery
   process prove software contracts only. Asked the pending retry question again
