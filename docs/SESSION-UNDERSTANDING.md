@@ -22,6 +22,14 @@ Decoded frame35.500 confirms the FFmpeg proof pickup. All five masters have an
 agent visual-only REVISE note, and full listening is still unverified. Buyer
 quiz is prepared with zero responses; no pending learning item is marked mastered.
 
+Latest typography follow-up: manual v003 changes font sizes only, not weights,
+timing or voices. Full PCM/SRT remain identical; two3second hooks also have equal
+decoded PCM and measured listening level. Agent can read sampled360px frames,
+but has not established one-pass recognition or user preference. Reference host
+headlines are already present; authored full-intro movement is not observed
+reference motion. No new quiz answer, listening approval or mastery is inferred.
+See `GOAL-RELEASE-AUDIT-2026-11-13.vi.md` for unmet full-scope requirements.
+
 - [ ] Silent scene versus voiced master:16authored fixtures revealed that a
   silent preview could not be produced without programme loudness. The fix
   admits measured silence only for previews, with null levels and no master

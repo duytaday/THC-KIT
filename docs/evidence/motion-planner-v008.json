@@ -332,5 +332,142 @@
     "full_watch": false,
     "full_listen": false,
     "scope": "Source UI regression plus package identity; no claim that native GUI was launched"
+  },
+  "font_only_manual_v003": {
+    "export": "7516aea3a68f4a53a27714c3337a62a6",
+    "sha256": "5ac2b54d41a75896df62e6d305a27320a1cfe534d7a1dda6ca33e8bf586db0b7",
+    "verified": {
+      "file": "edit.mp4",
+      "frames": 3543,
+      "video_s": 118.1,
+      "audio_s": 118.1,
+      "sha256": "5ac2b54d41a75896df62e6d305a27320a1cfe534d7a1dda6ca33e8bf586db0b7",
+      "full_decode": true
+    },
+    "loudness": {
+      "integrated_lufs": -16.08,
+      "true_peak_dbtp": -1.65
+    },
+    "encoder": "h264_nvenc",
+    "same_decoded_audio": true,
+    "same_stems_and_srt": true,
+    "same_ass_dialogue": true,
+    "known_missing_proof_frame_35_5_identical": true,
+    "reference_evidence": [
+      {
+        "id": "reference-4",
+        "sha256": "58124be53077ec496b3ebd34f98627e36a3b32e64d8ea9461cbe4b4c1c0f5fae",
+        "sampled_pts": [
+          0.0,
+          0.5,
+          1.0,
+          1.5,
+          2.0,
+          2.5,
+          3.0,
+          3.5,
+          4.0,
+          4.5,
+          5.0,
+          5.5,
+          6.0
+        ],
+        "evidence_image_sha256": "5e4875eee5cc1342bfd9f560c19636efc7f4d64046bb429413422a2c996bbde7"
+      },
+      {
+        "id": "reference-6",
+        "sha256": "3c2294c95b022c8406a7cd071dd047390f3c36e984ddb32d9134e9c350e96806",
+        "sampled_pts": [
+          0.0,
+          0.5,
+          1.0,
+          1.5,
+          2.0,
+          2.5,
+          3.0,
+          3.5,
+          4.0,
+          4.5,
+          5.0,
+          5.5,
+          6.0
+        ],
+        "evidence_image_sha256": "2257ff11b2a9e3acab7e8eaa48c51b557ff5182fb4857bb15b9b8a1fbd6651cc"
+      },
+      {
+        "id": "reference-12",
+        "sha256": "b2142b98fdf532561fa19f8fc2e993c9a8d61a5445f1f168c7e0f432765d6419",
+        "sampled_pts": [
+          0.0,
+          0.5,
+          1.0,
+          1.5,
+          2.0,
+          2.5,
+          3.0,
+          3.5,
+          4.0,
+          4.5,
+          5.0,
+          5.5,
+          6.0
+        ],
+        "evidence_image_sha256": "d53096b8e3684e01a7699a688ecfbf7374006df1527b9e790a1aa6189913e786"
+      }
+    ],
+    "full_watch": false,
+    "full_listen": false,
+    "release": "REVISE",
+    "before": "8451be1f3cf748858e9df8779e84cad8",
+    "master_range": [
+      0,
+      2.6
+    ],
+    "source_clock": "Same voice-first source[0,2.6); no downstream retiming",
+    "font_sizes_before": [
+      42,
+      42,
+      42,
+      42,
+      42,
+      42
+    ],
+    "font_sizes_after": [
+      60,
+      72,
+      72,
+      72,
+      72,
+      72
+    ],
+    "model_gain_claim": false,
+    "checkpoint_changed": false,
+    "blind_gallery": "/benchmarks/e3c9567a5af04eae92504a5737951553/index.html",
+    "hook_pcm_identical": true,
+    "hook_levels": [
+      {
+        "input_i": -16.54,
+        "input_tp": -1.75,
+        "input_lra": 0.0,
+        "input_thresh": -27.86,
+        "target_offset": -0.9
+      },
+      {
+        "input_i": -16.54,
+        "input_tp": -1.75,
+        "input_lra": 0.0,
+        "input_thresh": -27.86,
+        "target_offset": -0.9
+      }
+    ],
+    "reviewers": 0,
+    "first_pass_acceptance": null,
+    "repair_minutes_per_finished_minute": null,
+    "library_admission": false
+  },
+  "latest_master": {
+    "export": "7516aea3a68f4a53a27714c3337a62a6",
+    "sha256": "5ac2b54d41a75896df62e6d305a27320a1cfe534d7a1dda6ca33e8bf586db0b7",
+    "verdict": "REVISE"
   }
 }

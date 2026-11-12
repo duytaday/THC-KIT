@@ -235,3 +235,52 @@ Còn cần capture preview FFmpeg, tập B hoàn chỉnh, người có khả nă
 master 1×, câu trả lời hook/proof và phút sửa thực. Không release/promote vì loss
 giảm hoặc native validity tăng. Xem `SESSION-UNDERSTANDING.md` cho checkpoint
 hiểu biết đang chờ; không suy ra user mastery từ các test ở trên.
+
+## Thử riêng cỡ chữ intro — manual v003
+
+Đối chiếu lại sampled openings của reference-4 [00:00,00:02), reference-6 [00:00,00:03) và
+reference-12 [00:00,00:02.500): headline rõ, background trắng theo dòng, đã hiện ổn định;
+presenter còn trên hình. Các frame này không chứng minh entrance hoặc SFX.
+User yêu cầu intro full, vì thế chỉ mượn cách nhấn typography; không gọi bố cục
+full hoặc chuyển động 6–16 frame tự dựng là chuyển động gốc của reference.
+Source hashes và PTS được giữ trong receipt private, không chép pixels/face/voice.
+
+Protocol freeze trước sửa: **chỉ đổi font_size**, headline 42→60, năm tên repo
+42→72. Giữ text, rect, anchor, keyframe, hold, màu, source clock, audio/SRT,
+branding và locked demo. Không train/infer thêm, không thay default của khách.
+Save bằng Controls thật tạo artifact v003, history v002 còn nguyên; optional SFX
+vẫn vắng, model/source observations không đổi, correction chưa editor-confirmed.
+
+Trước full export đã render prefix 5 giây từ footage thật, h264_nvenc, 150 frames,
+full decode PASS; kiểm các frame phone-width. Prefix scene-preview còn nhãn
+STORYBOARD và không được admit vào library. Sau đó Queue qua normal batch UI.
+
+| Bản | Export / SHA256 | Kiểm kỹ thuật |
+|---|---|---|
+| Trước: manual v002 | 8451be1f3cf748858e9df8779e84cad8 / 510db2b73a92b6116b7e6eca1c3b415953da75438eaaab88a3edeca4cc207401 | Giữ nguyên |
+| Sau: manual v003 | 7516aea3a68f4a53a27714c3337a62a6 / 5ac2b54d41a75896df62e6d305a27320a1cfe534d7a1dda6ca33e8bf586db0b7 | 3543 frames /118,1s;1080×1920/30;NVENC/AAC; full decode PASS;−16,08 LUFS/−1,65 dBTP |
+
+Master/source voice-first **00:00–00:02.600 → 00:00–00:02.600**; cùng anchor,
+không retime downstream. Ở decoded master 00:00.200/00:00.567/00:02.533, tiêu đề
+xuống hai dòng, năm repo còn một dòng/tên, không thấy lỗi dấu/crop/che captions.
+00:02.600 trở lại mặt như trước. Đây là đọc sampled frames ở 360 px, chưa đo
+khả năng nhận biết khi xem một lượt 1× hoặc preference của user.
+
+PCM cả master, voice/music/SFX stems, SRT và ASS dialogue cùng hash v002.
+Hai hook [0,3) có PCM giống hệt nhau; cả hai đo −16,54 LUFS/−1,75 dBTP,
+không đổi gain giữa A/B. Trang so mù tạo qua UI, hai bản toàn tập, đáp án riêng
+không public, chưa có phản hồi:
+`http://127.0.0.1:59520/benchmarks/e3c9567a5af04eae92504a5737951553/index.html`.
+First-pass acceptance và phút sửa/phút thành phẩm vẫn null.
+
+Exact frame 00:35.500 trùng pixel với v002: vẫn trang GitHub thay cho yêu cầu quay
+preview thật. Đã ghi **REVISE** cho master mới qua UI, không attestation hoặc
+watch/listen claim. Sáu export trước/sau, v035 và checkpoints v007/v008 được giữ.
+Kaggle v008 kiểm lại bằng CLI: COMPLETE, không còn job train đang chờ.
+
+Evidence: `intro-scale-protocol.json`, `intro-scale-results.json`,
+`intro-scale-smoke/`, `intro-scale-final/`, `intro-scale-review/` trong
+`output/reference-training/reference-spec-v008`. Editable scene ở workspace
+`artifacts/17e018c7de2d4b1aab5570ec1603819f/v003/scene.json`; full export có
+`project.json`, `render-project.json`, `timeline.json`, `cue-sheet.json`, SRT và QC.
+Đây là sửa tay có kiểm soát, không phải cải thiện trọng số hoặc sign-off.
