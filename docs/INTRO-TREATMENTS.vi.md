@@ -203,3 +203,36 @@ scene v003. Đã kiểm diff thực tế rồi tiếp tục từ v002 để queu
 box_style panel→lines và normalization mảng SFX rỗng, source context/spec/model
 receipt được giữ. Bản sửa là agent manual repair, không phải kết quả raw model
 và chưa là nhãn human-approved. Các script lỗi và v001 được giữ cạnh evidence.
+
+Master sau sửa:`3ecf405c140b4d1cbd62e3b61ad255d9`, SHA256
+`854cd1ba64d85c621a3a6211512b5261290260046dc3aff216bc59ed69b30ddc`.
+Trước:`d5cde4519b344c6e9ab3c3d961009543`/SHA5b08061c…. Timecode nguồn/master
+đoạn sửa giữ nguyên0–2,6s →0–2,6s. Full decode3543frames/118,1s, NVENC,
+−16,08LUFS/−1,65dBTP. Voice WAV, SRT và decoded PCM mix giữ hash. Cả năm export
+thử trước giữ byte; chưa gọi bản sửa là model gain hoặc READY.
+
+Đã xem sheet78frame của v002 và selected phone frames:0,2s nền ôm headline,
+45,967s contact trên Releases/caption “vào đây”,49s thấy Recordly v1.4.0,
+108s CTA “5 repo github edit videos”. Đây là visual-frame observations; không
+thay cho quiz ở1× hoặc full listening. Headline/meaning hook, toàn bộ caption,
+audibility và proof còn thiếu của FFmpeg/Runway vẫn cần xử lý trước giao khách.
+`manual-repair-verified.json` ghi đúng phạm vi kiểm, không cấp editorial sign-off.
+
+Internal dev15 build từf2058b2/source_dirty=false,153files/17.659.583bytes,
+ZIP SHA4a86dd3c63ef2c46d7ec05e76d46ff9601d7af204e08bd38f57988bf85aa97fa.
+Embedded runtime thực thi package renderer trên prefix5s của bản đã sửa:
+150frames/NVENC/full decode PASS, SHAd1ab19b1…. Audio là scene-preview original
+level, không gọi đó là master loudness pass. Receipt:`packaged-dev15-smoke.json`;
+GUI launcher/Windows sạch và human watch/listen vẫn NOT_RUN. Dev14 giữ nguyên.
+
+Chạy lại từ **workspace mới cho mỗi condition**, không thêm lại cutaways vào A:
+
+```powershell
+. .\talking-head-qc\tools\use_d_storage.ps1
+python app/app.py --data D:\Cutroom-new-condition --port 59518 --no-browser
+# Terminal khác, cùng cấu hình runtime model/ASR và PYTHONPATH Playwright đã cài:
+python app/full_video_acceptance.py --url http://127.0.0.1:59518 --config output/reference-training/source-context-v001/config-A.json --out D:\Cutroom-new-condition-results
+```
+
+Giữ f6166f5/dev14 để kiểm lại raw A/B; f2058b2/dev15 cho sửa scene thiếu SFX.
+Không dùng các correction từ development5repo làm test unseen ở lượt train sau.

@@ -10,6 +10,10 @@
   says Fine-tuned. A focused multiple-choice checkpoint asks which evidence proves
   the new model generated the preview, separately from whether its quality is
   better. Awaiting the user's answer; no mastery inferred from the code/tests.
+  Latest concrete evidence: v006 runs can load correctly and still choose a panel
+  unlike the reference, or copy the protected face rectangle into a graphic and
+  be rejected. A manual panel-to-lines repair is recorded separately from raw
+  model scores. These results do not answer the pending human checkpoint.
 
 - [ ] Logical feedback retry: user initially chose two notes for a single click
   retried by the network. Explained one deliberate submission vs transport retry,
