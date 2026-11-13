@@ -1,0 +1,120 @@
+{
+  "date": "2026-11-13",
+  "plugin": "recordly-cutroom",
+  "version": "0.1.1",
+  "scope": "local Windows development smoke; not episode approval",
+  "unit_tests": {
+    "passed": 13,
+    "failed": 0,
+    "skipped": 0
+  },
+  "gpu": {
+    "name": "NVIDIA GeForce RTX 3070 Ti Laptop GPU",
+    "vram_mib": 8192,
+    "driver": "572.42"
+  },
+  "recordly_version": "1.4.0",
+  "original_main_sha256": "2ef26cf37acc1b047eebbabecd5e138c78a4bd55f8c795138ec7390683ed0891",
+  "original_preserved": true,
+  "capture": {
+    "id": "69f85a1e-b9e3-44fe-b133-0d5cebd9da01",
+    "duration_seconds": 19.26,
+    "width": 1276,
+    "height": 1210,
+    "audio": false,
+    "source_sha256": "3c632263db41a1688f0e1d324b37273497408ed98d24bbf846db7380f9508fd2",
+    "computer_use_click_performed_during_recording": true,
+    "fixture": "Local authored test export button; not real software-export proof",
+    "native_project_saved_reopened": true,
+    "project_sha256": "2c6ad0a18d8f95b513b6423ac70b67bd38bdbd8d0f4c20caacf4434c90f5973e"
+  },
+  "exports": [
+    {
+      "name": "smoke-full-v008.mp4",
+      "sha256": "ba73b019cd3bfc0f170218f56ca1d29935818e75d413f6cfb0aaef042e70d027",
+      "width": 1280,
+      "height": 720,
+      "sar": "1:1",
+      "fps": 30,
+      "frames": 578,
+      "duration_seconds": 19.266666666666666,
+      "audio": false,
+      "encoder": "static-layout-h264-nvenc",
+      "backend": "cuda-scale-cpu-pad",
+      "native_render_ms": 2215.1592999999993,
+      "decoder_frames": 578,
+      "technical_failures": 0
+    },
+    {
+      "name": "smoke-5s-v008.mp4",
+      "sha256": "573cf2db0972127e074cf4b1cafdabccfdc2da2739a8a6073ac47ca599bc2c6e",
+      "width": 1280,
+      "height": 720,
+      "sar": "1:1",
+      "fps": 30,
+      "frames": 150,
+      "duration_seconds": 5,
+      "audio": false,
+      "encoder": "static-layout-h264-nvenc",
+      "backend": "cuda-scale-cpu-pad",
+      "native_render_ms": 2409.045300000005,
+      "decoder_frames": 150,
+      "technical_failures": 0
+    }
+  ],
+  "visual_review": {
+    "reviewer": "Codex agent",
+    "method": "CUA before/after click states and six decoded MP4 frames",
+    "sample_times_seconds": [
+      1.633,
+      4.8,
+      7.967,
+      11.133,
+      14.3,
+      17.467
+    ],
+    "observed": "Target visible before click; disabled target and test state changed visible after click; final colors match source; no green cast",
+    "full_1x_playback": false,
+    "hearing": "Not applicable to intentionally silent capture; no speech/master listening approval"
+  },
+  "warnings": [
+    "No audio by design for B-roll",
+    "No subtitle track by design for standalone capture",
+    "Long static hold while preparing/clicking fixture; not a stuck whole decode"
+  ],
+  "fixed_defects": [
+    {
+      "version": "v001",
+      "problem": "Whole-source crop unnecessarily selected unsupported GPU compositor",
+      "fix": "Do not request crop when exporting full source"
+    },
+    {
+      "version": "v002",
+      "problem": "After app restart input media permission was not restored",
+      "fix": "Open saved native project before export"
+    },
+    {
+      "version": "v003",
+      "problem": "Native overlay_cuda export had green cast although technical decode passed",
+      "fix": "Hash-pinned companion selects existing Kf CUDA-scale/CPU-pad/NVENC builder; reject unknown backends"
+    },
+    {
+      "version": "v006",
+      "problem": "Non-square SAR inherited through scale/pad",
+      "fix": "Set SAR1:1 in companion layout builder; v007/v008 verified"
+    }
+  ],
+  "installed_mcp": {
+    "initialized": true,
+    "tool_count": 7,
+    "harmless_status_capture_stage": "STOPPED"
+  },
+  "chat_tool_discovery": "pending current-chat refresh",
+  "review": "NEEDS_REVIEW",
+  "release_limits": [
+    "Exact tested unpacked Recordly1.4.0 main hash required; no general-version compatibility claim",
+    "Animated zoom/keyframes/trim/cursor compositing not exposed by this adapter",
+    "No real FFmpeg episode B-roll captured in this smoke",
+    "No full normal-speed phone-size review or audio/master approval from this smoke"
+  ]
+}

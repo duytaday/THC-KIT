@@ -1,0 +1,21 @@
+{
+  "name": "recordly-cutroom",
+  "version": "0.1.1",
+  "description": "Local Recordly window capture, native project and export tools for Talking Head Cutroom.",
+  "author": {
+    "name": "duytaday"
+  },
+  "skills": "./skills",
+  "mcpServers": "./.mcp.json",
+  "interface": {
+    "displayName": "Recordly Cutroom",
+    "shortDescription": "Capture Recordly demos",
+    "longDescription": "Local Windows Recordly companion with explicit window selection, silent B-roll capture, editable projects and native exports on D.",
+    "developerName": "Talking Head Cutroom",
+    "category": "Productivity",
+    "capabilities": [],
+    "logo": "./assets/icon.svg",
+    "composerIcon": "./assets/icon.svg",
+    "defaultPrompt": "Capture the requested software demonstration in Recordly and retain the project, source and export on D."
+  }
+}

@@ -1,0 +1,9 @@
+smoke-home/
+recordly-companion.log
+bridge-auth.dpapi
+bridge-ready.json
+capture-ledger.json
+open.lock
+*.mp4
+*.recordly
+runtime-*/

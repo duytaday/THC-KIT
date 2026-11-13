@@ -84,3 +84,6 @@ Its kit adapter preserves real narration and imports outputs into versioned QC.
 ## Client material
 
 Git ignores input/, output/, briefs/, references/ and Recordly projects. Check git status before sharing changes. Ignore rules protect newly added files. They do not remove material already tracked by Git. Per-machine paths, linked assets and output history need their own local backup.
+
+
+Local Recordly capture plugin: [setup, tested results and limits](docs/RECORDLY-PLUGIN.vi.md).

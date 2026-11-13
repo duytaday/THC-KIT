@@ -174,3 +174,13 @@ T1–T8/three variants in both arms, score1.0→1.0(flat), with zero real human
 reviews. Stable-ID retry did not create new exports. Explained that operational
 runner success is not model/style improvement; no new mastery or sign-off is
 inferred. Full held-out video quality and the pending SFX distinction remain open.
+
+
+Recordly plugin checkpoint13/11: capture/export smoke used a controlled local fixture,
+not a real client demo. Thirteen tests, real native capture and exports establish
+operation, not editorial approval. Explained same request ID means network retry
+and must reuse the original result; a deliberate new take uses a new ID. An
+open-ended restatement was requested; no answer yet, so mastery remains pending.
+- [ ] Explain why repeated delivery of one Recordly request must not start two takes.
+- [ ] Distinguish this silent fixture test from actual action/result proof and
+  whole-master listening/QC. No mastery inferred from plugin installation.

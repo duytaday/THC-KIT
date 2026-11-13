@@ -1,0 +1,20 @@
+{
+  "name": "talking-head-cutroom-local",
+  "interface": {
+    "displayName": "Talking Head Cutroom Local"
+  },
+  "plugins": [
+    {
+      "name": "recordly-cutroom",
+      "source": {
+        "source": "local",
+        "path": "./recordly-cutroom"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Productivity"
+    }
+  ]
+}

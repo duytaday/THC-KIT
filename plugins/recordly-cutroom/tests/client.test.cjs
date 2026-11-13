@@ -1,0 +1,5 @@
+'use strict';
+const {test}=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),os=require('node:os'),path=require('node:path');const {Client}=require('../server/client.cjs');
+test('An authenticated but stale bridge never causes a duplicate launch',async()=>{const home=path.join(os.tmpdir(),'not-created-recordly-client-unit');const c=new Client({home});c.health=async()=>({ready:true,compatible:false});await assert.rejects(c.open(),/code differs/);});
+test('A live prior PID with an unauthenticated endpoint blocks startup',async()=>{const home=fs.mkdtempSync(path.join(os.tmpdir(),'recordly-client-unit-'));fs.writeFileSync(path.join(home,'bridge-ready.json'),JSON.stringify({pid:process.pid}));const c=new Client({home});c.health=async()=>null;await assert.rejects(c.open(),/cannot be authenticated/);assert(!fs.existsSync(path.join(home,'open.lock')));});
+test('A mismatched running bridge cannot receive mutation commands',async()=>{const c=new Client({home:path.join(os.tmpdir(),'not-created-recordly-client-unit')});c.health=async()=>({ready:true,compatible:false});await assert.rejects(c.call('start',{},'stable-request'),/code differs/);});
