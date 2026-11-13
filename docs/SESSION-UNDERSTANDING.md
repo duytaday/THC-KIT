@@ -13,8 +13,14 @@
   episode audio approval.
   Dev21 also preserves this distinction in Controls Save. Five real UI cases
   passed on an isolated workspace, including cue removal/restoration and locked
-  scene protection. Asked which sound state Save should keep when only moving
-  a card; no answer yet. Neither tests nor an unanswered quiz establish mastery.
+  scene protection. On13/11 the user answered the Save question:
+  “âm thanh sẽ đi theo thẻ riêng.” This expresses a per-card cue relationship;
+  it does not yet distinguish spatial placement from event time, or unknown
+  sound planning from explicit mute. Keep this item pending. Asked a concrete
+  follow-up: a card/pop at00:05 is moved left on the picture without changing
+  timeline time — what should Save do to the pop? No answer recorded yet.
+  Neither the UI tests nor this partial answer establishes full mastery or any
+  listening approval. This reply is not confirmation of the Recordly source.
 
 Current v008 evidence: Kaggle COMPLETE/reloaded; base/tuned full masters are
 byte-identical. The full intro manual v002 changes timing only, not model weights.
