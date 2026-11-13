@@ -1,0 +1,68 @@
+{
+  "status": "PASS",
+  "arms": {
+    "baseline": {
+      "turns": {
+        "T1": true,
+        "T2": true,
+        "T3": true,
+        "T4": true,
+        "T5": true,
+        "T6": true,
+        "T7": true,
+        "T8": true
+      },
+      "variants": {
+        "superseded_instruction": true,
+        "missing_result": true,
+        "long_vietnamese_caption": true
+      },
+      "exports": 3,
+      "wall_seconds": 45.98400000017136,
+      "real_human_reviews": 0,
+      "real_master_approved": false
+    },
+    "challenger": {
+      "turns": {
+        "T1": true,
+        "T2": true,
+        "T3": true,
+        "T4": true,
+        "T5": true,
+        "T6": true,
+        "T7": true,
+        "T8": true
+      },
+      "variants": {
+        "superseded_instruction": true,
+        "missing_result": true,
+        "long_vietnamese_caption": true
+      },
+      "exports": 3,
+      "wall_seconds": 45.938000000081956,
+      "real_human_reviews": 0,
+      "real_master_approved": false
+    }
+  },
+  "rounds": 1,
+  "metric": "mechanical_trajectory_success_rate",
+  "scores": {
+    "baseline": 1.0,
+    "challenger": 1.0
+  },
+  "outcome": "flat",
+  "critical_regression": false,
+  "retry_unchanged": true,
+  "existing_export_hashes_unchanged": true,
+  "quality_promotion": false,
+  "quality_benchmark": "NOT_RUN",
+  "fresh_episode_B": false,
+  "full_master_listening": false,
+  "tests_passed": 271,
+  "source_sha256": {
+    "app/hillclimb.py": "8dd2e53ab8ef00b0e6f352eaff092278d77282055990fcbbd8e30b00828dc54f",
+    "app/editing_replay.py": "e7b9e12b29890cf4b0b6fd5f805f75135bc7d9fa1bf5b34c13e170aab0b54101",
+    "app/test_hillclimb.py": "ba3b4fd72c625eca1cadf1f1eb3518d1a42826efafb91c841f992e027ddd3001"
+  },
+  "canonical_targeted_tests_passed": 13
+}

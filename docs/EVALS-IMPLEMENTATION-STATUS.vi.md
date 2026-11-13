@@ -1,5 +1,11 @@
 # Evals, prompt audit, hillclimb và harness — 13/11/2026
 
+Update13/11: đã thêm persisted one-round runner gọi harness thật, stable IDs,
+receipt/hash checks và budget stop. 271 tests và một paired development replay
+đạt; mechanical score flat1,0→1,0. Chưa có autonomous candidate proposer hoặc
+quality gain trên tập mới. Xem [Hillclimb runner](HILLCLIMB-RUNNER.vi.md).
+Các mô tả thiếu runner bên dưới là trạng thái trước update này.
+
 Đã kiểm source hiện hành và chạy lại kiểm tra tập trung. Không gọi cơ chế đã
 viết thành một vòng tối ưu chất lượng đã chạy thành công.
 

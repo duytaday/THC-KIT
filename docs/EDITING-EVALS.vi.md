@@ -1,5 +1,11 @@
 # Talking Head Cutroom — nghiệm thu nhiều lượt
 
+Update13/11: đã thêm persisted one-round runner gọi harness thật, stable IDs,
+receipt/hash checks và budget stop. 271 tests và một paired development replay
+đạt; mechanical score flat1,0→1,0. Chưa có autonomous candidate proposer hoặc
+quality gain trên tập mới. Xem [Hillclimb runner](HILLCLIMB-RUNNER.vi.md).
+Các mô tả thiếu runner bên dưới là trạng thái trước update này.
+
 Lượt tiếp theo dev17 bổ sung lời hứa mở đầu theo từng recording và sửa lỗi
 analysis reference chạy muộn làm đổi guidance đã duyệt. UI run đầu bị assertion
 chặn trước khi thay demo khóa; recovery và 252 tests được ghi riêng tại

@@ -168,3 +168,9 @@ interval into a deliberate presenter hold. Inference features and final-editor
 targets are separate; duplicate/creator/series/excerpt groups stay together.
 The user permits agent-reviewed experiments. Those labels remain experimental,
 and a reviewer without audio cannot certify voice clarity.
+
+Applied hillclimb example13/11: a persisted paired mechanical replay completed
+T1–T8/three variants in both arms, score1.0→1.0(flat), with zero real human
+reviews. Stable-ID retry did not create new exports. Explained that operational
+runner success is not model/style improvement; no new mastery or sign-off is
+inferred. Full held-out video quality and the pending SFX distinction remain open.

@@ -71,14 +71,21 @@ class Editor:
             self.call('/api/quit',{});self.process.wait(timeout=30)
 
 
-def run(config,out,app):
-    out=Path(out).resolve();out.mkdir(parents=True,exist_ok=False)
+def input_snapshot(config,app):
+    app=Path(app)
     files=[config['A'],config['A_srt'],config['B'],config['B_srt'],config['proof']]+[c['path'] for c in config.get('captures',[])]
     if config.get('branding'):files.append(config['branding']['path'])
     fixed=dict(protocol=editing_evals.PROTOCOL,config=config,source_files={str(Path(p).resolve()):media.sha(p) for p in files},
         implementation={p.relative_to(app).as_posix():media.sha(p) for p in Path(app).rglob('*') if p.is_file() and p.suffix in ('.py','.js','.html') and not p.name.startswith('test_')})
+    return fixed
+
+
+def run(config,out,app):
+    started=time.monotonic()
+    out=Path(out).resolve();out.mkdir(parents=True,exist_ok=False)
+    fixed=input_snapshot(config,app)
     media.write_json(out/'frozen-inputs.json',fixed)
-    result=dict(scope='development_mechanical_replay',not_unseen=True,real_human_reviews=0,real_master_approved=False,turns={},variants={},assertions=[],render_wait_seconds=[],tool_versions={},quality='INCONCLUSIVE')
+    result=dict(completed=False,scope='development_mechanical_replay',not_unseen=True,real_human_reviews=0,real_master_approved=False,turns={},variants={},assertions=[],render_wait_seconds=[],tool_versions={},quality='INCONCLUSIVE')
     def check(name,value):result['assertions'].append(dict(id=name,pass_=bool(value)));media.write_json(out/'results.json',result)
     last_tool=0
     def turn(number,text,assertions,**facts):
@@ -96,7 +103,7 @@ def run(config,out,app):
         result['turns'][number]=all(assertions.values());media.write_json(out/'results.json',result)
     editor=Editor(app,out)
     try:
-        state=editor.state();result['tool_versions']=dict(app=state['version'],protocol=editing_evals.VERSION,renderer_sha256=fixed['implementation']['engine/edit.py'],effective_editor='Deterministic local planner/artifact tools; no conversational LLM invoked by this replay',grader='Mechanical assertions in editing_replay.py; no aesthetic or audio judgments')
+        state=editor.state();result['tool_versions']=dict(app=state['version'],protocol=editing_evals.VERSION,grader_sha256=media.sha(Path(__file__)),renderer_sha256=fixed['implementation']['engine/edit.py'],effective_editor='Deterministic local planner/artifact tools; no conversational LLM invoked by this replay',grader='Mechanical assertions in editing_replay.py; no aesthetic or audio judgments')
         editor.begin_turn('T1','Create A. Propose three source-backed hooks, choose one, render its real demonstration and actual closing; request missing footage explicitly.')
         a=editor.import_(config['A'],'host');proof=editor.import_(config['proof'],'reference')
         settings=dict(script=Path(config['A_srt']).read_text(encoding='utf-8'),motion_profile='focus',music_mode='auto',music_gain_db=-24)
@@ -168,7 +175,7 @@ def run(config,out,app):
             valid,valid_code=editor.call('/api/review',test,expect=(200,400));without=copy.deepcopy(test);without.pop('attestation');_,absent=editor.call('/api/review',without,expect=(400,));normal=copy.deepcopy(test);normal.pop('validate_only');_,test_denied=editor.call('/api/review',normal,expect=(400,))
         else:valid={};valid_code=None;absent=None;test_denied=None
         turn('T8','Reject A digest on B; validate a disposable test attestation without granting a release.',{'stale_digest_rejected':stale==400,'missing_evidence_rejected':absent==400,'valid_attestation_route':valid_code==200 and valid.get('approval_recorded') is False,'test_cannot_approve':test_denied==400,'real_approval_pending':editor.state()['exports'][-1]['verdict']!='READY'},validation=valid)
-        result.update(A=a,B=b,exports=[v1['id'],v2['id'],v_b['id']],workspace=str(editor.root),actual_independent_source_families=1,
+        result.update(completed=True,wall_seconds=time.monotonic()-started,A=a,B=b,exports=[v1['id'],v2['id'],v_b['id']],workspace=str(editor.root),actual_independent_source_families=1,
             summary=editing_evals.summarize([dict(conversation='development-replay',episodes=[a,b],episode_coverage={a:config.get('A_coverage','excerpt'),b:config.get('B_coverage','excerpt')},family=config['family'],family_verified=False,turns=result['turns'],variants=result['variants'],test_only=True)]))
         media.write_json(out/'results.json',result);return result
     except BaseException as ex:
