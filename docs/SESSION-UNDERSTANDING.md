@@ -18,7 +18,13 @@
   it does not yet distinguish spatial placement from event time, or unknown
   sound planning from explicit mute. Keep this item pending. Asked a concrete
   follow-up: a card/pop at00:05 is moved left on the picture without changing
-  timeline time — what should Save do to the pop? No answer recorded yet.
+  timeline time — what should Save do to the pop? The user selected mute.
+  Explained that X/Y placement and sound mute are separate; a spatial move
+  preserves the existing onset/gain. In the next open-ended case the user said
+  “sẽ đẩy đoạn đầu xuống thôi”; this does not identify X/Y versus timeline time.
+  Explained the intended X/Y-only operation and deferred a visual demonstration
+  while answering the user's evals/harness audit request. Mastery remains pending;
+  do not change product behavior to auto-mute based on this quiz response.
   Neither the UI tests nor this partial answer establishes full mastery or any
   listening approval. This reply is not confirmation of the Recordly source.
 
