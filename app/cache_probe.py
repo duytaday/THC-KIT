@@ -9,9 +9,17 @@ from engine import media
 def contexts():
     a=dict(request='intro',quote='Giới thiệu Recordly.',texts=['Recordly'],frames=90,protected=[],style='balanced',anchors=[dict(id='word',kind='speech',frame=0)])
     different=copy.deepcopy(a);different.update(quote='Giới thiệu Remotion.',texts=['Remotion'])
-    revised=copy.deepcopy(a);revised.update(texts=['Recordly rõ hơn'],intent='Public current correction: keep the label visible longer.')
+    revised=revision_contexts(a)[0][1]
     style=copy.deepcopy(a);style['style']='maverick_fast'
     return [('C1-cold',a,9),('C2-identical',copy.deepcopy(a),9),('C3-new-episode',different,9),('C4-one-scene-revision',revised,9),('C5-style-version',style,8),('C6-process-restart',a,9)]
+
+
+def revision_contexts(base=None):
+    """Separate synthetic timing-only and display-label edits; speech stays fixed."""
+    base=base or dict(request='intro',quote='Giới thiệu Recordly.',texts=['Recordly'],frames=90,protected=[],style='balanced',anchors=[dict(id='word',kind='speech',frame=0)])
+    timing=copy.deepcopy(base);timing.update(frames=120,intent='Public current correction: keep the same display label visible for the longer declared scene; do not change words or anchors.')
+    label=copy.deepcopy(base);label.update(texts=['Recordly rõ hơn'],intent='Public current correction: replace only the display label with the declared texts; keep the recorded quote, anchors and scene duration unchanged.')
+    return [('R1-timing-only',timing),('R2-label-only',label)]
 
 
 def probe(context,version,tokenizer=None,tokenizer_identity=None):

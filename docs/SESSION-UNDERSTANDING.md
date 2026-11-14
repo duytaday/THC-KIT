@@ -201,3 +201,11 @@ mechanical evidence. A sampled fixture export exposed an unwanted window;
 source-ID/title monitoring is now tested but cannot establish pixel isolation.
 - [ ] Explain why no observed ID/title change and passing mechanical tests do
   not establish readable real software proof or whole-master listening.
+
+
+14/11 model request audit: the old synthetic C4 combined a changed label with a
+hold-only instruction. Split into timing-only and label-only development probes,
+preserving the old rejection. New authored train-only examples are experimental;
+no mastery, hearing approval or model quality improvement inferred from them.
+- [ ] Explain why a corrected probe and lower training loss do not establish
+  improved full-video editing on an independent episode.

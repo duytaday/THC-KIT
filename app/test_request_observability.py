@@ -22,4 +22,15 @@ class RequestObservationTests(unittest.TestCase):
         self.assertEqual(r['tokenizer_input_tokens'],3);self.assertIsNone(r['cache']['cache_write_tokens']);self.assertEqual(observation.common_prefix([1,4],[1,9]),1)
 
 
+    def test_timing_revision_preserves_words_labels_and_spoken_anchors(self):
+        original=cache_probe.contexts()[0][1];timing=cache_probe.revision_contexts(original)[0][1]
+        self.assertEqual({k for k in set(original)|set(timing) if original.get(k)!=timing.get(k)},{'frames','intent'})
+        self.assertEqual(cache_probe.contexts()[3][1],timing)
+
+    def test_label_revision_preserves_duration_recorded_quote_and_anchors(self):
+        original=cache_probe.contexts()[0][1];label=cache_probe.revision_contexts(original)[1][1]
+        self.assertEqual({k for k in set(original)|set(label) if original.get(k)!=label.get(k)},{'texts','intent'})
+        self.assertNotEqual(label['texts'],original['texts']);self.assertEqual(original['texts'],['Recordly'])
+
+
 if __name__=='__main__':unittest.main()
