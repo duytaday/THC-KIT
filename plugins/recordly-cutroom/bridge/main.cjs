@@ -8,15 +8,27 @@ function exact(p,keys){if(!p||typeof p!=='object'||Array.isArray(p)||Object.keys
 async function atomic(file,obj){const tmp=file+'.'+crypto.randomUUID()+'.tmp';await fsp.writeFile(tmp,JSON.stringify(obj,null,2));await fsp.rename(tmp,file);}
 function editorDefaults(width,height){return {padding:{top:0,bottom:0,left:0,right:0,linked:true},borderRadius:0,shadowIntensity:0,backgroundBlur:0,showCursor:true,webcam:{enabled:false,sourcePath:null},cropRegion:{x:0,y:0,width:1,height:1},zoomRegions:[],trimRegions:[],clipRegions:[],speedRegions:[],annotationRegions:[],audioRegions:[],autoCaptions:[],sourceAudioTrackSettingsByClip:{},defaultSourceAudioTrackSettings:{},aspectRatio:width>=height?'16:9':'9:16',mp4FrameRate:30,exportFormat:'mp4',exportEncodingMode:'auto',exportQuality:'high'};}
 
-async function controller({root,invoke,version='1.4.0',sourceCheckMs=300}){
+async function controller({root,invoke,version='1.4.0',sourceCheckMs=300,sourceClock=Date.now}){
  root=path.resolve(root);if(process.platform==='win32'&&!/^D:\\/i.test(root))throw Error('Recordly Cutroom data must stay on D');
  await fsp.mkdir(root,{recursive:true});root=await fsp.realpath(root);
  if(process.platform==='win32'&&!/^D:\\/i.test(root))throw Error('Resolved workspace must stay on D');
  const file=path.join(root,'capture-ledger.json');let state={requests:{},capture:null};
  if(fs.existsSync(file))state=JSON.parse(await fsp.readFile(file,'utf8'));
- let chain=Promise.resolve(),timer=null,guardTimer=null,guardQueued=false;const pending=new Map();
+ let chain=Promise.resolve(),timer=null,guardTimer=null,guardQueued=false;const pending=new Map(),sourceObservations=new Map();
  const ok=async(channel,...args)=>{const result=await invoke(channel,...args);if(result?.success===false)throw Error(result.message||result.error||channel+' failed');return result;};
  async function sources(){const data=await ok('get-sources',{types:['window'],thumbnailSize:{width:1,height:1},fetchWindowIcons:false});if(!Array.isArray(data))throw Error('Unexpected source list');return data.filter(s=>s.id?.startsWith('window:')).map(s=>({id:s.id,name:s.name,sourceType:'window'}));}
+
+ function observeSources(list){
+  const now=sourceClock();for(const [key,v] of sourceObservations)if(v.at<now-300000)sourceObservations.delete(key);
+  for(const source of list)sourceObservations.set(JSON.stringify([source.id,source.name]),{at:now});
+  while(sourceObservations.size>500)sourceObservations.delete(sourceObservations.keys().next().value);
+ }
+ function allowedTitles(p){
+  const titles=p.allowed_titles??[p.expected_title];
+  if(!Array.isArray(titles)||titles.length<1||titles.length>5||new Set(titles).size!==titles.length||titles.some(t=>typeof t!=='string'||!t||t.length>500)||!titles.includes(p.expected_title))throw Error('allowed_titles must include the exact starting title and contain 1–5 unique exact titles.');
+  for(const title of titles)if(title!==p.expected_title){const seen=sourceObservations.get(JSON.stringify([p.window_id,title]));if(!seen||seen.at<sourceClock()-300000)throw Error('List every additional allowed title for this same window in fresh recordly_sources within five minutes before starting.');}
+  return [...titles];
+ }
  function current(id){const c=state.capture;if(!c||c.id!==id)throw Error('Capture ID does not match current retained capture');return c;}
  async function save(c,name){
   if(c.stage!=='STOPPED')throw Error('Stop capture before saving a project');
@@ -31,7 +43,7 @@ async function controller({root,invoke,version='1.4.0',sourceCheckMs=300}){
  async function checkSource(c){
   if(!c.source_guard||c.source_guard.status==='FAILED')return false;
   let reason=null;
-  try{const observed=(await sources()).find(s=>s.id===c.window.id);if(!observed)reason='SELECTED_WINDOW_MISSING';else if(observed.name!==c.window.name)reason='SELECTED_WINDOW_TITLE_CHANGED';}
+  try{const observed=(await sources()).find(s=>s.id===c.window.id);if(!observed)reason='SELECTED_WINDOW_MISSING';else if(!(c.allowed_titles||[c.window.name]).includes(observed.name))reason='SELECTED_WINDOW_TITLE_CHANGED';}
   catch{reason='SOURCE_CHECK_UNAVAILABLE';}
   c.source_guard.checks++;c.source_guard.last_checked_at=new Date().toISOString();
   if(reason){c.source_guard.status='FAILED';c.source_guard.reason=reason;await atomic(file,state);return false;}
@@ -64,24 +76,25 @@ async function controller({root,invoke,version='1.4.0',sourceCheckMs=300}){
   return {capture_id:c.id,stage:c.stage,source:c.source,...project,metadata:c.metadata,source_guard:c.source_guard||null};
  }
  async function action(command,p){
-  if(command==='sources'){exact(p,[]);return {sources:await sources()};}
+  if(command==='sources'){exact(p,[]);const list=await sources();observeSources(list);return {sources:list};}
   if(command==='status'){exact(p,[]);return {recordly_version:version,capture:state.capture,capabilities:{window_capture:true,native_export:true,animated_zoom:false,arbitrary_ipc:false},review:'NEEDS_REVIEW'};}
   if(command==='start'){
-   exact(p,['window_id','expected_title','beat','max_seconds']);label(p.beat);
+   exact(p,['window_id','expected_title','allowed_titles','beat','max_seconds']);label(p.beat);
    if(typeof p.expected_title!=='string'||!p.expected_title||p.expected_title.length>500)throw Error('Supply the exact observed window title');
    const seconds=p.max_seconds??30;if(!Number.isInteger(seconds)||seconds<5||seconds>180)throw Error('Capture limit must be5–180seconds');
    if(state.capture&&!['STOPPED'].includes(state.capture.stage))throw Error('An active/uncertain capture is retained; stop or inspect it first');
+   const allowed=allowedTitles(p);
    const selected=(await sources()).find(s=>s.id===p.window_id&&s.name===p.expected_title);
    if(!selected)throw Error('Selected window disappeared or title changed; list sources again. No fallback.');
    const dir=await ok('get-recordings-directory');if(!inside(path.resolve(dir.path),root))throw Error('Recordly recording directory is outside D workspace');
    await ok('set-recording-preferences',{microphoneEnabled:false,systemAudioEnabled:false,webcamEnabled:false});
    await ok('select-source',selected);
    if(!(await sources()).some(s=>s.id===selected.id&&s.name===selected.name))throw Error('Selected window changed after selection; no capture started.');
-   const c={id:crypto.randomUUID(),beat:p.beat,window:selected,stage:'STARTING',started_at:new Date().toISOString(),max_seconds:seconds,source_guard:{status:'MONITORING',checks:0,interval_ms:sourceCheckMs,limitation:'ID/title polling cannot prove pixel isolation; inspect decoded export.'}};state.capture=c;await atomic(file,state);
+   const c={id:crypto.randomUUID(),beat:p.beat,window:selected,allowed_titles:allowed,stage:'STARTING',started_at:new Date().toISOString(),max_seconds:seconds,source_guard:{status:'MONITORING',policy:'exact_frozen_title_list',checks:0,interval_ms:sourceCheckMs,limitation:'ID/title polling cannot prove pixel isolation; inspect decoded export.'}};state.capture=c;await atomic(file,state);
    await ok('start-native-screen-recording',selected,{capturesSystemAudio:false,capturesMicrophone:false});
    c.stage='CAPTURING';await atomic(file,state);monitor(c);
    timer=setTimeout(()=>{chain=chain.then(()=>stop(c)).catch(async()=>{c.stage='STOP_FAILED';await atomic(file,state);});},seconds*1000);timer.unref?.();
-   return {capture_id:c.id,stage:c.stage,window:selected,maximum_seconds:seconds,audio:'OFF',webcam:'OFF'};
+   return {capture_id:c.id,stage:c.stage,window:selected,allowed_titles:allowed,maximum_seconds:seconds,audio:'OFF',webcam:'OFF'};
   }
   if(command==='stop'){exact(p,['capture_id']);return stop(current(p.capture_id));}
   if(command==='save_project'){exact(p,['capture_id','name']);const c=current(p.capture_id);const saved=await save(c,p.name);await atomic(file,state);return saved;}

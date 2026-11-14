@@ -38,11 +38,28 @@ change OS capture permissions, or delete prior media to make a test pass.
 The exact selected window ID/title is checked again after selection, every 300 ms
 while recording, and at stop. A changed/missing window or failed source check
 stops the capture, retains its source/native project, marks the take FAILED and
-blocks export. Deliberate navigation that changes the window title needs a new
-explicitly selected take. Never silently expand the allowed title list.
+blocks export. In 0.1.2, all title changes required a new take. Version 0.1.3 below adds an
+explicit planned-navigation contract. Never silently expand the allowed title list.
 
 MONITORED_NO_CHANGE_OBSERVED means only that polling saw no ID/title change.
 It does not prove pixel isolation, privacy, a real tutorial result or readiness.
 Inspect the decoded export for unwanted tabs/windows. Legacy captures are
 LEGACY_UNVERIFIED and retain their prior evidence. The 0.1.2 native Windows
 recapture remains pending; deterministic tests do not replace that test.
+
+
+## Planned navigation (0.1.3)
+
+For a real navigation demo such as GitHub → Releases, prepare both states before
+recording. Call recordly_sources in each state and verify the SAME window ID.
+Return to the initial state. Supply allowed_titles on recordly_start containing
+the exact initial title and up to four additional exact destination titles that
+were listed for that same ID in the last five minutes. No wildcards or guessed
+titles. The title list is frozen for the entire take; listing another window or
+calling sources during recording cannot expand it. Without allowed_titles, the
+strict single-title behavior remains. Unexpected titles still quarantine the take.
+
+This allows the intended action/result to stay in one recording while retaining
+the source-change guard. It still cannot prove tab/pixel isolation between polls.
+Inspect the decoded export. Native Windows planned-navigation capture remains
+pending explicit resumption of desktop use; unit tests are mechanical evidence.

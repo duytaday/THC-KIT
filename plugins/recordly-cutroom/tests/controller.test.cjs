@@ -3,7 +3,7 @@ const {test}=require('node:test'),assert=require('node:assert/strict'),fs=requir
 const {controller,label,inside}=require('../bridge/main.cjs');
 async function fixture(backend='cuda-scale-cpu-pad'){
  const root=fs.mkdtempSync(path.join(os.tmpdir(),'recordly-unit-'));const native=path.join(root,'recordings');const projects=path.join(root,'projects');fs.mkdirSync(native);fs.mkdirSync(projects);
- const calls=[];const source={id:'window:123:0',name:'Synthetic unit window'};let present=true,sourceError=false,changeOnSelect=false;
+ const calls=[];const source={id:'window:123:0',name:'Synthetic unit window'};let present=true,sourceError=false,changeOnSelect=false,sourceTime=Date.now();
  const invoke=async(channel,...args)=>{calls.push({channel,args});
   if(channel==='get-sources'){if(sourceError)throw Error('Synthetic source listing error');return present?[source]:[];}
   if(channel==='select-source'&&changeOnSelect)source.name='Unexpected window';
@@ -16,7 +16,7 @@ async function fixture(backend='cuda-scale-cpu-pad'){
   if(channel==='finalize-exported-video'){fs.copyFileSync(args[0].tempPath,args[0].outputPath,fs.constants.COPYFILE_EXCL);return {success:true,path:args[0].outputPath};}
   return {success:true};
  };
- const c=await controller({root,invoke,sourceCheckMs:5});return {root,c,calls,source,disappear:()=>present=false,failSource:()=>sourceError=true,changeAfterSelection:()=>changeOnSelect=true};
+ const c=await controller({root,invoke,sourceCheckMs:5,sourceClock:()=>sourceTime});return {root,c,calls,source,disappear:()=>present=false,failSource:()=>sourceError=true,changeAfterSelection:()=>changeOnSelect=true,advanceSourceTime:ms=>sourceTime+=ms};
 }
 const start=f=>({command:'start',request_id:'start-request-001',params:{window_id:f.source.id,expected_title:f.source.name,beat:'unit-beat',max_seconds:5}});
 test('Concurrent/reordered retries start native capture once; changed payload conflicts',async()=>{
@@ -95,4 +95,23 @@ test('Manual stop checks the source even before the first polling tick',async()=
 });
 test('Unchanged source records limited evidence without claiming isolation',async()=>{
  const f=await fixture();try{const a=await f.c.dispatch(start(f));const c=await f.c.dispatch({command:'stop',request_id:'stop-clean-guard',params:{capture_id:a.capture_id}});assert.equal(c.source_guard.status,'MONITORED_NO_CHANGE_OBSERVED');assert(c.source_guard.checks>=1);assert.match(c.source_guard.limitation,/cannot prove pixel isolation/);}finally{f.c.close();}
+});
+
+async function planNavigation(f){
+ const initial=f.source.name;await f.c.dispatch({command:'sources'});f.source.name='Approved Releases page';await f.c.dispatch({command:'sources'});f.source.name=initial;
+ const request=start(f);request.params.allowed_titles=[initial,'Approved Releases page'];return request;
+}
+test('Observed planned navigation keeps the same capture running and exports without expanding titles',async()=>{
+ const f=await fixture();try{const req=await planNavigation(f);const a=await f.c.dispatch(req);f.source.name='Approved Releases page';await new Promise(r=>setTimeout(r,25));const status=await f.c.dispatch({command:'status'});assert.equal(status.capture.stage,'CAPTURING');assert.deepEqual(status.capture.allowed_titles,req.params.allowed_titles);
+ const c=await f.c.dispatch({command:'stop',request_id:'planned-stop-001',params:{capture_id:a.capture_id}});assert.equal(c.source_guard.status,'MONITORED_NO_CHANGE_OBSERVED');const e=await f.c.dispatch({command:'export',request_id:'planned-export-001',params:{capture_id:a.capture_id,name:'planned-navigation'}});assert.equal(e.review,'NEEDS_REVIEW');assert.equal(e.source_guard.policy,'exact_frozen_title_list');
+ }finally{f.c.close();}
+});
+test('Unobserved and stale additional titles are rejected before native start',async()=>{
+ const f=await fixture();try{const req=start(f);req.params.allowed_titles=[f.source.name,'Unobserved title'];await assert.rejects(f.c.dispatch(req),/fresh recordly_sources/);const observed=await planNavigation(f);observed.request_id='stale-navigation-001';f.advanceSourceTime(300001);await assert.rejects(f.c.dispatch(observed),/fresh recordly_sources/);assert(!f.calls.some(c=>c.channel==='start-native-screen-recording'));}finally{f.c.close();}
+});
+test('A title observed on a different window ID cannot authorize navigation',async()=>{
+ const f=await fixture();try{const id=f.source.id,name=f.source.name;f.source.id='window:999:0';f.source.name='Other window title';await f.c.dispatch({command:'sources'});f.source.id=id;f.source.name=name;const req=start(f);req.params.allowed_titles=[name,'Other window title'];await assert.rejects(f.c.dispatch(req),/same window/);assert(!f.calls.some(c=>c.channel==='start-native-screen-recording'));}finally{f.c.close();}
+});
+test('Sources called during capture never expand the frozen navigation title list',async()=>{
+ const f=await fixture();try{const req=await planNavigation(f);const a=await f.c.dispatch(req);f.source.name='Unplanned private tab';await f.c.dispatch({command:'sources'});const c=await stopped(f);assert.equal(c.source_guard.status,'FAILED');assert(!c.allowed_titles.includes(f.source.name));assert.equal(f.calls.filter(c=>c.channel==='stop-native-screen-recording').length,1);assert.equal(c.id,a.capture_id);}finally{f.c.close();}
 });
