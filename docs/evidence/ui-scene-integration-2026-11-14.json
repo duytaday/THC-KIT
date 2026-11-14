@@ -251,8 +251,60 @@
   "fresh_independent_episode_b": "MISSING",
   "preview_annotation_fix": {
     "issue": "THC-51",
-    "status": "SOURCE_AND_REGRESSION_TESTED_PENDING_NEW_EXPORT",
+    "status": "VERIFIED_SCOPED_VISUAL_FIX",
     "approach": "Place preview-only status in a band avoiding swept motion, caption regions and actual PiP; preserve master content",
-    "tests": 3
+    "tests": 3,
+    "preview_version": 3,
+    "original_preview_version": 2,
+    "annotation_rect": [
+      60,
+      1316,
+      960,
+      48
+    ],
+    "inspected_preview_and_master_seconds": [
+      0,
+      2.5,
+      4.966
+    ],
+    "inspected_before_after_seconds": [
+      1
+    ],
+    "checks": {
+      "voice.wav": true,
+      "sfx.wav": true,
+      "captions.srt": true,
+      "captions.ass": true,
+      "old_master_preserved": true,
+      "old_preview_preserved": true,
+      "composition_unchanged": true,
+      "animation_unchanged": true,
+      "master_hash_matches": true,
+      "font_license_packaged": true,
+      "font_loaded": true,
+      "no_page_errors": true,
+      "saved_instance_reopens": true,
+      "annotation_clear_of_face_in_inspected_frames": true,
+      "master_bytes_identical_to_prior": true
+    },
+    "master_sha256": "4ec0fab3e05f8f1b1313b93ccb54f954d4f466b17cf2ff997337cf2dc39f8edb",
+    "master_bytes_identical_to_prior": true,
+    "full_listen": false
+  },
+  "private_windows_package": {
+    "version": "0.14.0-dev22",
+    "candidate": "v003",
+    "source_commit": "1c3facaa49f3b7bd9646e92588bf3633426b10b7",
+    "source_dirty": false,
+    "source_tree_sha256": "1b05f8b8635522d2b5af1f57bf40dba9a60c5f239dfd61effd36fd20e617f6eb",
+    "zip_sha256": "035b4a579d4aa74bf97dc4e3b08935d709100bbbbad019eeb1444a32643d74f9",
+    "actual_exe_test": "PASS: normal UI saved existing scene v002 as v003, rendered preview and full 5-second master, reopened choices",
+    "encoder": "h264_nvenc",
+    "decoded_frames": 150,
+    "integrated_lufs": -16.0,
+    "true_peak_dbtp": -2.98,
+    "clean_windows_tested": false,
+    "distribution": "INTERNAL ONLY; starter distribution grant unresolved",
+    "editorial_status": "NEEDS_REVIEW"
   }
 }

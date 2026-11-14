@@ -114,3 +114,25 @@ trống cho nhãn preview. Nếu không có chỗ an toàn, trả lỗi cần đ
 che nội dung. Scene đã căn lời không nhận nhãn storyboard; master không nhận nhãn
 này. Ba regression mới đạt; suite hiện 310 test, 297 đạt và 13 skip. Cần xuất lại
 đúng scene qua UI và kiểm frame trước khi đóng bug; các version cũ vẫn giữ.
+
+
+## Kiểm chứng EXE và preview v003
+
+Đã build candidate internal v003 từ commit `1c3faca`, source_dirty=false. Chạy
+**Talking Head Cutroom.exe** thật trên máy hiện tại, qua Chrome headless vào UI
+thường: mở scene v002 đã lưu → Save presenter layout only → preview v003 → queue
+master mới → mở lại scene. Font đã load và OFL hiện diện trong package. Không
+coi kiểm tra trên máy này là kiểm trên Windows sạch.
+
+Đã xem ảnh decode preview/master tại 00:00.000, 00:02.500 và 00:04.966 ở bề rộng
+360 px; so v002/v003 tại 00:01.000. Nhãn đã chuyển từ y=1780 lên y=1340 và không
+đè mặt/caption ở các frame đó. Geometry picker kiểm cả vùng chuyển động đi qua.
+Voice, SFX, SRT, ASS, composition và animation giữ nguyên. Preview/master cũ giữ
+nguyên hash. **MP4 master mới trùng byte với v002**, SHA256
+`4ec0fab3e05f8f1b1313b93ccb54f954d4f466b17cf2ff997337cf2dc39f8edb`:
+thay đổi này chỉ sửa nhãn của preview. Bản master có 150 frame decode, NVENC,
+−16,0 LUFS và −2,98 dBTP. Nghe toàn master và tính đúng lời vẫn UNVERIFIED.
+
+Vị trí mặc định sát mép dưới/phải cần được duyệt cho nền tảng đích; kiểm tránh
+caption trong video không thay cho kiểm UI TikTok/Reels che lên hình. Không
+đánh READY hay kết luận model/style tốt hơn từ bản kiểm tra này.
