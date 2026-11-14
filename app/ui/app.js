@@ -18,6 +18,7 @@ const stem = (name) =>
     .toLowerCase();
 const selected = new Set(),
   touched = new Set();
+let formRevisions = {};
 let state = {},
   inserts = [],
   activePanel = "script",
@@ -89,7 +90,18 @@ const versionsFor=id=>state.exports.filter(e=>e.job===id);
 const cutVersion=e=>'v'+String(versionsFor(e.job).findIndex(x=>x.id===e.id)+1).padStart(3,'0');
 const latestFor=id=>versionsFor(id).at(-1);
 function visibleSources(){const query=(el('sourceSearch')?.value||'').toLocaleLowerCase('vi'),collection=el('sourceCollection')?.value||'',visibility=el('sourceVisibility')?.value||'active';return Object.values(state.jobs||{}).filter(j=>(!collection||(j.collection||'')===collection)&&(visibility==='all'||Boolean(j.archived)===(visibility==='archived'))&&(!query||[sourceName(j.id),state.assets[j.id].name,j.collection||'',j.id].join(' ').toLocaleLowerCase('vi').includes(query)));}
+async function firstCut(ids,niche,story_format){
+ const key='cutroom-first-cut-pending:'+state.data_folder+':'+ids.slice().sort().join(','), intent={ids,niche,story_format};
+ let pending;try{pending=JSON.parse(sessionStorage.getItem(key)||'null');}catch{}
+ if(pending&&JSON.stringify(pending.intent)!==JSON.stringify(intent))throw Error('A previous cut request has an uncertain result. Retry with the same options before starting another cut.');
+ const body=pending?.body||{...intent,request_id:crypto.randomUUID(),revisions:Object.fromEntries(ids.map(id=>[id,state.jobs[id].revision]))};
+ sessionStorage.setItem(key,JSON.stringify({intent,body}));
+ try{const result=await req('/api/creator/first-cut',body);sessionStorage.removeItem(key);return result;}
+ catch(error){if(error.status&&error.status<500)sessionStorage.removeItem(key);throw error;}
+}
 async function req(path, data, raw = false) {
+  if(path==='/api/update' && data && !raw && data.revisions===undefined)
+    data={...data,revisions:Object.fromEntries(data.ids.map(id=>[id,state.jobs[id].revision]))};
   const opts =
     data === undefined
       ? {}
@@ -104,7 +116,7 @@ async function req(path, data, raw = false) {
         };
   const r = await fetch(path, opts);
   const body = await r.json();
-  if (!r.ok) throw Error(body.error || "The request failed");
+  if (!r.ok) {const error=Error(body.error || "The request failed");error.status=r.status;throw error;}
   return body;
 }
 const guard =
@@ -142,7 +154,7 @@ function playsource(id) {
     a.name,
     '<video controls src="/assets/' +
       id +
-      '/media"></video><small>Original recording · ' +
+      '/media"></video><small>'+(a.kind==='host'?'Original recording':'Source footage · not the edited cut')+' · ' +
       time(a.duration) +
       "</small>",
   );
@@ -266,9 +278,21 @@ function showPanel(name) {
     p.classList.toggle("hidden", p.dataset.body !== name),
   );
 }
+function draftKey(){return 'cutroom-settings-draft:'+state.data_folder+':'+selectedIds().slice().sort().join(',');}
+function draftChanges(){return Object.fromEntries([...touched].map(k=>[k,k==='inserts'?inserts:k==='events'?manualEvents:['motion_intensity','music_gain_db','brand_from','brand_to'].includes(k)?Number(el(k).value):el(k).value]));}
+function persistDraft(){try{sessionStorage.setItem(draftKey(),JSON.stringify({ids:selectedIds(),revisions:formRevisions,changes:draftChanges()}));}catch{notify('Draft storage unavailable. Keep this page open or copy your changes before reloading.');}}
+function showSavedDraft(){
+ let draft;try{draft=JSON.parse(sessionStorage.getItem(draftKey())||'null');}catch{}
+ if(!draft)return;
+ dialog('Unsaved draft',`<p>This draft keeps its original revision. Compare it with the current settings; it will never overwrite a newer revision automatically.</p><textarea id="savedDraftText" rows="14" readonly>${esc(JSON.stringify(draft,null,2))}</textarea><button type="button" class="soft" id="downloadSettingsDraft">Download draft JSON</button><button type="button" class="textbtn" id="discardSettingsDraft">Discard saved draft</button>`);
+ el('downloadSettingsDraft').onclick=()=>{const a=document.createElement('a'),url=URL.createObjectURL(new Blob([JSON.stringify(draft,null,2)],{type:'application/json'}));a.href=url;a.download='cutroom-unsaved-settings.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);};
+ el('discardSettingsDraft').onclick=()=>{sessionStorage.removeItem(draftKey());el('modal').close();};
+}
+const draftButton=document.createElement('button');draftButton.type='button';draftButton.className='textbtn';draftButton.id='savedSettingsDraft';draftButton.textContent='Review saved draft';draftButton.onclick=showSavedDraft;el('save').after(draftButton);
 function setDirty(k) {
   editRevision++;
   touched.add(k);
+  persistDraft();
   el("dirty").textContent = "Unsaved changes";
   el("save").disabled = false;
   if(k==='script')el('generateArtifacts').disabled=!el('script').value.trim();
@@ -326,7 +350,7 @@ function drawList() {
   el("selectedDownload").classList.toggle("hidden", !downloadable.length);
   el("selectedDownload").href =
     "/downloads/latest.zip?jobs=" + encodeURIComponent(downloadable.join(","));
-  const ready=ids.filter(k=>!state.jobs[k].archived&&!locked(state.jobs[k])&&state.jobs[k].settings.script.trim()&&!state.jobs[k].script_issue).length;
+  const ready=ids.filter(k=>!state.jobs[k].archived&&!locked(state.jobs[k])&&state.jobs[k].status!=='Failed'&&state.jobs[k].settings.script.trim()&&!state.jobs[k].script_issue).length;
   el("queue").disabled = !ready || !state.tools;
   el("queue").textContent = `Render ${ready} video${ready===1?'':'s'}`;
   el("queueHint").textContent = jobs.some(locked)
@@ -345,7 +369,7 @@ function drawInserts() {
           '<div class="insert" data-insert="' +
           i +
           '"><label>Demo subject (optional)<input data-k="demonstrates" maxlength="140" placeholder="Remotion / Export invoice" value="'+esc(r.demonstrates||'')+'"></label><label>What must be visible<input data-k="visual_claim" maxlength="400" placeholder="Specific control, value or resulting state" value="'+esc(r.visual_claim||'')+'"></label><small>Assignment links this footage to a claim; it still needs review. An illustration cannot prove a software result.</small><select aria-label="Cutaway source" data-k="asset">' +
-          options(r.asset, false) +
+          refs().filter(a=>a.source_role!=='style_reference'||a.id===r.asset).map(a=>`<option value="${esc(a.id)}" ${a.id===r.asset?'selected':''}>${esc(a.name)}</option>`).join('') +
           `</select><img class="insert-thumb" alt="Cutaway source thumbnail" src="/assets/${r.asset}/thumb"><small>Show in video · presenter audio continues</small><label>Spoken cue (optional)<input data-k="cue" maxlength="240" placeholder="Exact words from this script" value="` +
           esc(r.cue || "") +
           `"></label><button type="button" class="textbtn" data-resolve="${i}">Find phrase in script</button><small>${r.occurrence!=null?'Chosen occurrence '+(r.occurrence+1)+' · ':''}${r.cue&&r.occurrence==null?'At spoken phrase · resolve to inspect timing':'Insertion at '+Number(r.at).toFixed(2)+'s'} · ${Number(r.duration).toFixed(2)}s long · ${esc(el('insert_sound')?.value||'none')} sound</small><div class="times">` +
@@ -365,7 +389,7 @@ function drawInserts() {
                 '"></label>',
             )
             .join("") +
-          `</div><label>Layout<select data-k="layout"><option value="full_demo" ${(r.layout||'full_demo')==='full_demo'?'selected':''}>Full demo · original voice</option><option value="presenter_pip" ${r.layout==='presenter_pip'?'selected':''}>Presenter PiP · real recording</option></select></label><label>PiP corner<select data-k="pip_corner">${['auto','top_left','top_right','bottom_left','bottom_right'].map(k=>`<option value="${k}" ${(r.pip_corner||'auto')===k?'selected':''}>${k.replaceAll('_',' ')}</option>`).join('')}</select></label><label>PiP width (canvas fraction)<input data-k="pip_width" type="number" min="0.18" max="0.36" step="0.01" value="${r.pip_width??.25}"></label><small>Auto avoids observed control, result and captions; no safe corner uses full demo. The corner stays fixed for the cutaway.</small>${anchorControls(r)}<button type="button" data-remove="` +
+          `</div><label>Layout<select data-k="layout"><option value="full_demo" ${(r.layout||'full_demo')==='full_demo'?'selected':''}>Full demo · original voice</option><option value="presenter_pip" ${r.layout==='presenter_pip'?'selected':''}>Presenter PiP · real recording</option></select></label><label>Presenter shape<select data-k="pip_shape"><option value="rectangle" ${(r.pip_shape||'rectangle')==='rectangle'?'selected':''}>Rectangle</option><option value="circle" ${r.pip_shape==='circle'?'selected':''}>Circle</option></select></label><label>PiP corner<select data-k="pip_corner">${['auto','top_left','top_right','bottom_left','bottom_right'].map(k=>`<option value="${k}" ${(r.pip_corner||(r.pip_shape==='circle'?'bottom_right':'auto'))===k?'selected':''}>${k.replaceAll('_',' ')}</option>`).join('')}</select></label><label>PiP width (canvas fraction)<input data-k="pip_width" type="number" min="0.18" max="0.36" step="0.01" value="${r.pip_width??.25}"></label>${['Center X','Center Y','Zoom'].map((label,index)=>`<label>Presenter crop · ${label}<input type="number" data-pip-crop="${index}" min="${index===2?1:0}" max="${index===2?3:1}" step=".01" value="${r.pip_crop?.[index]??[.5,.38,1][index]}"></label>`).join('')}<small>Auto avoids observed control, result and captions; no safe corner uses full demo. The corner stays fixed for the cutaway.</small>${anchorControls(r)}<button type="button" data-remove="` +
           i +
           '" class="textbtn">Remove</button></div>',
       )
@@ -398,6 +422,7 @@ function drawForm() {
     refs().length;
   if (key === versionKey || touched.size) return;
   versionKey = key;
+  formRevisions=Object.fromEntries(ids.map(id=>[id,state.jobs[id].revision]));
   const first = state.jobs[ids[0]].settings;
   ["script", "style", "fit", "insert_sound", "caption_position"].forEach(
     (k) => {
@@ -506,7 +531,7 @@ function draw() {
           a.height +
           '</div></div><button class="textbtn" data-play="' +
           a.id +
-          `">Preview</button><div class="ref-actions"><small>${esc(a.source_role==='style_reference'?'Style only · not inserted automatically':a.source_role==='broll'?'Usable B-roll':'Library footage · explicit assignment required')}</small><button class="textbtn" data-describe-footage="${a.id}">Label / assign to recording</button><button class="textbtn" data-analyze="${a.id}">Reference profile</button><button class="textbtn" data-pacing="${a.id}">Use for pacing</button><button class="textbtn" data-show-reference="${a.id}">Show in video</button><button class="textbtn" data-training-intake="${a.id}">Include in training</button></div></div>`,
+          `">Preview</button><div class="ref-actions"><small>${esc(a.source_role==='style_reference'?'Style only · not inserted automatically':a.source_role==='broll'?'Usable B-roll':'Library footage · explicit assignment required')}</small><button class="textbtn" data-describe-footage="${a.id}">Label / assign to recording</button><button class="textbtn" data-analyze="${a.id}">Reference profile</button><button class="textbtn" data-pacing="${a.id}">Use for pacing</button>${a.source_role==='style_reference'?'':`<button class="textbtn" data-show-reference="${a.id}">Show in video</button>`}<button class="textbtn" data-training-intake="${a.id}">Include in training</button></div></div>`,
       )
       .join("") ||
     '<div class="simple-empty">Added footage will be available to every recording in this batch.</div>';
@@ -556,7 +581,7 @@ function drawArtifacts(){
  drawAnimationLibrary();
 }
 function drawAnimationLibrary(){
- el('animationLibrary').innerHTML=Object.values(state.animation_library||{}).map(r=>`<article class="cue-card"><strong>${esc(r.title)}</strong><small>${esc(r.kind||'native_spec')} · ${esc(r.status)} · silent preview</small><button type="button" class="soft" data-animation-preview="${r.id}">Preview / inspect</button>${r.kind==='reference_excerpt'?`<button type="button" class="textbtn" data-animation-import="${r.id}">Add as illustration</button>`:`<button type="button" class="textbtn" data-animation-adapt="${r.id}">Adapt to a current scene</button>`}<button type="button" class="textbtn" data-reveal="animation" data-local-id="${r.id}">Show in animations folder</button></article>`).join('')||'<small>No saved animations yet. Native templates keep editable specs; reference clips retain baked pixels. New episodes need their own narration and proof.</small>';
+ el('animationLibrary').innerHTML=Object.values(state.animation_library||{}).map(r=>`<article class="cue-card"><strong>${esc(r.title)}</strong><small>${esc(r.kind||'native_spec')}${r.kind==='native_spec'?' · template v'+(r.template_version||1)+' / source scene v'+r.source_version:''} · ${esc(r.status)} · silent preview</small><button type="button" class="soft" data-animation-preview="${r.id}">Preview / inspect</button>${r.kind==='reference_excerpt'?`<button type="button" class="textbtn" data-animation-import="${r.id}">Add as illustration</button>`:`<button type="button" class="textbtn" data-animation-adapt="${r.id}">Adapt to a current scene</button>`}<button type="button" class="textbtn" data-reveal="animation" data-local-id="${r.id}">Show in animations folder</button></article>`).join('')||'<small>No saved animations yet. Native templates keep editable specs; reference clips retain baked pixels. New episodes need their own narration and proof.</small>';
  all('[data-artifact-edit]').forEach(b=>{const r=state.artifacts[b.dataset.artifactEdit];if(r?.plan.kind==='animation_spec'){const button=document.createElement('button');button.type='button';button.className='textbtn';button.dataset.animationSaveScene=r.id;button.textContent='Save to animations';b.parentElement.appendChild(button);}});
 }
 function drawGenerative(){
@@ -564,10 +589,12 @@ function drawGenerative(){
  el('generativeRuns').innerHTML=runs.map(r=>`<article class="cue-card"><strong>${esc(r.receipt.base_model||'CogVideoX candidate')}</strong><small>${r.receipt.task==='video_diffusion_lora'?r.receipt.actual_optimizer_steps+' actual optimizer steps':'Kaggle generation · adapter loaded: '+Boolean(r.receipt.weights_loaded)} · ${esc(r.status)}<br>Run ${r.id.slice(0,8)} · source ${esc(r.source_kernel||'Imported receipt')}</small>${(r.receipt.outputs||[]).map((v,i)=>`<div class="dialogactions"><button type="button" class="textbtn" data-generated-preview="${r.id}" data-generated-index="${i}">${esc(v.label)} · Preview ${i+1}</button>${v.label==='candidate'?`<button type="button" class="soft" data-generated-scene="${r.id}" data-generated-index="${i}">Create illustration scene</button>`:''}</div>`).join('')}</article>`).join('')||'<small>No generative model result imported. Built-in animations remain available.</small>';
  el('generativeJobs').innerHTML=Object.values(state.generative_jobs||{}).map(j=>`<article class="cue-card"><strong>${esc(j.status)}</strong><p>${esc(j.prompt)}</p><small>Private Kaggle · prompt only · seed ${j.seed}</small><button type="button" class="soft" data-generative-check="${j.id}">Refresh generation</button></article>`).join('');
 }
+function compositionFields(p){const c=p.composition||{};return `<details open><summary>Presenter composition</summary><label>Layout<select id="scenePresenterLayout"><option value="full_demo" ${c.layout!=='presenter_pip'?'selected':''}>Current scene</option><option value="presenter_pip" ${c.layout==='presenter_pip'?'selected':''}>Presenter inset</option></select></label><label>Shape<select id="scenePresenterShape"><option value="circle" ${c.pip_shape!=='rectangle'?'selected':''}>Circle</option><option value="rectangle" ${c.pip_shape==='rectangle'?'selected':''}>Rectangle</option></select></label><label>Position<select id="scenePresenterCorner">${['bottom_right','bottom_left','top_right','top_left','auto'].map(k=>`<option value="${k}" ${(c.pip_corner||'bottom_right')===k?'selected':''}>${k.replaceAll('_',' ')}</option>`).join('')}</select></label><label>Diameter / canvas width<input id="scenePresenterSize" type="number" min=".18" max=".36" step=".01" value="${c.pip_width??.25}"></label>${['Center X','Center Y','Zoom'].map((label,i)=>`<label>${label}<input type="number" data-scene-presenter-crop="${i}" min="${i===2?1:0}" max="${i===2?3:1}" step=".01" value="${c.pip_crop?.[i]??[.5,.38,1][i]}"></label>`).join('')}<small>Crop centers use the fitted presenter canvas (0–1), zoom 1–3. Caption/result conflicts require moving or resizing. Voice and SFX stay unchanged.</small></details>`;}
+function readComposition(){return {layout:el('scenePresenterLayout').value,pip_shape:el('scenePresenterShape').value,pip_corner:el('scenePresenterCorner').value,pip_width:Number(el('scenePresenterSize').value),pip_crop:all('[data-scene-presenter-crop]').map(x=>Number(x.value))};}
 function artifactEditor(id){
  const r=state.artifacts[id],p=r.plan,parts=state.storyboards?.[r.job]?.passages||[];
  if(p.kind==='animation_spec'){
-  dialog('Edit animation spec',`<p>${esc(p.source_quote)}</p><small>${esc(p.status)} · ${esc(p.animation.model.mode)} · ${esc(p.animation.model.checkpoint_sha256||'rules; no weights')}</small>${p.animation.spec.objects.map((o,i)=>`<details open><summary>${esc(o.id)} · source ${esc(o.anchor)}</summary>${motionBackgroundControls(o,i)}${o.text!==undefined?`<label>Visible text<textarea rows="2" data-motion-text="${i}">${esc(o.text)}</textarea></label><label>Font size<input type="number" data-motion-font="${i}" min="38" max="92" value="${o.font_size}"></label>`:''}<div class="roi-inputs">${['x','y','width','height'].map((k,j)=>`<label>${k} (0–1)<input type="number" min="0" max="1" step="0.01" data-motion-rect="${i}" data-coordinate="${j}" value="${o.rect[j]}"></label>`).join('')}</div><label>Entrance (frames)<input type="number" min="${Math.max(1,o.keyframes.length-1)}" max="60" data-motion-entrance="${i}" value="${o.keyframes.at(-1).frame}"></label>${o.text!==undefined?`<label>Entrance tilt (°)<input type="number" min="0" max="45" step="0.5" data-motion-tilt="${i}" value="${Math.max(...o.keyframes.map(k=>Math.abs(k.rotation||0)))}"></label>`:''}<label>Readable hold (frames)<input type="number" min="12" max="180" data-motion-hold="${i}" value="${o.hold_frames}"></label>${motionReplacementControls(o,i)}</details>`).join('')}${(p.animation.spec.sfx||[]).map((s,i)=>`<div class="scene-controls"><label><input type="checkbox" data-motion-sound="${i}" checked> ${esc(s.id)} · ${esc(s.anchor)}</label><label>Gain dB<input type="number" min="-60" max="-6" data-motion-gain="${i}" value="${s.gain_db??-26}"></label></div>`).join('')}<label>Save edits from<select id="motionEditMode"><option value="controls">Controls above</option><option value="json">Advanced JSON below</option></select></label><details><summary>Advanced · source anchors, replacement states and keyframes</summary><textarea id="motionSpecEditor" rows="18">${esc(JSON.stringify(p.animation,null,2))}</textarea></details><p>Music remains independent in Style. Manual specifications survive preview regeneration.</p><button type="button" class="primary" data-save-motion="${id}" ${r.locked?'disabled':''}>Save new scene version</button><button type="button" class="soft" data-motion-lock="${id}">${r.locked?'Unlock scene':'Lock scene'}</button>`);return;
+  dialog('Edit animation spec',`${compositionFields(p)}<button type="button" class="soft" data-save-composition="${id}" data-scene-version="${r.version}" ${r.locked?'disabled':''}>Save presenter layout only</button><p>${esc(p.source_quote)}</p><small>${esc(p.status)} · ${esc(p.animation.model.mode)} · ${esc(p.animation.model.checkpoint_sha256||'rules; no weights')}</small>${p.animation.spec.objects.map((o,i)=>`<details open><summary>${esc(o.id)} · source ${esc(o.anchor)}</summary>${motionBackgroundControls(o,i)}${o.text!==undefined?`<label>Visible text<textarea rows="2" data-motion-text="${i}">${esc(o.text)}</textarea></label><label>Font size<input type="number" data-motion-font="${i}" min="38" max="92" value="${o.font_size}"></label>`:''}<div class="roi-inputs">${['x','y','width','height'].map((k,j)=>`<label>${k} (0–1)<input type="number" min="0" max="1" step="0.01" data-motion-rect="${i}" data-coordinate="${j}" value="${o.rect[j]}"></label>`).join('')}</div><label>Entrance (frames)<input type="number" min="${Math.max(1,o.keyframes.length-1)}" max="60" data-motion-entrance="${i}" value="${o.keyframes.at(-1).frame}"></label>${o.text!==undefined?`<label>Entrance tilt (°)<input type="number" min="0" max="45" step="0.5" data-motion-tilt="${i}" value="${Math.max(...o.keyframes.map(k=>Math.abs(k.rotation||0)))}"></label>`:''}<label>Readable hold (frames)<input type="number" min="12" max="180" data-motion-hold="${i}" value="${o.hold_frames}"></label>${motionReplacementControls(o,i)}</details>`).join('')}${(p.animation.spec.sfx||[]).map((s,i)=>`<div class="scene-controls"><label><input type="checkbox" data-motion-sound="${i}" checked> ${esc(s.id)} · ${esc(s.anchor)}</label><label>Gain dB<input type="number" min="-60" max="-6" data-motion-gain="${i}" value="${s.gain_db??-26}"></label></div>`).join('')}<label>Save edits from<select id="motionEditMode"><option value="controls">Controls above</option><option value="json">Advanced JSON below</option></select></label><details><summary>Advanced · source anchors, replacement states and keyframes</summary><textarea id="motionSpecEditor" rows="18">${esc(JSON.stringify(p.animation,null,2))}</textarea></details><p>Music remains independent in Style. Manual specifications survive preview regeneration.</p><button type="button" class="primary" data-save-motion="${id}" data-scene-version="${r.version}" ${r.locked?'disabled':''}>Save new scene version</button><button type="button" class="soft" data-motion-lock="${id}">${r.locked?'Unlock scene':'Lock scene'}</button>`);return;
  }
  dialog('Edit '+(p.type==='introduction'?'introduction':'demo'),`<label>Wording<input id="sceneTitle" value="${esc(p.title)}"></label><label>Spoken passage<select id="scenePassage">${parts.map(s=>`<option value="${s.id}" ${p.passage_ids.includes(s.id)?'selected':''}>${esc(s.quote)} · occurrence ${s.occurrence+1}</option>`).join('')}</select></label><small>${esc(p.timing)}. This is not a claim of successful speech alignment.</small><div class="scene-controls"><label>Duration (s)<input type="number" id="sceneDuration" min="0.5" max="30" step="any" value="${p.duration}"></label><label>Insert at (s)<input type="number" id="sceneAt" min="0" step="any" value="${p.at}"></label></div><label>Position<select id="scenePosition">${['top','center','bottom'].map(k=>`<option ${k===p.position?'selected':''}>${k}</option>`).join('')}</select></label><label>Motion intensity<input id="sceneIntensity" type="range" min="0" max="1" step="0.05" value="${p.intensity}"></label><label>Sound<select id="sceneSound"><option value="none" ${p.sound==='none'?'selected':''}>Off · intentional silence</option><option value="click+chime" ${p.sound!=='none'?'selected':''}>Click on contact · chime on result</option></select></label>${['contact','result'].map(key=>`<details><summary>${key==='contact'?'Contact click':'Success chime'} overrides</summary><label><input id="sceneMute-${key}" type="checkbox" ${p.sounds?.[key]?.muted?'checked':''}> Mute</label><label>Gain (dB)<input id="sceneGain-${key}" type="number" min="-60" max="6" value="${p.sounds?.[key]?.gain_db??-14}"></label><label>Offset (frames)<input id="sceneOffset-${key}" type="number" value="${p.sounds?.[key]?.offset_frames??0}"></label></details>`).join('')}${designFields(p.design)}${evidenceFields(p.evidence)}<button type="button" class="primary" data-save-scene="${id}">Save new scene version</button><p>Other scenes, their versions and manual edits remain unchanged.</p>`);
 }
@@ -615,7 +642,12 @@ async function save() {
   const savingRevision=editRevision;
   const changes = {};
   for (const k of touched) changes[k] = k === "inserts" ? inserts : k==='events'?manualEvents:['motion_intensity','music_gain_db','brand_from','brand_to'].includes(k)?Number(el(k).value):el(k).value;
-  await req("/api/update", { ids: selectedIds(), changes });
+  persistDraft();
+  let saved;
+  try{saved=await req("/api/update", { ids: selectedIds(), revisions:formRevisions, changes });}
+  catch(error){if(error.status===409)showSavedDraft();throw error;}
+  formRevisions=saved.revisions;
+  if(editRevision===savingRevision)sessionStorage.removeItem(draftKey());else persistDraft();
   if(editRevision!==savingRevision){notify('Earlier settings saved. Newer edits are still unsaved.');return;}
   touched.clear();
   versionKey = "";
@@ -701,7 +733,7 @@ document.addEventListener(
   guard(async (e) => {
     const b = e.target.closest("button,input,[data-row],a");
     if (!b) return;
-    if(b.id==='componentInventory'){const c=await req('/api/components');dialog('Component inventory',`<p>${c.specified} specified · ${c.render_tested} render-tested · ${c.editorially_approved} editorially approved for delivery.</p><p>Render tests do not replace reviewing this episode’s exact master.</p>${c.components.map(r=>`<p><strong>${r.id} · ${esc(r.name)}</strong><br><small>v${esc(r.version)} · ${r.render_tested?'Render-tested variant':'Specified / separate validation needed'} · ${esc(r.limitation)}</small></p>`).join('')}`);return;}
+    if(b.id==='componentInventory'){const c=await req('/api/components');dialog('Component inventory',`<p>${c.specified} specified · ${c.render_tested} render-tested · ${c.editorially_approved} editorially approved for delivery.</p><p>Render tests do not replace reviewing this episode’s exact master.</p>${c.components.map(r=>`<p><strong>${r.id} · ${esc(r.name)}</strong><br><small>v${esc(r.version)} · ${r.render_tested?'Render-tested variant':'Specified / separate validation needed'} · ${esc(r.limitation)}<br>Renderer: ${esc(r.renderer||'Unavailable')} · ${esc(r.kind)}<br>Parameters: ${esc(r.parameters.join(', ')||'None declared')}<br>Requires: ${esc(r.requirements.join('; '))}<br>${esc(r.validation)}</small></p>`).join('')}`);return;}
     if(b.id==='importGenerative'){dialog('Import generative run',`<p>Compact ZIP: one completed provenance receipt, adapter and matching MP4 previews. This does not activate an edit-selector adapter or approve the video.</p><label>Private Kaggle kernel · optional, required for new prompts<input id="generativeKernel" placeholder="owner/kernel-slug/version"></label><button type="button" id="chooseGenerativeZip" class="primary">Choose result ZIP</button>`);return;}
     if(b.id==='chooseGenerativeZip'){el('generativePackageInput').click();return;}
     if(b.dataset.generatedPreview){const r=state.generative_runs[b.dataset.generatedPreview],i=Number(b.dataset.generatedIndex),v=r.receipt.outputs[i];dialog('AI illustration · '+v.label,`<video controls src="/generated/${r.id}/${i}"></video><p>${esc(v.prompt)}</p><small>Generated illustration; not proof of a real software action. Seed ${v.seed} · SHA ${esc(v.sha256)}</small>`);return;}
@@ -722,7 +754,7 @@ document.addEventListener(
       dialog('Make first cut',`<p>Use the real recorded voice. Prepared scripts, B-roll and style references are optional. Ambiguous takes remain for review. Unchanged fields keep each recording’s own choices.</p><label>Your niche · optional<input id="creatorNiche" maxlength="500" data-original="${esc(niche)}" value="${esc(niche)}" placeholder="e.g. retail, hospitality, WordPress tutorials…"></label><label>Story recipe<select id="creatorFormat" data-original="${esc(format)}">${[...(mixedFormat?[['','Keep each recording’s recipe']]:[]),['auto','Choose from available evidence'],['result-first','Result first'],['mistake-fix','Mistake → fix'],['before-after','Before / after'],['a-b','Two options'],['myth-check','Check a belief'],['checklist','Checklist'],['viewer-question','Answer a viewer'],['challenge','Challenge'],['teardown','Teardown'],['mini-case','Mini case']].map(([id,label])=>`<option value="${id}" ${format===id?'selected':''}>${label}</option>`).join('')}</select></label><p>A recipe requiring missing proof keeps the presenter and names the pickup. Visual style stays independent.</p><button id="startFirstCut" class="primary" type="button">Make reviewable cut</button>`);return;
     }
     if(b.id==='startFirstCut'){
-      b.disabled=true;try{const r=await req('/api/creator/first-cut',{ids:selectedIds(),niche:el('creatorNiche').value===el('creatorNiche').dataset.original?undefined:el('creatorNiche').value,story_format:el('creatorFormat').value===el('creatorFormat').dataset.original?undefined:el('creatorFormat').value});
+      b.disabled=true;try{const r=await firstCut(selectedIds(),el('creatorNiche').value===el('creatorNiche').dataset.original?undefined:el('creatorNiche').value,el('creatorFormat').value===el('creatorFormat').dataset.original?undefined:el('creatorFormat').value);
        if(r.setup_required){dialog('Local captions · first use',`<p>${esc(r.speech_setup.download)}</p><p>Destination: ${esc(r.speech_setup.destination)}</p><p>Only model/dependency files are downloaded. Your recording stays local. Future runs use the cache offline.</p><button type="button" id="setupLocalCaptions" class="primary">Download local captions</button><button type="button" id="attachCreatorScript" class="soft">Use a prepared TXT / SRT instead</button>`);}
        else{el('modal').close();versionKey='';await refresh();notify(`First cut queued: ${r.queued}. Uncertain words and proof stay pending.`);}
       }finally{b.disabled=false;}return;
@@ -730,7 +762,17 @@ document.addEventListener(
     if(b.id==='setupLocalCaptions'){await req('/api/creator/setup',{});el('modal').close();await refresh();notify('Local captions setup started. Progress appears above the recordings.');return;}
     if(b.id==='attachCreatorScript'){if(selectedIds().length!==1)throw Error('Select one recording to attach its prepared script.');el('creatorScriptInput').click();return;}
     if(b.dataset.saveCreatorBrief){const id=b.dataset.saveCreatorBrief;await req('/api/creator/brief',{id,revision:state.jobs[id].revision,text:el('creatorBrief').value});versionKey='';await refresh();notify('Brief saved; render a new cut for review.');return;}
-    if(b.dataset.auditionOpenings){b.disabled=true;try{const r=await req('/api/creator/openings',{id:b.dataset.auditionOpenings});dialog('Opening audition · same audio',`<p>Only ${r.duration}s rendered. Original narration and body are fixed. Editorial choice; audience performance is not established.</p><div class="review-grid">${[['host','Host first','host_first'],['proof','Assigned result first','proof_first']].map(([key,label,mode])=>`<section><h3>${label}</h3><video controls width="360" src="/openings/${r.id}/${key}"></video><button class="soft" data-opening-choice="${mode}" data-audition="${r.id}">Choose ${label.toLowerCase()}</button></section>`).join('')}</div><a href="/openings/${r.id}/receipt" download>Source timecodes &amp; hashes</a><p>Check whether this actual result supports the spoken promise and is readable. These previews do not approve the full master.</p>`);}finally{b.disabled=false;}return;}
+    if(b.dataset.auditionOpenings){
+      const job=b.dataset.auditionOpenings;b.disabled=true;
+      try{
+        const r=await req('/api/creator/openings',{id:job});
+        const shot=state.assets[r.proof.asset]?.name||'assigned result footage';
+        const candidates=[['host','Presenter first','host_first','Opens on the recorded presenter.'],['proof','Result first','proof_first',`Opens on ${shot} at source ${time(r.proof.source_range[0])}.`]];
+        dialog('Compare openings',`<p>Both options use the same recorded line: “${esc(r.quote)}”. These are editorial choices, not proven winners.</p><div class="opening-grid">${candidates.map(([key,label,mode,reason])=>`<section><h3>${label}</h3><video controls playsinline preload="metadata" id="opening-${key}" aria-label="${label} preview" src="/openings/${r.id}/${key}"></video><p>${esc(reason)}</p><button type="button" class="soft" data-play-opening="${key}">Play into the body</button><button type="button" class="textbtn" data-opening-choice="${mode}" data-audition="${r.id}">Choose ${label.toLowerCase()}</button></section>`).join('')}</div><section class="opening-body"><h3>Same body for both</h3><video controls playsinline id="openingBody" aria-label="Shared edited body" src="/exports/${r.baseline_export}/mp4"></video><p id="openingPlaybackStatus" role="status">The preview switches to the shared body after ${r.duration} seconds. Playback may pause briefly at the switch.</p></section><p><small>Check whether the result supports the line. Choosing an opening requires a new cut and review.</small></p>`);
+        for(const [key] of candidates){const preview=el('opening-'+key);preview.addEventListener('ended',()=>{const body=el('openingBody');if(!body)return;body.currentTime=r.duration;body.play().then(()=>{el('openingPlaybackStatus').textContent='Playing the shared body.';}).catch(()=>{el('openingPlaybackStatus').textContent='Press play on the shared body to continue.';});});}
+      }finally{b.disabled=false;}return;
+    }
+    if(b.dataset.playOpening){const body=el('openingBody');body.pause();for(const v of all('[id^="opening-"]'))v.pause();const preview=el('opening-'+b.dataset.playOpening);preview.currentTime=0;await preview.play();el('openingPlaybackStatus').textContent='Playing the opening; the shared body follows.';return;}
     if(b.dataset.openingChoice){await req('/api/creator/opening-choice',{audition:b.dataset.audition,mode:b.dataset.openingChoice});el('modal').close();versionKey='';await refresh();notify('Opening saved. Render a new version; original narration and old cuts are kept.');return;}
     if(b.dataset.previewPassage){const id=b.dataset.previewPassage;playsource(id);const video=el('dialogBody').querySelector('video'),start=Number(b.dataset.from),end=Number(b.dataset.to);video.addEventListener('loadedmetadata',()=>{video.currentTime=start;},{once:true});video.addEventListener('timeupdate',()=>{if(video.currentTime>end)video.pause();});return;}
     if(b.dataset.creatorTrim||b.dataset.restoreTake){const id=b.dataset.creatorTrim||b.dataset.restoreTake;await req('/api/creator/trim',{id,revision:state.jobs[id].revision,start:b.dataset.restoreTake?0:Number(el('creatorKeepStart').value),end:b.dataset.restoreTake?state.assets[id].duration:Number(el('creatorKeepEnd').value)});versionKey='';await refresh();notify('Source cut saved. Prior cuts remain; check meaning and joins on the next export.');return;}
@@ -761,7 +803,8 @@ document.addEventListener(
     if(b.dataset.confirmAnimationAdapt){const r=state.artifacts[el('adaptAnimationScene').value];await req('/api/animations/reuse',{id:r.id,library:b.dataset.confirmAnimationAdapt,version:r.version});el('modal').close();await refresh();return;}
     if(b.id==='transcribeRecording'){const ids=selectedIds();if(ids.length!==1)throw Error('Select one take');b.disabled=true;try{const t=await req('/api/transcribe',{id:ids[0]});dialog('Vietnamese transcript · review required',`<p>${esc(t.device)} · ${esc(t.compute_type)} · source SHA ${t.source_sha256.slice(0,12)}</p><textarea rows="16" id="asrTranscript">${esc(t.srt)}</textarea><small>Check names, Vietnamese meaning and CTA against the recording. This does not certify listening.</small><button type="button" class="primary" id="useAsrTranscript" data-job="${ids[0]}">Use as this take’s script</button>`);}finally{b.disabled=false;}return;}
     if(b.id==='useAsrTranscript'){await req('/api/update',{ids:[b.dataset.job],changes:{script:el('asrTranscript').value}});el('modal').close();versionKey='';await refresh();return;}
-    if(b.dataset.saveMotion){const r=state.artifacts[b.dataset.saveMotion],animation=el('motionEditMode').value==='json'?JSON.parse(el('motionSpecEditor').value):JSON.parse(JSON.stringify(r.plan.animation));if(el('motionEditMode').value==='controls'){animation.spec.objects.forEach((o,i)=>{const text=document.querySelector(`[data-motion-text="${i}"]`);if(text){o.text=text.value;o.font_size=Number(document.querySelector(`[data-motion-font="${i}"]`).value);o.box_style=document.querySelector(`[data-motion-background="${i}"]`).value;if(!animation.context.texts.includes(o.text)){animation.context.texts.push(o.text);animation.context.voice_aligned=false;}}o.rect=all(`[data-motion-rect="${i}"]`).map(x=>Number(x.value));const tilt=document.querySelector(`[data-motion-tilt="${i}"]`);o.keyframes=retimeMotionKeys(o.keyframes,Number(document.querySelector(`[data-motion-entrance="${i}"]`).value),tilt?Number(tilt.value):null);o.hold_frames=Number(document.querySelector(`[data-motion-hold="${i}"]`).value);readMotionReplacementControls(animation,o,i);});if('sfx' in animation.spec)animation.spec.sfx=animation.spec.sfx.filter((s,i)=>{s.gain_db=Number(document.querySelector(`[data-motion-gain="${i}"]`).value);return document.querySelector(`[data-motion-sound="${i}"]`).checked;});}b.disabled=true;try{await req('/api/artifacts/edit',{id:r.id,version:r.version,changes:{animation}});el('modal').close();await refresh();}finally{b.disabled=false;}return;}
+    if(b.dataset.saveComposition){const r=state.artifacts[b.dataset.saveComposition];b.disabled=true;try{await req('/api/artifacts/edit',{id:r.id,version:Number(b.dataset.sceneVersion),changes:{composition:readComposition()}});el('modal').close();await refresh();notify('Presenter layout saved as a new scene version. Voice and sound cues retained.');}finally{b.disabled=false;}return;}
+    if(b.dataset.saveMotion){const r=state.artifacts[b.dataset.saveMotion],animation=el('motionEditMode').value==='json'?JSON.parse(el('motionSpecEditor').value):JSON.parse(JSON.stringify(r.plan.animation));if(el('motionEditMode').value==='controls'){animation.spec.objects.forEach((o,i)=>{const text=document.querySelector(`[data-motion-text="${i}"]`);if(text){o.text=text.value;o.font_size=Number(document.querySelector(`[data-motion-font="${i}"]`).value);o.box_style=document.querySelector(`[data-motion-background="${i}"]`).value;if(!animation.context.texts.includes(o.text)){animation.context.texts.push(o.text);animation.context.voice_aligned=false;}}o.rect=all(`[data-motion-rect="${i}"]`).map(x=>Number(x.value));const tilt=document.querySelector(`[data-motion-tilt="${i}"]`);o.keyframes=retimeMotionKeys(o.keyframes,Number(document.querySelector(`[data-motion-entrance="${i}"]`).value),tilt?Number(tilt.value):null);o.hold_frames=Number(document.querySelector(`[data-motion-hold="${i}"]`).value);readMotionReplacementControls(animation,o,i);});if('sfx' in animation.spec)animation.spec.sfx=animation.spec.sfx.filter((s,i)=>{s.gain_db=Number(document.querySelector(`[data-motion-gain="${i}"]`).value);return document.querySelector(`[data-motion-sound="${i}"]`).checked;});}b.disabled=true;try{await req('/api/artifacts/edit',{id:r.id,version:Number(b.dataset.sceneVersion),changes:{animation}});el('modal').close();await refresh();}finally{b.disabled=false;}return;}
     if(b.dataset.motionLock){const r=state.artifacts[b.dataset.motionLock];await req('/api/artifacts/edit',{id:r.id,version:r.version,changes:{locked:!r.locked}});el('modal').close();await refresh();return;}
     if(b.dataset.artifactPreview){const r=state.artifacts[b.dataset.artifactPreview];dialog(r.plan.title,`<video controls src="/artifacts/${r.id}/preview?v=${r.version}"></video><p>${esc(r.status)} · ${esc(r.plan.narration_status)}</p><blockquote>${esc(r.plan.source_quote)}</blockquote><p>${esc(artifactVisual(r.plan))}</p><div class="dialogactions"><a class="link" download href="/artifacts/${r.id}/preview?download=1">Export MP4</a><a class="link" download href="/artifacts/${r.id}/source?download=1">Editable scene JSON</a><a class="link" download href="/artifacts/${r.id}/timeline?download=1">Timeline</a></div>`);return;}
     if(b.dataset.artifactEdit){artifactEditor(b.dataset.artifactEdit);return;}
@@ -791,7 +834,7 @@ document.addEventListener(
     if(b.dataset.style){el('style').value=b.dataset.style;setDirty('style');drawFraming();return;}
     if(b.id==='toggleInspector'){inspectorOpen=!inspectorOpen;el('form').classList.toggle('collapsed',!inspectorOpen);b.setAttribute('aria-expanded',String(inspectorOpen));b.textContent=inspectorOpen?'Hide settings':'Show settings';return;}
     if(b.dataset.pacing){if(!selectedIds().length)throw Error('Select recordings to apply pacing.');await save();await req('/api/update',{ids:selectedIds(),changes:{style_ref:b.dataset.pacing}});versionKey='';await refresh();showPanel('look');notify('Pacing reference applied. It stays off screen.');return;}
-    if(b.dataset.showReference){if(selectedIds().length!==1)throw Error('Select one recording to add its on-screen demonstration.');inserts.push({asset:b.dataset.showReference,at:0,offset:0,duration:Math.min(2,state.assets[b.dataset.showReference].duration,state.assets[selectedIds()[0]].duration)});setDirty('inserts');showPanel('inserts');drawInserts();return;}
+    if(b.dataset.showReference){if(state.assets[b.dataset.showReference]?.source_role==='style_reference')throw Error('Add this file as footage to include before placing it in the video.');if(selectedIds().length!==1)throw Error('Select one recording to add its on-screen demonstration.');inserts.push({asset:b.dataset.showReference,at:0,offset:0,duration:Math.min(2,state.assets[b.dataset.showReference].duration,state.assets[selectedIds()[0]].duration)});setDirty('inserts');showPanel('inserts');drawInserts();return;}
     if(b.id==='resolveScripts'){
       dialog('Assign unmatched scripts',unresolvedScripts.map((f,i)=>`<div class="assignment"><strong>${esc(f.name)}</strong><small>${esc(f.reason)}</small><label>Recording<select data-assignment="${i}"><option value="">Choose recording…</option>${Object.values(state.jobs).map(j=>`<option value="${j.id}">${esc(state.assets[j.id].name)}</option>`).join('')}</select></label><button class="soft" data-assign="${i}">Assign script</button></div>`).join(''));return;
     }
@@ -893,8 +936,8 @@ document.addEventListener(
         el("scriptInput").click();
         break;
       case "addInsert": {
-        const r = refs()[0];
-        if (!r) throw Error("Add reference footage first.");
+        const r = refs().find(a=>a.source_role!=='style_reference');
+        if (!r) throw Error("Add footage to include first.");
         const at = inserts.length
           ? inserts.at(-1).at + inserts.at(-1).duration
           : 0;
@@ -934,7 +977,8 @@ document.addEventListener(
         waiting = true;
         try {
           await save();
-          const r = await req("/api/queue", { ids: selectedIds(),request_id:crypto.randomUUID() });
+          const readyIds=selectedIds().filter(k=>!state.jobs[k].archived&&!locked(state.jobs[k])&&state.jobs[k].status!=="Failed"&&state.jobs[k].settings.script.trim()&&!state.jobs[k].script_issue);
+          const r = await req("/api/queue", { ids: readyIds,request_id:crypto.randomUUID() });
           await refresh();
           notify(
             "Queued " +
@@ -977,6 +1021,7 @@ el("form").addEventListener(
   }),
 );
 el("form").addEventListener("input", (e) => {
+  if(e.target.dataset.pipCrop!==undefined){const i=Number(e.target.closest('[data-insert]').dataset.insert);inserts[i].pip_crop??=[.5,.38,1];inserts[i].pip_crop[Number(e.target.dataset.pipCrop)]=Number(e.target.value);setDirty('inserts');return;}
   if(e.target.dataset.anchorArray){const i=Number(e.target.closest('[data-insert]').dataset.insert),key=e.target.dataset.anchorArray,index=Number(e.target.dataset.coordinate);inserts[i].anchors??={};if(key==='crop'){inserts[i].crop??=[1280,800,0,0];inserts[i].crop[index]=Number(e.target.value);}else{inserts[i].anchors[key]??=key==='contact_point_source'?[0,0]:[0,0,100,60];inserts[i].anchors[key][index]=Number(e.target.value);}setDirty('inserts');return;}
   if(e.target.dataset.eventField||e.target.dataset.soundField||e.target.dataset.eventRoi!=null){const index=Number(e.target.closest('[data-event]').dataset.event),event=manualEvents[index],field=e.target.dataset.eventField,sound=e.target.dataset.soundField;
     if(field==='at'){event.anchor.timeline_source_pts=Number(e.target.value);}else if(field)event[field]=field==='hold_frames'?Number(e.target.value):e.target.value;
@@ -988,10 +1033,11 @@ el("form").addEventListener("input", (e) => {
   const k = e.target.dataset.k;
   if (k) {
     const i = Number(e.target.closest("[data-insert]").dataset.insert);
-    inserts[i][k] = ["asset", "cue", "layout", "pip_corner", "demonstrates", "visual_claim"].includes(k)
+    inserts[i][k] = ["asset", "cue", "layout", "pip_corner", "pip_shape", "demonstrates", "visual_claim"].includes(k)
       ? e.target.value
       : Number(e.target.value);
     if(k==='cue')delete inserts[i].occurrence;
+    if(k==='pip_shape'){inserts[i].pip_corner??=inserts[i].pip_shape==='circle'?'bottom_right':'auto';drawInserts();}
     setDirty("inserts");
   } else if (
     [
@@ -1083,3 +1129,508 @@ document.addEventListener('change',e=>{if(e.target.id==='animationMode'){const s
 document.addEventListener('change',e=>{const id=e.target.dataset.motionStateCustom;if(id!==undefined)all(`[data-motion-state-rect="${id}"]`).forEach(x=>x.disabled=!e.target.checked);});
 
 document.addEventListener('input',e=>{if(e.target.dataset.observedFace!==undefined){const values=all('[data-observed-face]').map(x=>Number(x.value));if(values.every(Number.isFinite))['x','y','width','height'].forEach((k,i)=>el('observedFaceBox').setAttribute(k,values[i]));}});
+// Creator workspace: presentation over the existing, versioned Cutroom handlers.
+(() => {
+  const root = document.createElement('section'); root.id = 'creatorRoom';
+  const layout = document.querySelector('#work .layout');
+  const advanced = document.createElement('details'); advanced.className='creator-advanced';
+  advanced.innerHTML='<summary>Batch workflow & advanced editing</summary>';
+  layout.before(root, advanced); advanced.append(layout);
+  document.querySelector('#work .sectionhead h1').textContent='Your cut';
+  document.querySelector('#work .sectionhead p').textContent='Bring your recording. Make a first cut, then make it yours.';
+  const originalDraw=draw; let signature='', chosenBeat=-1, captionDraft=null, shotDraft=null; const roomProjects=new Map(), nicheDrafts=new Map();
+  draw=function(){originalDraw(); renderRoom();};
+  const format=t=>time(Math.max(0,Number(t)||0));
+  function editTime(t, keep){let offset=0; for(const [a,b] of keep||[]){if(t>=a&&t<b)return offset+t-a; offset+=b-a;} return null;}
+  function selectedBeat(job,index){
+    const cut=latestFor(job.id),project=cut&&roomProjects.get(cut.id);
+    return project?.beats?.[index];
+  }
+  function selectBeat(index){
+    chosenBeat=index;
+    root.querySelectorAll('.room-beat.selected').forEach(x=>{x.classList.remove('selected');x.querySelector('.beat-actions')?.remove();});
+    const button=root.querySelector(`[data-room-beat="${index}"]`), row=button?.closest('.room-beat');
+    if(!row)return;
+    row.classList.add('selected');
+    root.querySelectorAll('.timeline-clip').forEach(x=>x.classList.toggle('selected',x.dataset.roomBeat===String(index)));
+    row.insertAdjacentHTML('beforeend','<div class="beat-actions"><button type="button" class="soft" data-room-correct="'+index+'">Correct caption</button><button type="button" class="textbtn" data-room-shot="'+index+'">Replace shot</button><button type="button" class="textbtn" data-room-restore>Restore entire take</button><button type="button" class="textbtn" data-room-scenes>Scene plan & style board</button></div>');
+  }
+  function renderRoom(force=false){
+    if(!state.jobs)return;
+    const ids=selectedIds(), id=ids.length===1?ids[0]:null, j=id&&state.jobs[id], a=id&&state.assets[id], cut=id&&latestFor(id);
+    const key=JSON.stringify([ids,Object.values(state.jobs).map(x=>[x.id,x.revision,x.status,x.stage,x.latest]),Object.values(state.assets).map(x=>[x.id,x.source_role,x.owner_jobs]),state.speech_setup?.status]);
+    if(!force&&key===signature)return; signature=key;
+    const names=Object.values(state.jobs).filter(x=>!x.archived).map(x=>`<option value="${esc(x.id)}" ${id===x.id?'selected':''}>${esc(sourceName(x.id))} · ${esc(x.status)}</option>`).join('');
+    const own=id?refs().filter(x=>(x.owner_jobs||[]).includes(id)):[];
+    const roleList=role=>own.filter(x=>x.source_role===role).map(x=>`<li class="room-media-item">${thumb(x)}<span><strong>${esc(x.name)}</strong><small>${role==='broll'?'Can be placed in cut':'Style only · stays off screen'}</small></span>${role==='broll'?`<button type="button" class="textbtn" data-room-assign="${esc(x.id)}">Assign</button>`:''}</li>`).join('')||'<li class="room-media-empty">None added</li>';
+    if(cut&&!roomProjects.has(cut.id)){
+      roomProjects.set(cut.id,null);
+      fetch(`/api/creator/editor?id=${encodeURIComponent(id)}&export=${encodeURIComponent(cut.id)}`).then(r=>{if(!r.ok)throw Error('Project unavailable');return r.json();}).then(project=>{roomProjects.set(cut.id,project);signature='';renderRoom();}).catch(()=>{roomProjects.set(cut.id,false);signature='';renderRoom();});
+    }
+    const project=cut&&roomProjects.get(cut.id), plan=project?.plan;
+    const stale=cut&&cut.revision!==j.revision, beats=project?.beats||[], canMap=Boolean(cut&&!stale&&project?.editable&&!locked(j));
+
+    const proof=(j?.settings?.inserts||[]).find(q=>state.assets[q.asset]?.source_role==='broll' && q.anchors?.result!=null && Number(q.offset||0)+Number(q.duration||0)-Number(q.anchors.result)>=2);
+    const stage=j?.stage && j.status!=='Draft'?`<p class="room-stage" role="status"><strong>${esc(j.status)}</strong> · ${esc(j.stage)}${j.status==='Failed'?' · Check the recording or script, correct the problem, then make the cut again.':''}</p>`:'';
+    let review='';
+    if(cut){
+      const issues=j.creator?.uncertain||[];
+      const rows=beats.map((b,i)=>{const t=b.segments?.[0]?.edit_start??null, shot=(project?.settings?.inserts||j.settings.inserts||[]).find(q=>q.at<=b.source_start&&q.at+q.duration>b.source_start), picture=shot?state.assets[shot.asset]?.name:'Presenter';
+        const caption=(plan?.captions||[]).flat().filter(w=>w[0]>=b.source_start-.05&&w[1]<=b.source_end+.05).map(w=>w[2]).join(' ');
+        return `<div class="room-beat ${i===chosenBeat?'selected':''}"><button type="button" data-room-beat="${i}" ${!canMap||t===null?'disabled':''}><span class="room-time">${t===null?'Removed':format(t)}</span><span><strong>${esc(b.quote)}</strong><small>${caption?`Caption in ${cutVersion(cut)}: ${esc(caption)}<br>`:''}Planned picture: ${esc(picture||'Assigned footage')} · check the player · source ${format(b.source_start)}</small></span></button>${i===0&&proof&&canMap?`<button type="button" class="soft" data-audition-openings="${id}">Compare openings</button>`:''}${i===chosenBeat&&canMap?`<div class="beat-actions"><button type="button" class="soft" data-room-correct="${i}">Correct caption</button><button type="button" class="textbtn" data-room-shot="${i}">Replace shot</button><button type="button" class="textbtn" data-room-restore>Restore entire take</button><button type="button" class="textbtn" data-room-scenes>Scene plan & style board</button></div>`:''}</div>`;}).join('');
+      review=`<div class="room-review"><section class="room-player"><div class="room-player-head"><div><span class="eyebrow">${stale?'Previous edited cut':'Edited cut'} · ${cutVersion(cut)}</span><h2>${esc(sourceName(id))}</h2></div><button type="button" class="textbtn" data-room-original>Watch original</button></div><video id="roomVideo" controls playsinline aria-label="Edited cut ${cutVersion(cut)}" src="/exports/${cut.id}/mp4"></video><p>${stale?'Your edits have changed since this cut. Make a new cut and review that version.':`This is ${cutVersion(cut)} of your edited video.`}</p><div class="room-buttons"><button type="button" class="primary" data-room-review="${cut.id}">Review & export ${cutVersion(cut)}</button><a class="soft" href="/exports/${cut.id}/mp4?download=1" download>Download video</a></div></section><section class="room-story"><div class="room-story-head"><div><span class="eyebrow">STORYBOARD</span><h2>Listen through the words</h2></div>${issues.length===3&&canMap?'<button class="soft" type="button" data-room-issues>Check 3 moments</button>':''}</div>${stale?'<p class="room-note">These spoken phrases are from the earlier cut. Make a new cut before seeking.</p>':''}${project===false?'<p class="room-note" role="alert">Saved cut could not be loaded. Editing is disabled.</p><button type="button" class="soft" data-room-retry>Retry loading cut</button>':rows||'<p class="room-note">Loading saved passages, or no timed captions available. Use advanced editing for untimed scripts.</p>'}</section></div>`;
+    }
+    root.innerHTML=`<div class="room-top"><div><span class="eyebrow">CUTROOM / ${cut?'REVIEW':'IMPORT'}</span><h2>${cut?(stale?'Your previous cut':'Your cut is ready to watch'):'Start with your recording'}</h2><p>${cut?'Watch the edited cut beside the words. Choose a phrase to hear it in context.':'Add a recording, then add any helpful material before making your first cut.'}</p></div>${names?`<label class="room-select">Recording<select id="roomRecording"><option value="">Choose a recording</option>${names}</select></label>`:''}</div>
+    ${!names?'<div class="room-drop" aria-label="Add recording"><strong>Drop your recording here</strong><span>or choose one or more video files</span><button type="button" class="primary" data-room-add>Add recording</button></div>':!id?'<p class="room-note">Choose one recording above, or open Batch workflow to select several.</p>':`<div class="room-recording">${thumb(a)}<div><strong>${esc(a.name)}</strong><small>Original recording · ${format(a.duration)} · ${esc(j.status)}</small></div><button type="button" class="textbtn" data-room-original>Watch original</button></div>${stage}<div class="room-inputs"><div><span class="eyebrow">OPTIONAL INPUTS · ${esc(sourceName(id))}</span><p>Footage to include is available for this recording; choose where to place it. A style reference guides pacing and style and will not appear by itself.</p></div><div class="room-input-grid"><section><h3>Script</h3><p>${j.settings.script.trim()?'Attached to this recording':'Optional · captions can be made locally'}</p><button type="button" class="soft" data-room-script>Add script</button></section><section><h3>Footage to include</h3><ul>${roleList('broll')}</ul><button type="button" class="soft" data-room-broll>Add footage</button></section><section><h3>Style reference</h3><ul>${roleList('style_reference')}</ul><button type="button" class="soft" data-room-style>Add reference</button></section><section><h3>Niche</h3><label for="roomNiche">Who is this for?</label><input id="roomNiche" maxlength="500" value="${esc(nicheDrafts.has(id)?nicheDrafts.get(id):j.settings.niche||'')}" placeholder="e.g. fitness creators"></section></div></div><div class="room-start"><span>${cut?(stale?'Changes need a new cut before review.':'You are viewing the latest cut.'):'Your original stays intact.'}</span><button type="button" class="primary" data-room-start ${locked(j)?'disabled':''}>${cut?'Make updated cut':'Make first cut'}</button></div>${review}`}`;
+    if(id)root.insertAdjacentHTML('beforeend','<button type="button" class="soft" data-room-scenes>Scene plan & style board</button>');
+    if(cut){
+      root.classList.add('room-has-cut');
+      const editor=document.createElement('div');editor.className='room-editor';
+      const rail=document.createElement('aside');rail.className='room-media-rail';rail.setAttribute('aria-label','Media for this recording');
+      rail.innerHTML='<div class="room-rail-heading"><span class="eyebrow">PROJECT MEDIA</span><strong>Media</strong><small>Files for this recording</small></div>';
+      for(const selector of ['.room-recording','.room-inputs','.room-start']){const node=root.querySelector(selector);if(node)rail.append(node);}
+      editor.append(rail,root.querySelector('.room-review'));root.append(editor);
+      const duration=Math.max(.001,Number(cut.duration)||a.duration), keep=plan?.keep||j.creator?.keep||[[0,a.duration]];
+      const timeline=document.createElement('section');timeline.className='room-timeline';timeline.setAttribute('aria-label','Edited cut timeline');
+      const ticks=[0,.25,.5,.75,1].map(p=>`<span>${format(duration*p)}</span>`).join('');
+      const clips=beats.map((beat,i)=>{return (beat.segments||[]).map(segment=>{const begin=segment.edit_start,finish=segment.edit_end;const left=Math.max(0,Math.min(100,begin/duration*100)),width=Math.max(.5,Math.min(100-left,(finish-begin)/duration*100));return `<button type="button" class="timeline-clip" data-room-beat="${i}" style="left:${left}%;width:${width}%" aria-label="Play passage at ${format(begin)}: ${esc(beat.quote)}" ${!canMap?'disabled':''}><span>${esc(beat.quote)}</span></button>`;}).join('');}).join('');
+      const pictures=(plan?.proof||[]).map(q=>{const begin=editTime(q.start,keep),end=editTime(Math.max(q.start,q.end-.001),keep);if(begin===null||end===null)return '';const left=Math.max(0,Math.min(100,begin/duration*100)),width=Math.max(.5,Math.min(100-left,(end-begin+.001)/duration*100)),asset=state.assets[q.asset_id];return `<span class="timeline-picture" style="left:${left}%;width:${width}%" title="${esc(q.source_name||'Assigned footage')}">${asset?thumb(asset):''}<span>${esc(q.source_name||'Assigned footage')}</span></span>`;}).join('');
+      timeline.innerHTML=`<div class="timeline-head"><div><span class="eyebrow">EDITED CUT · ${esc(cutVersion(cut))}</span><h2>Timeline</h2></div><span class="timeline-duration">${format(duration)}</span></div><div class="timeline-grid"><div class="timeline-label">Time</div><div class="timeline-ruler">${ticks}</div><div class="timeline-label">Picture</div><div class="timeline-source">${thumb(a)}<span>${esc(a.name)} · presenter</span>${pictures}</div><div class="timeline-label">Speech</div><div class="timeline-track">${clips||'<small>Timed passages will appear when available.</small>'}</div></div><small class="timeline-help">Select a speech segment to play it in context. Picture segments reflect the saved edit plan; check the player.</small>`;
+      root.append(timeline);
+    }else root.classList.remove('room-has-cut');
+  }
+  root.addEventListener('input',e=>{if(e.target.id==='roomNiche'&&selectedIds().length===1)nicheDrafts.set(selectedIds()[0],e.target.value);});
+  root.addEventListener('change',e=>{if(e.target.id==='roomRecording'&&e.target.value){chosenBeat=-1;changeSelection([e.target.value]);}});
+  root.addEventListener('dragover',e=>{if(e.target.closest('.room-drop')){e.preventDefault();e.target.closest('.room-drop').classList.add('drag');}});
+  root.addEventListener('dragleave',e=>e.target.closest('.room-drop')?.classList.remove('drag'));
+  root.addEventListener('drop',guard(async e=>{if(!e.target.closest('.room-drop'))return;e.preventDefault();await upload([...e.dataTransfer.files],'host');}));
+  root.addEventListener('keydown',e=>{if(e.target.classList.contains('room-drop')&&['Enter',' '].includes(e.key)){e.preventDefault();el('hostInput').click();}});
+  root.addEventListener('click',guard(async e=>{
+    const b=e.target.closest('button'); if(!b){if(e.target.closest('.room-drop'))el('hostInput').click();return;} const id=selectedIds()[0],j=state.jobs[id];
+    if(b.hasAttribute('data-room-scenes')){await openScenePlan(id);return;}
+    if(b.hasAttribute('data-room-retry')){roomProjects.delete(latestFor(id).id);signature='';renderRoom();return;}
+    if(b.hasAttribute('data-room-add')){el('hostInput').click();return;}
+    if(b.hasAttribute('data-room-script')){el('creatorScriptInput').click();return;}
+    if(b.hasAttribute('data-room-broll')){el('brollInput').click();return;}
+    if(b.hasAttribute('data-room-style')){el('styleReferenceInput').click();return;}
+    if(b.dataset.roomAssign){document.querySelector(`[data-describe-footage="${b.dataset.roomAssign}"]`)?.click();return;}
+    if(b.hasAttribute('data-room-original')){playsource(id);return;}
+    if(b.dataset.roomReview){review(b.dataset.roomReview);return;}
+    if(b.hasAttribute('data-room-start')){b.disabled=true;try{await save();const result=await firstCut([id],el('roomNiche').value);versionKey='';await refresh();if(result.setup_required)dialog('Captions need setup',`<p>Your recording is safe. To make captions from this recording, set up local captions once, or attach a prepared script.</p><p>${esc(result.speech_setup.download)}</p><button type="button" id="setupLocalCaptions" class="primary">Set up local captions</button><button type="button" id="attachCreatorScript" class="soft">Use a prepared TXT / SRT</button>`);else notify('First cut queued for '+sourceName(id)+'.');}finally{b.disabled=false;}return;}
+    if(b.dataset.roomBeat!==undefined){const i=Number(b.dataset.roomBeat), beat=selectedBeat(j,i),cut=latestFor(id),project=cut&&roomProjects.get(cut.id),t=beat.segments[0].edit_start,player=el('roomVideo');selectBeat(i);player.currentTime=Math.max(0,t-1);player.play().catch(()=>{});return;}
+    if(b.dataset.roomCorrect!==undefined){
+      const beat=selectedBeat(j,Number(b.dataset.roomCorrect)), view=roomProjects.get(latestFor(id).id), parsed=beat.cues.length?{cues:beat.cues.map(c=>({...c,i:c.index}))}:null;
+      if(!parsed)throw Error('Use advanced editing for untimed or boundary-crossing captions.');
+      captionDraft={id,revision:j.revision,script:j.settings.script,beat:beat.id,export:view.export,sha256:view.sha256};
+      const fields=parsed.cues.map((c,n)=>`<label for="roomCue-${n}">Caption · source ${format(c.start)}–${format(c.end)}</label><textarea id="roomCue-${n}" data-room-cue="${c.i}" rows="2">${esc(c.text)}</textarea>`).join('');
+      dialog('Correct caption',`<p>Spoken phrase: “${esc(beat.quote)}”</p><p>Edit only the captions in this passage. Their timing stays the same. Save, then make a new cut to check the result.</p>${fields}<button type="button" class="primary" data-room-save-caption="${id}">Save caption correction</button>`);return;
+    }
+    if(b.dataset.roomShot!==undefined){
+      const beat=selectedBeat(j,Number(b.dataset.roomShot)),available=refs().filter(a=>a.source_role==='broll'&&(a.owner_jobs||[]).includes(id));
+      const existing=(j.settings.inserts||[]).findIndex(q=>q.at<beat.source_end&&q.at+q.duration>beat.source_start);
+      const view=roomProjects.get(latestFor(id).id);shotDraft={id,revision:j.revision,beat:beat.id,export:view.export,sha256:view.sha256};
+      const choices=available.map(a=>`<option value="${esc(a.id)}" ${existing>=0&&j.settings.inserts[existing].asset===a.id?'selected':''}>${esc(a.name)} · ${format(a.duration)}</option>`).join('');
+      dialog(existing>=0?'Replace this shot':'Show a shot here',`<p>At source ${format(beat.source_start)} · “${esc(beat.quote)}”</p><p>Choose footage assigned to this recording. The recorded voice continues.</p><label for="roomShotChoice">Picture for this passage</label><select id="roomShotChoice"><option value="">Presenter only</option>${choices}</select>${available.length?'':'<p class="room-note">No footage has been assigned to this recording yet. Add footage to include first.</p>'}<button type="button" class="primary" data-room-save-shot="${id}">Save shot choice</button><p><small>Replacing a shot clears its old proof markers. Check the new shot before treating it as evidence.</small></p>`);return;
+    }
+    if(b.hasAttribute('data-room-restore')){await req('/api/creator/trim',{id,revision:j.revision,start:0,end:state.assets[id].duration});versionKey='';await refresh();notify('Entire take restored. Make a new cut to review it.');return;}
+    if(b.hasAttribute('data-room-issues')){const m=j.creator.uncertain[0];const v=el('roomVideo'),t=editTime(m.source_range[0],j.creator.keep);if(t!==null){v.currentTime=Math.max(0,t-1);v.play().catch(()=>{});}dialog('Check these moments',j.creator.uncertain.map((x,i)=>`<p><strong>Source ${format(x.source_range[0])}</strong> · ${esc(x.reason)}<br>${esc(x.action)}<br><button type="button" class="soft" data-room-moment="${i}">Play this moment</button></p>`).join(''));return;}
+  }));
+  document.addEventListener('click',guard(async e=>{const moment=e.target.closest('[data-room-moment]');if(moment){const id=selectedIds()[0],j=state.jobs[id],issue=j.creator.uncertain[Number(moment.dataset.roomMoment)],index=j.creator.beats.findIndex(b=>b.source_end>issue.source_range[0]&&b.source_start<issue.source_range[1]);el('modal').close();if(index>=0){chosenBeat=index;renderRoom(true);const v=el('roomVideo'),t=editTime(issue.source_range[0],j.creator.keep);if(t!==null){v.currentTime=Math.max(0,t-1);v.play().catch(()=>{});}notify('Choose a passage action below the selected phrase.');}return;}const b=e.target.closest('[data-room-save-caption]');if(!b)return;const id=b.dataset.roomSaveCaption;b.disabled=true;try{
+      if(!captionDraft||captionDraft.id!==id||state.jobs[id].revision!==captionDraft.revision||state.jobs[id].settings.script!==captionDraft.script)throw Error('This recording changed while the editor was open. Reopen the caption and try again.');
+      const cues=all('[data-room-cue]').map(field=>({index:Number(field.dataset.roomCue),text:field.value}));
+      await req('/api/creator/caption',{id,revision:captionDraft.revision,export:captionDraft.export,sha256:captionDraft.sha256,beat:captionDraft.beat,cues});captionDraft=null;el('modal').close();versionKey='';await refresh();notify('Caption correction saved. Make an updated cut to review it.');
+    }finally{b.disabled=false;}}));
+  document.addEventListener('click',guard(async e=>{
+    const b=e.target.closest('[data-room-save-shot]');if(!b)return;const id=b.dataset.roomSaveShot;
+    if(!shotDraft||shotDraft.id!==id||state.jobs[id].revision!==shotDraft.revision)throw Error('This recording changed while the editor was open. Reopen the shot and try again.');
+    const asset=el('roomShotChoice').value;
+    b.disabled=true;try{await req('/api/creator/shot',{id,revision:shotDraft.revision,export:shotDraft.export,sha256:shotDraft.sha256,beat:shotDraft.beat,asset});shotDraft=null;el('modal').close();versionKey='';await refresh();notify('Shot choice saved. Make an updated cut to review it.');}finally{b.disabled=false;}
+  }));
+  renderRoom();
+})();
+
+// Vietnamese/English interface. Creator text, filenames and caption fields are never translated.
+(() => {
+  const words = {
+    'Workspace':'Không gian làm việc','Exports':'Bản xuất','Local workspace':'Làm việc trên máy',
+    'Workspace settings':'Cài đặt không gian làm việc','Your cut':'Bản dựng của bạn','Bring your recording. Make a first cut, then make it yours.':'Thêm bản quay, tạo bản dựng đầu tiên rồi chỉnh theo ý bạn.',
+    '＋ Add recordings':'＋ Thêm bản quay','CUTROOM / REVIEW':'CUTROOM / XEM LẠI','CUTROOM / IMPORT':'CUTROOM / NHẬP TỆP',
+    'Your cut is ready to watch':'Bản dựng đã sẵn sàng để xem','Your previous cut':'Bản dựng trước đó','Start with your recording':'Bắt đầu với bản quay của bạn',
+    'Watch the edited cut beside the words. Choose a phrase to hear it in context.':'Xem bản dựng bên cạnh lời thoại. Chọn một câu để nghe trong ngữ cảnh.',
+    'Add a recording, then add any helpful material before making your first cut.':'Thêm bản quay và các tư liệu cần thiết trước khi tạo bản dựng đầu tiên.',
+    'Drop your recording here':'Thả bản quay vào đây','or choose one or more video files':'hoặc chọn một hay nhiều tệp video','Add recording':'Thêm bản quay','Recording':'Bản quay','Choose a recording':'Chọn bản quay',
+    'Choose one recording above, or open Batch workflow to select several.':'Chọn một bản quay ở trên, hoặc mở quy trình hàng loạt để chọn nhiều bản.',
+    'PROJECT MEDIA':'TƯ LIỆU DỰ ÁN','Media':'Tư liệu','Files for this recording':'Tệp của bản quay này','Watch original':'Xem bản gốc',
+    'OPTIONAL INPUTS':'TƯ LIỆU TÙY CHỌN','Script':'Kịch bản','Attached to this recording':'Đã gắn với bản quay này','Optional · captions can be made locally':'Tùy chọn · có thể tạo phụ đề trên máy',
+    'Add script':'Thêm kịch bản','Footage to include':'Cảnh có thể đưa vào','Can be placed in cut':'Có thể đưa vào bản dựng','Style only · stays off screen':'Chỉ tham khảo phong cách · không xuất hiện trong video','None added':'Chưa thêm','Assign':'Gán','Add footage':'Thêm cảnh',
+    'Style reference':'Video tham khảo phong cách','Add reference':'Thêm video tham khảo','Niche':'Chủ đề','Who is this for?':'Video dành cho ai?','e.g. fitness creators':'Ví dụ: người làm nội dung thể hình',
+    'Footage to include is available for this recording; choose where to place it. A style reference guides pacing and style and will not appear by itself.':'Cảnh được thêm có thể đặt vào bản dựng của bản quay này. Video tham khảo chỉ định hướng nhịp và phong cách, không tự xuất hiện trong video.',
+    'Your original stays intact.':'Bản gốc của bạn được giữ nguyên.','You are viewing the latest cut.':'Bạn đang xem bản dựng mới nhất.','Changes need a new cut before review.':'Cần tạo bản dựng mới để xem lại các thay đổi.',
+    'Make first cut':'Tạo bản dựng đầu tiên','Make updated cut':'Tạo bản dựng mới','Edited cut':'Bản dựng đã chỉnh','Previous edited cut':'Bản dựng trước đó',
+    'Your edits have changed since this cut. Make a new cut and review that version.':'Bạn đã chỉnh sửa sau bản dựng này. Hãy tạo bản mới và xem lại đúng phiên bản đó.',
+    'Download video':'Tải video','STORYBOARD':'LỜI THOẠI','Listen through the words':'Nghe theo lời thoại','Check 3 moments':'Kiểm tra 3 đoạn',
+    'These spoken phrases are from the earlier cut. Make a new cut before seeking.':'Đây là lời thoại của bản trước. Hãy tạo bản mới trước khi chuyển tới từng đoạn.',
+    'No timed spoken phrases are available for this cut. Open advanced editing to inspect the script.':'Bản dựng này chưa có lời thoại kèm thời gian. Mở chỉnh sửa nâng cao để xem kịch bản.',
+    'Correct caption':'Sửa phụ đề','Replace shot':'Thay cảnh','Restore take':'Khôi phục bản quay','Compare openings':'So sánh đoạn mở đầu',
+    'EDITED CUT':'BẢN DỰNG ĐÃ CHỈNH','Timeline':'Dòng thời gian','Time':'Thời gian','Picture':'Hình ảnh','Speech':'Lời thoại',
+    'Timed passages will appear when available.':'Các đoạn có thời gian sẽ xuất hiện khi sẵn sàng.',
+    'Select a speech segment to play it in context. Picture segments reflect the saved edit plan; check the player.':'Chọn một đoạn lời thoại để nghe trong ngữ cảnh. Các đoạn hình ảnh theo kế hoạch đã lưu; hãy kiểm tra trên trình phát.',
+    'Batch workflow & advanced editing':'Xử lý hàng loạt và chỉnh sửa nâng cao','Source recordings':'Bản quay gốc','No recordings yet':'Chưa có bản quay','Select all':'Chọn tất cả','Clear selection':'Bỏ chọn tất cả',
+    'Find a source recording':'Tìm bản quay gốc','Project':'Dự án','All projects':'Tất cả dự án','Source visibility':'Hiển thị bản quay','Active sources':'Bản quay đang dùng','Archived':'Đã lưu trữ','All sources':'Tất cả bản quay',
+    'B-roll & style library':'Thư viện cảnh và phong cách','＋ Usable B-roll':'＋ Cảnh có thể dùng','＋ Style reference':'＋ Video tham khảo','Other footage':'Tư liệu khác','Show in video':'Đưa vào video','Use for pacing':'Dùng làm nhịp tham khảo','Preview':'Xem trước','Manage':'Quản lý','View cuts':'Xem bản dựng','Edit settings':'Cài đặt chỉnh sửa','Hide settings':'Ẩn cài đặt','Show settings':'Hiện cài đặt','Style':'Phong cách','Cutaways':'Cảnh chèn','Save changes':'Lưu thay đổi','Saved':'Đã lưu','Unsaved changes':'Chưa lưu thay đổi',
+    'Draft':'Bản nháp','Queued':'Đang chờ','Rendering':'Đang dựng','For review':'Chờ xem lại','Failed':'Thất bại','Needs input':'Cần bổ sung','Needs revision':'Cần chỉnh sửa','Approved':'Đã duyệt','Interrupted':'Bị gián đoạn',
+    'Add a TXT/SRT, or set up local captions once.':'Thêm tệp TXT/SRT hoặc thiết lập phụ đề trên máy một lần.',
+    'Multilingual small model ~486MB, plus Python dependencies':'Mô hình đa ngôn ngữ khoảng 486 MB cùng các thành phần Python',
+    'Captions need setup':'Cần thiết lập phụ đề','Your recording is safe. To make captions from this recording, set up local captions once, or attach a prepared script.':'Bản quay của bạn vẫn an toàn. Để tạo phụ đề, hãy thiết lập phụ đề trên máy một lần hoặc thêm kịch bản đã chuẩn bị.','Set up local captions':'Thiết lập phụ đề trên máy','Use a prepared TXT / SRT':'Dùng tệp TXT / SRT đã chuẩn bị','Close':'Đóng',
+    'Correct caption':'Sửa phụ đề','Script / captions':'Kịch bản / phụ đề','Save caption correction':'Lưu chỉnh sửa phụ đề','Review the words against the recording.':'Đối chiếu lời với bản quay.','Edit only the captions in this passage. Their timing stays the same.':'Chỉ sửa phụ đề trong đoạn này. Thời gian sẽ được giữ nguyên.',
+    'The script has no matching timed cues. Edit the full script here and keep any timing information intact.':'Kịch bản không có đoạn phụ đề khớp thời gian. Hãy sửa toàn bộ kịch bản và giữ nguyên thông tin thời gian.',
+    'Replace this shot':'Thay cảnh này','Show a shot here':'Đưa cảnh vào đoạn này','Choose footage assigned to this recording. The recorded voice continues.':'Chọn cảnh đã gán cho bản quay này. Giọng nói gốc vẫn tiếp tục.','Picture for this passage':'Hình ảnh cho đoạn này','Presenter only':'Chỉ người nói','Save shot choice':'Lưu lựa chọn cảnh',
+    'No footage has been assigned to this recording yet. Add footage to include first.':'Chưa có cảnh nào được gán cho bản quay này. Hãy thêm cảnh trước.','Replacing a shot clears its old proof markers. Check the new shot before treating it as evidence.':'Thay cảnh sẽ xóa các dấu xác minh của cảnh cũ. Hãy kiểm tra cảnh mới trước khi xem là bằng chứng.',
+    'Check these moments':'Kiểm tra các đoạn này','Play this moment':'Phát đoạn này','Compare openings':'So sánh đoạn mở đầu','Presenter first':'Người nói trước','Result first':'Kết quả trước','Play into the body':'Phát tiếp vào phần chính','Same body for both':'Cùng một phần chính',
+    'Final review':'Xem lại lần cuối','I watched the entire export at1× and phone size.':'Tôi đã xem toàn bộ bản xuất ở tốc độ 1× và kích thước điện thoại.','The speaker, claims, proof and requested CTA are correct.':'Người nói, nội dung, bằng chứng và lời kêu gọi hành động đều chính xác.','Captions are accurate, readable and on time.':'Phụ đề chính xác, dễ đọc và đúng thời điểm.','I listened for clear speech, sync and unobtrusive sound effects.':'Tôi đã nghe để kiểm tra giọng nói, đồng bộ và hiệu ứng âm thanh.','Download MP4':'Tải MP4','Captions (.srt)':'Phụ đề (.srt)','Request revision':'Yêu cầu chỉnh sửa','Approve export':'Duyệt bản xuất','Save feedback only':'Chỉ lưu góp ý','Show MP4 in Explorer':'Mở vị trí MP4','Timecode and correction (required for revisions)':'Thời điểm và nội dung cần sửa (bắt buộc khi yêu cầu chỉnh sửa)',
+    'Your name':'Tên của bạn','Person who watched and listened':'Người đã xem và nghe','I explicitly attest that I watched and listened to this entire exact MP4 at 1× and phone size. My name and decision apply only to this run and SHA256.':'Tôi xác nhận đã xem và nghe toàn bộ đúng tệp MP4 này ở tốc độ 1× và kích thước điện thoại. Tên và quyết định của tôi chỉ áp dụng cho bản xuất và mã SHA256 này.',
+    'A · Opening, payoff and CTA':'A · Mở đầu, kết quả và lời kêu gọi hành động','B · Visible target, action and readable result':'B · Đối tượng, thao tác và kết quả dễ đọc','C · Vietnamese names, numbers and caption timing':'C · Tên tiếng Việt, số liệu và thời gian phụ đề','D · Animation purpose and SFX alignment':'D · Mục đích chuyển động và đồng bộ hiệu ứng âm thanh','E · Intact speech, natural cuts and intelligible mix':'E · Lời nói đầy đủ, điểm cắt tự nhiên và âm thanh rõ','F · Export, captions and reproducible recipe':'F · Bản xuất, phụ đề và thiết lập có thể lặp lại',
+    'Check lip sync at these moments; enter the observed offset in output frames (0 if aligned).':'Kiểm tra đồng bộ khẩu hình tại các thời điểm này; nhập độ lệch theo khung hình đầu ra (0 nếu khớp).','e.g. 00:12 · Cutaway covers the result.':'Ví dụ: 00:12 · Cảnh chèn che khuất kết quả.','00:12 · What you saw or heard…':'00:12 · Điều bạn nhìn thấy hoặc nghe được…',
+    'A · Opening and payoff':'A · Mở đầu và kết quả','B · Visual proof':'B · Bằng chứng hình ảnh',
+    'Download selected edits':'Tải các bản dựng đã chọn','Share a style guide or cutaway across your recordings.':'Dùng chung video tham khảo hoặc cảnh chèn cho các bản quay.','Usable B-roll':'Cảnh có thể sử dụng','Style only · not inserted automatically':'Chỉ tham khảo phong cách · không tự đưa vào video','Library footage · explicit assignment required':'Tư liệu thư viện · cần gán trước khi sử dụng',
+    'Label / assign to recording':'Đặt nhãn / gán cho bản quay','Reference profile':'Thông tin video tham khảo','Include in training':'Đưa vào dữ liệu huấn luyện','＋ Add screenshot / logo':'＋ Thêm ảnh màn hình / logo','Match to scripts':'Ghép với kịch bản',
+    'Use a filename like “save the result.mp4” to match a spoken phrase.':'Dùng tên tệp như “save the result.mp4” để ghép với câu nói.','▶ Preview source':'▶ Xem bản gốc','Brief & uncertain moments':'Tóm tắt và các đoạn cần kiểm tra','Editable brief':'Tóm tắt có thể chỉnh sửa','Save brief':'Lưu tóm tắt',
+    'Openings are editorial proposals. Recorded words and proof stay authoritative.':'Đoạn mở đầu chỉ là đề xuất. Lời đã quay và bằng chứng thực tế là nguồn xác nhận.','Check these passages first':'Kiểm tra các đoạn này trước','Play source passage':'Phát đoạn gốc','Trim ends / restore original take':'Cắt hai đầu / khôi phục bản quay gốc','Suggested B-roll':'Cảnh chèn được đề xuất',
+    'No confident creator-label match. Presenter retained; label supplied B-roll or place it manually in Cutaways.':'Chưa tìm được cảnh khớp chắc chắn. Giữ hình người nói; hãy gắn nhãn hoặc đặt cảnh thủ công trong mục Cảnh chèn.','Compare 3-second openings':'So sánh đoạn mở đầu 3 giây',
+    'Host-first / assigned result-first. Same master audio; body stays fixed. Requires a rendered current cut and real result footage.':'Người nói trước / kết quả đã gán trước. Cùng âm thanh và phần chính. Cần bản dựng hiện tại và cảnh kết quả thực tế.',
+    'Plain text uses estimated timing. SRT uses your cue times.':'Văn bản thường dùng thời gian ước tính. Tệp SRT dùng thời gian trong tệp.','Paste what the presenter says…':'Dán lời người nói vào đây…','Generate intro & demos':'Tạo phần mở đầu và minh họa','Transcribe this take · Vietnamese':'Tạo lời thoại tiếng Việt cho bản quay này','Import animation-spec adapter':'Nhập bộ điều hợp thông số chuyển động',
+    'No animation-spec adapter installed. Native rules and existing scenes remain available.':'Chưa cài bộ điều hợp chuyển động. Quy tắc có sẵn và các cảnh hiện có vẫn dùng được.','Built-in storyboard and original animation. No API key. Recorded words still need verification.':'Có bảng phân cảnh và chuyển động gốc tích hợp. Không cần khóa API. Lời đã quay vẫn cần được kiểm tra.',
+    'Animation library · reusable templates and clips':'Thư viện chuyển động · mẫu và đoạn dùng lại','Component inventory · specification / render / QC':'Danh sách thành phần · thông số / dựng / kiểm tra','Optional lab · AI illustrations · outside V1':'Thử nghiệm tùy chọn · hình minh họa AI · ngoài V1',
+    'Media for this recording':'Tư liệu của bản quay này','Edited cut timeline':'Dòng thời gian bản dựng','Rendered export':'Bản xuất đã dựng','QC report':'Báo cáo kiểm tra','Edit plan':'Kế hoạch dựng','Imported SRT phrase timings.':'Thời gian được lấy từ phụ đề SRT đã nhập.',
+    'Listen to the mix · matched level':'Nghe bản phối · cùng mức âm lượng','Choose a mix…':'Chọn bản phối…','Voice only':'Chỉ giọng nói','Voice + SFX':'Giọng nói + hiệu ứng','Full mix':'Bản phối đầy đủ','Technical checks · this master':'Kiểm tra kỹ thuật · bản xuất này','Duration / frames':'Thời lượng / số khung hình','Voice loudness':'Độ lớn giọng nói','True peak':'Đỉnh âm thanh',
+    'Technical checks do not establish editorial approval. Review this exact export at normal speed. SHA256:':'Kiểm tra kỹ thuật không thay thế việc duyệt nội dung. Hãy xem đúng bản xuất này ở tốc độ bình thường. SHA256:',
+    'Review first 3 seconds before body':'Xem 3 giây đầu trước phần chính','Review observations · required for approval':'Nhận xét khi xem lại · cần có để duyệt','UNVERIFIED':'CHƯA XÁC MINH',
+    'A · Opening and payoff':'A · Mở đầu và kết quả','B · Visual proof':'B · Bằng chứng hình ảnh','C · Vietnamese captions':'C · Phụ đề tiếng Việt','D · Animation and SFX':'D · Chuyển động và hiệu ứng âm thanh','E · Voice and mix':'E · Giọng nói và bản phối','F · Final export':'F · Bản xuất cuối',
+    'Edit only the captions in this passage. Their timing stays the same. Save, then make a new cut to check the result.':'Chỉ sửa phụ đề trong đoạn này; thời gian sẽ được giữ nguyên. Lưu rồi tạo bản dựng mới để kiểm tra kết quả.',
+    'Review the words against the recording. Save, then make a new cut to check the result.':'Đối chiếu lời với bản quay. Lưu rồi tạo bản dựng mới để kiểm tra kết quả.',
+    'Choose a passage action below the selected phrase.':'Chọn thao tác bên dưới câu đã chọn.','The preview switches to the shared body after 3 seconds. Playback may pause briefly at the switch.':'Bản xem trước chuyển sang phần chính sau 3 giây. Video có thể dừng ngắn khi chuyển.',
+    'Technical checks passed · editorial review needed':'Đã kiểm tra kỹ thuật · cần xem lại nội dung','Transcribing locally; your recording stays on this computer':'Đang tạo lời thoại trên máy; bản quay không rời khỏi máy này','Analyzing speech':'Đang phân tích lời nói','Encoding and checking playback':'Đang dựng video và kiểm tra phát lại','Running six-gate QC':'Đang kiểm tra bản dựng',
+    'Set up local captions or attach this recording’s TXT/SRT':'Thiết lập phụ đề trên máy hoặc thêm tệp TXT/SRT cho bản quay này','SRT cues must be ordered and fit within the recording.':'Các đoạn SRT phải đúng thứ tự và nằm trong thời lượng bản quay.','Check the recording or script, correct the problem, then make the cut again.':'Kiểm tra bản quay hoặc kịch bản, sửa lỗi rồi tạo lại bản dựng.',
+    'Edit settings':'Cài đặt chỉnh sửa','Spoken script':'Kịch bản lời nói','Import TXT / SRT':'Nhập TXT / SRT','On-screen cutaways':'Cảnh chèn trên màn hình','＋ Add insert':'＋ Thêm cảnh chèn','Place footage at a spoken phrase or a time in seconds. The presenter’s voice continues.':'Đặt cảnh vào một câu nói hoặc thời điểm cụ thể. Giọng người nói vẫn tiếp tục.','Cutaway source':'Nguồn cảnh chèn','Remove':'Xóa','Cutaway sound':'Âm thanh cảnh chèn','Off · voice only':'Tắt · chỉ giọng nói',
+    'No footage has been assigned to this recording yet.':'Chưa có cảnh nào được gán cho bản quay này.','Picture segments reflect the saved edit plan; check the player.':'Các đoạn hình ảnh theo kế hoạch đã lưu; hãy kiểm tra trên trình phát.'
+  };
+  Object.assign(words, {
+  "Review the final picture, captions, and voice before publishing.": "Xem lại hình ảnh, phụ đề và giọng nói trước khi xuất bản.",
+  "Download all latest exports (.zip)": "Tải tất cả bản xuất mới nhất (.zip)",
+  "All source recordings": "Tất cả bản quay gốc",
+  "Versions": "Phiên bản",
+  "Latest cut per source": "Bản mới nhất của mỗi bản quay",
+  "All versions / history": "Tất cả phiên bản / lịch sử",
+  "Benchmark full videos": "Đánh giá toàn bộ video",
+  "Latest": "Mới nhất",
+  "Previous": "Trước đó",
+  "Go to source": "Đến bản quay gốc",
+  "No exports in this view": "Không có bản xuất trong chế độ xem này",
+  "Choose another source or render a new cut. Previous versions are kept.": "Chọn bản quay khác hoặc dựng bản mới. Các phiên bản trước vẫn được giữ lại.",
+  "Hook 0–3s": "Mở đầu 0–3 giây",
+  "Branding": "Nhận diện thương hiệu",
+  "Logo on presenter shots": "Logo trên cảnh người nói",
+  "No logo": "Không có logo",
+  "From source seconds": "Bắt đầu tại giây nguồn",
+  "Through source seconds · 0 = entire take": "Kết thúc tại giây nguồn · 0 = toàn bộ bản quay",
+  "Original image, top-left; hidden during cutaways and native scenes so it cannot cover their proof. Review the frame on a phone.": "Ảnh gốc ở góc trên trái; ẩn trong cảnh chèn và cảnh tạo sẵn để không che nội dung. Hãy kiểm tra trên điện thoại.",
+  "Built-in caption presets": "Kiểu phụ đề có sẵn",
+  "Clean": "Đơn giản",
+  "Focus": "Nhấn mạnh",
+  "Built-in · phrase captions": "Có sẵn · phụ đề theo cụm",
+  "Built-in · word emphasis": "Có sẵn · nhấn từng từ",
+  "Caption treatment": "Kiểu phụ đề",
+  "Clean · phrase captions": "Đơn giản · phụ đề theo cụm",
+  "Focus · highlighted words": "Nhấn mạnh · tô sáng từng từ",
+  "Portrait framing": "Khung hình dọc",
+  "Fit entire picture": "Hiển thị toàn bộ hình",
+  "Fill frame · center crop": "Lấp đầy khung · cắt giữa",
+  "Portrait framing preview": "Xem trước khung hình dọc",
+  "Caption placement": "Vị trí phụ đề",
+  "Lower third": "Phần dưới",
+  "Upper third": "Phần trên",
+  "Pacing reference": "Video tham khảo nhịp dựng",
+  "Cut frequency guides caption length. This footage stays off screen.": "Tần suất cắt giúp xác định độ dài phụ đề. Video tham khảo không xuất hiện trên màn hình.",
+  "Record editing request": "Ghi yêu cầu chỉnh sửa",
+  "Finish current request": "Hoàn tất yêu cầu hiện tại",
+  "Request history records your tools and changes; it does not approve a master.": "Lịch sử ghi lại công cụ và thay đổi; việc này không duyệt bản xuất.",
+  "Select style locks / transfer": "Chọn khóa phong cách / chuyển sang bản khác",
+  "Locks copy only selected style fields; speech, proof and approval stay with each recording.": "Chỉ sao chép các thiết lập phong cách đã chọn; lời nói, bằng chứng và phê duyệt thuộc từng bản quay.",
+  "Decision planner": "Bộ lập kế hoạch",
+  "Preset source": "Nguồn thiết lập",
+  "Built-in rules / assigned reference": "Quy tắc có sẵn / video tham khảo đã gán",
+  "Base planner · local weights required": "Bộ cơ sở · cần trọng số trên máy",
+  "Base + frozen training-only retrieval": "Bộ cơ sở + dữ liệu huấn luyện cố định",
+  "Fine-tuned candidate · experimental": "Mô hình tinh chỉnh · thử nghiệm",
+  "No model weights loaded. References can guide rules immediately.": "Chưa tải trọng số mô hình. Có thể dùng video tham khảo để hướng dẫn quy tắc ngay.",
+  "Training readiness": "Mức sẵn sàng huấn luyện",
+  "Motion": "Chuyển động",
+  "Motion profile": "Kiểu chuyển động",
+  "Current preset · original behavior": "Thiết lập hiện tại · hành vi ban đầu",
+  "Reference guided · built-in rules": "Theo video tham khảo · quy tắc có sẵn",
+  "Reference badges · original motion preset": "Nhãn tham khảo · chuyển động gốc",
+  "Calm · reduced motion": "Nhẹ nhàng · ít chuyển động",
+  "Focus · restrained emphasis": "Tập trung · nhấn vừa phải",
+  "Motion intensity": "Cường độ chuyển động",
+  "Motion strength changes visual emphasis. Individual sound cues and music remain independent.": "Cường độ thay đổi mức nhấn hình ảnh. Hiệu ứng âm thanh và nhạc vẫn độc lập.",
+  "Preview cue plan": "Xem trước kế hoạch hiệu ứng",
+  "Review saved corrections": "Xem các chỉnh sửa đã lưu",
+  "Sound effects": "Hiệu ứng âm thanh",
+  "Each contact and result can have its own sound, offset or intentional silence.": "Mỗi thao tác và kết quả có thể có âm thanh, độ lệch hoặc khoảng im lặng riêng.",
+  "＋ Add manual cue": "＋ Thêm hiệu ứng thủ công",
+  "Music": "Nhạc",
+  "Music bed": "Nhạc nền",
+  "Off · voice and chosen effects only": "Tắt · chỉ giọng nói và hiệu ứng đã chọn",
+  "Choose automatically · original instrumental": "Tự chọn · nhạc không lời gốc",
+  "My track · cleared audio": "Nhạc của tôi · đã có quyền sử dụng",
+  "Texture": "Sắc thái",
+  "Calm explanation · sparse / quiet": "Giải thích nhẹ nhàng · thưa / nhỏ",
+  "Tutorial pulse · restrained / moderate": "Nhịp hướng dẫn · vừa phải",
+  "Music level before voice ducking (dB)": "Mức nhạc trước khi giảm theo giọng nói (dB)",
+  "My imported track": "Nhạc đã nhập",
+  "Choose a cleared track…": "Chọn bản nhạc có quyền sử dụng…",
+  "Import my music": "Nhập nhạc của tôi",
+  "The original narration controls ducking. No paid service, model weights or reference music is used.": "Giọng nói gốc điều khiển mức giảm nhạc. Không dùng dịch vụ trả phí, trọng số mô hình hoặc nhạc tham khảo.",
+  "Effect": "Hiệu ứng",
+  "Presenter timeline anchor (s)": "Điểm neo trên dòng thời gian người nói (giây)",
+  "Readable hold (frames)": "Thời gian giữ để đọc (khung hình)",
+  "Text (optional)": "Văn bản (tùy chọn)",
+  "Sound": "Âm thanh",
+  "Intentional silence": "Chủ ý im lặng",
+  "Mute this cue": "Tắt âm hiệu ứng này",
+  "Gain (dB)": "Mức âm (dB)",
+  "Timing offset (frames)": "Độ lệch thời gian (khung hình)",
+  "Reason for intentional offset": "Lý do chủ ý đặt độ lệch",
+  "Advanced target / marker": "Đối tượng / dấu mốc nâng cao",
+  "Perceptual marker sample (48 kHz)": "Mẫu dấu mốc cảm nhận (48 kHz)",
+  "Trim audio from sample": "Cắt âm thanh từ mẫu",
+  "Remove cue": "Xóa hiệu ứng",
+  "No manual cues. Verified cutaway anchors can suggest focus, click and result cues.": "Chưa có hiệu ứng thủ công. Các điểm neo cảnh chèn đã xác minh có thể gợi ý hiệu ứng.",
+  "Soft click": "Tiếng nhấp nhẹ",
+  "Slide": "Trượt",
+  "Chime": "Âm báo",
+  "Save an animation from reference footage": "Lưu chuyển động từ video tham khảo",
+  "Private Kaggle LoRA outputs are experimental illustrations. The core editor uses your real recording and voice. These outputs cannot replace real software proof.": "Hình minh họa Kaggle LoRA riêng tư đang thử nghiệm. Trình dựng sử dụng bản quay và giọng nói thật; hình minh họa không thay thế bằng chứng thao tác phần mềm.",
+  "Import trained run / previews": "Nhập kết quả huấn luyện / bản xem trước",
+  "Generate illustration on Kaggle": "Tạo hình minh họa trên Kaggle",
+  "Select a recording to edit": "Chọn bản quay để chỉnh sửa",
+  "Your edit controls": "Công cụ chỉnh sửa",
+  "Select one or more recordings to assign a script, set a style, or add a cutaway.": "Chọn một hoặc nhiều bản quay để gán kịch bản, chọn phong cách hoặc thêm cảnh chèn.",
+  "Wait for the current import to finish.": "Hãy đợi quá trình nhập hiện tại hoàn tất.",
+  "The request failed": "Yêu cầu không thành công",
+  "Import results": "Kết quả nhập tệp",
+  "Choose B-roll or style reference": "Chọn cảnh B-roll hoặc video tham khảo phong cách.",
+  "Choose an existing source recording for a new take.": "Chọn bản quay gốc hiện có để thêm lần quay mới.",
+  "Install FFmpeg and FFprobe using the setup panel first.": "Hãy cài FFmpeg và FFprobe trong phần cài đặt trước.",
+  "Choose a decodable PNG or JPEG image.": "Chọn ảnh PNG hoặc JPEG có thể đọc được.",
+  "Choose a decodable audio track.": "Chọn tệp âm thanh có thể đọc được.",
+  "This file has no video track.": "Tệp này không có hình ảnh video.",
+  "A talking-head recording needs an audio track.": "Bản quay người nói cần có âm thanh.",
+  "Choose an editorial recipe": "Chọn cách kể chuyện.",
+  "Choose an available opening": "Chọn đoạn mở đầu có sẵn.",
+  "Choose an imported logo image": "Chọn ảnh logo đã nhập.",
+  "Logo times must be nonnegative seconds": "Thời gian logo phải là số giây không âm.",
+  "Logo end must follow its start": "Thời điểm kết thúc logo phải sau thời điểm bắt đầu.",
+  "Choose an available decision planner.": "Chọn bộ lập kế hoạch có sẵn.",
+  "Unknown project setting.": "Thiết lập dự án không hợp lệ.",
+  "Choose an available built-in motion profile.": "Chọn kiểu chuyển động tích hợp có sẵn.",
+  "Choose Music Off, Choose automatically, or My track.": "Chọn Tắt nhạc, Tự chọn hoặc Nhạc của tôi.",
+  "Choose an available instrumental bed.": "Chọn nhạc không lời có sẵn.",
+  "Choose an available cutaway sound.": "Chọn âm thanh cảnh chèn có sẵn.",
+  "Invalid visual settings.": "Thiết lập hình ảnh không hợp lệ.",
+  "Use a script of up to 200,000 characters.": "Kịch bản tối đa 200.000 ký tự.",
+  "Choose an imported reference.": "Chọn video tham khảo đã nhập.",
+  "Use up to 32 cutaways per video.": "Mỗi video có tối đa 32 cảnh chèn.",
+  "Cutaway times must be numbers.": "Thời gian cảnh chèn phải là số.",
+  "Use a short phrase for the spoken cue.": "Hãy dùng một cụm ngắn làm điểm chèn theo lời nói.",
+  "The cutaway must fit its source footage.": "Cảnh chèn phải nằm trong thời lượng của tư liệu nguồn.",
+  "Cutaways must fit the recording without overlapping.": "Các cảnh chèn phải nằm trong bản quay và không chồng lên nhau.",
+  "A queued or rendering clip is locked until it finishes.": "Bản quay đang chờ hoặc đang dựng sẽ bị khóa đến khi hoàn tất.",
+  "Unlock the selected style field before changing it": "Mở khóa thiết lập phong cách đã chọn trước khi thay đổi.",
+  "Wait for these recordings to finish rendering before importing scripts.": "Đợi các bản quay dựng xong trước khi nhập kịch bản.",
+  "Choose reference footage to analyze.": "Chọn video tham khảo để phân tích.",
+  "Add reviewer, observation and an in-range source interval.": "Thêm người kiểm tra, nhận xét và khoảng thời gian hợp lệ trong video nguồn.",
+  "FFmpeg and FFprobe must be installed before rendering.": "Cần cài FFmpeg và FFprobe trước khi dựng.",
+  "Add a script to render this recording.": "Thêm kịch bản để dựng bản quay này.",
+  "The original source file changed. Import it as a new take; prior timings were preserved.": "Tệp nguồn đã thay đổi. Hãy nhập thành lần quay mới; thời gian cũ vẫn được giữ.",
+  "Style reference changed. Import the replacement; prior analysis and edits were preserved.": "Video tham khảo đã thay đổi. Hãy nhập tệp thay thế; phân tích và chỉnh sửa cũ vẫn được giữ.",
+  "Add and select a recording first": "Hãy thêm và chọn một bản quay trước.",
+  "This master has changed. Reopen the correct export.": "Bản xuất đã thay đổi. Hãy mở lại đúng phiên bản.",
+  "Choose a review result.": "Chọn kết quả xem lại.",
+  "Complete all four viewing and listening checks before approving.": "Hoàn tất cả bốn bước kiểm tra hình và tiếng trước khi duyệt.",
+  "A confirmed defect remains on this master; render and review a new version": "Bản xuất này còn lỗi đã xác nhận; hãy dựng và xem lại phiên bản mới.",
+  "The project changed after this export. Render the current revision before release; the prior cut is preserved.": "Dự án đã thay đổi sau bản xuất này. Hãy dựng phiên bản hiện tại trước khi phát hành; bản trước vẫn được giữ.",
+  "Describe the defect with a timecode.": "Mô tả lỗi kèm thời điểm.",
+  "Render a recording first.": "Hãy dựng một bản quay trước.",
+  "Upload interrupted.": "Quá trình tải lên bị gián đoạn.",
+  "Upload was interrupted.": "Quá trình tải lên bị gián đoạn.",
+  "Select a video smaller than 8 GB.": "Chọn video nhỏ hơn 8 GB.",
+  "Use MP4, MOV, M4V, MKV or WebM.": "Sử dụng MP4, MOV, M4V, MKV hoặc WebM.",
+  "Request is too large.": "Yêu cầu có dung lượng quá lớn.",
+  "This cut may clip a word. Move it into the adjacent pause.": "Điểm cắt có thể cắt mất một phần từ. Hãy chuyển vào khoảng nghỉ gần đó.",
+  "Choose existing recordings for this footage": "Chọn bản quay hiện có để gán tư liệu này.",
+  "The selected local file is missing.": "Không tìm thấy tệp đã chọn trên máy.",
+  "Set up local captions, or use the supplied script timing.": "Thiết lập phụ đề trên máy hoặc sử dụng thời gian trong kịch bản đã cung cấp.",
+  "This recording changed while the editor was open. Reopen the caption and try again.": "Bản quay đã thay đổi trong khi mở trình chỉnh sửa. Hãy mở lại phụ đề và thử lại.",
+  "Add footage to include first.": "Hãy thêm cảnh có thể đưa vào trước.",
+  "No time remains for another cutaway.": "Không còn thời gian để thêm cảnh chèn.",
+  "Select one recording to add its manual cues.": "Chọn một bản quay để thêm hiệu ứng thủ công.",
+  "Select one recording to inspect its exact cue plan.": "Chọn một bản quay để xem kế hoạch hiệu ứng.",
+  "Select recordings to apply pacing.": "Chọn bản quay để áp dụng nhịp dựng.",
+  "Add this file as footage to include before placing it in the video.": "Hãy thêm tệp này vào cảnh có thể đưa vào trước khi đặt vào video.",
+  "Select one recording to add its on-screen demonstration.": "Chọn một bản quay để thêm cảnh minh họa.",
+  "Choose the intended recording.": "Chọn bản quay cần dùng.",
+  "Choose one recording to resolve its spoken phrase.": "Chọn một bản quay để tìm câu nói.",
+  "Enter the exact spoken phrase first.": "Nhập chính xác câu nói trước.",
+  "Confirm permission for this audio before importing it.": "Xác nhận quyền sử dụng âm thanh trước khi nhập.",
+  "Choose one recording for this script.": "Chọn một bản quay cho kịch bản này.",
+  "honest question": "Câu hỏi tự nhiên",
+  "host first": "Người nói trước",
+  "proof first": "Kết quả trước",
+  ": Recorded question; a later quote is a proposal, not silently moved speech.": ": Câu hỏi đã quay; câu nói phía sau chỉ là đề xuất, chưa tự động chuyển vị trí.",
+  ": Available recorded voice; no unverified result inserted.": ": Dùng giọng đã quay; không chèn kết quả chưa xác minh.",
+  ": No assigned verified result; retain presenter.": ": Chưa có kết quả đã gán và xác minh; giữ hình người nói."
+});
+  Object.assign(words, {'Workspace account information':'Thông tin tài khoản không gian làm việc','Workspace information':'Thông tin không gian làm việc','Your projects are stored on this computer.':'Các dự án được lưu trên máy tính này.'});
+  Object.assign(words, {'Video encoder':'Bộ mã hóa video','FFmpeg and FFprobe are available.':'FFmpeg và FFprobe đã sẵn sàng.','Check again':'Kiểm tra lại','Local files':'Tệp trên máy','Recordings, scripts and exports are stored on this computer. Closing the tab leaves active renders running.':'Bản quay, kịch bản và bản xuất được lưu trên máy này. Đóng thẻ trình duyệt không dừng quá trình dựng đang chạy.','Quit Talking Head Cutroom':'Thoát Talking Head Cutroom','No pacing reference':'Không có video tham khảo nhịp dựng','Source framing preview · sample caption':'Xem trước khung hình nguồn · phụ đề mẫu','Fit entire picture: keep the full source; unused portrait space is padded.':'Hiển thị toàn bộ hình gốc; phần trống của khung dọc được lấp nền.','Fill frame: the centered source is cropped to fill the portrait frame.':'Lấp đầy khung: hình gốc được cắt ở giữa theo khung dọc.','built-in rules · rules-v2 · no model weights loaded':'Quy tắc có sẵn · rules-v2 · chưa tải trọng số mô hình','Output':'Bản xuất'});
+  Object.assign(words, {'Import your music':'Nhập nhạc của bạn','Choose audio you may use in this export. Reference permission does not automatically grant permission to reuse its soundtrack.':'Chọn âm thanh bạn có quyền dùng trong bản xuất này. Quyền dùng video tham khảo không tự động bao gồm quyền dùng nhạc của video đó.','I have permission to use this track in my exported videos.':'Tôi có quyền dùng bản nhạc này trong video xuất ra.','Choose audio file':'Chọn tệp âm thanh'});
+  Object.assign(words, {'Display language':'Ngôn ngữ hiển thị'});
+  Object.assign(words, {'About local profiles':'Thông tin hồ sơ trên máy','Local profiles':'Hồ sơ trên máy','Review saved draft':'Xem nháp đã lưu','Unsaved draft':'Nháp chưa lưu','Download draft JSON':'Tải nháp JSON','Discard saved draft':'Bỏ nháp đã lưu','Restore entire take':'Khôi phục toàn bộ take','Scene plan & style board':'Kế hoạch cảnh & bảng tham chiếu','Presenter composition':'Bố cục người dẫn','Save presenter layout only':'Chỉ lưu bố cục người dẫn','Create scene preview':'Tạo preview cảnh','Save observation':'Lưu quan sát','Current passage → scene instance':'Câu nói hiện tại → cảnh dựng','Source-linked style board':'Bảng style liên kết nguồn','Scene preview · review before insertion':'Preview cảnh · kiểm tra trước khi chèn','Insert in episode':'Chèn vào tập','Edit instance':'Sửa cảnh của tập','Spoken passage':'Câu nói','Visible title':'Chữ hiển thị','Editable component':'Component chỉnh được','Style observation':'Quan sát tham chiếu','Reference source':'Nguồn tham chiếu','Scene family':'Nhóm cảnh','Observed layout / motion':'Bố cục / chuyển động đã quan sát','Visual confidence':'Độ tin cậy hình ảnh','Observer':'Người quan sát','What was heard':'Âm thanh đã nghe','I can hear this reference and inspected its audio':'Tôi nghe được và đã kiểm tra âm thanh tham chiếu'});
+  Object.assign(words, {'Edit profile':'Chỉnh sửa hồ sơ','Edit profile and picture':'Chỉnh sửa hồ sơ và ảnh','Display name':'Tên hiển thị','Email (optional)':'Email (không bắt buộc)','Profile picture':'Ảnh hồ sơ','Choose an image':'Chọn ảnh','Remove current picture':'Xóa ảnh hiện tại','Save profile':'Lưu hồ sơ','Profile details and picture are stored in this browser on this computer.':'Thông tin và ảnh hồ sơ được lưu trong trình duyệt trên máy tính này.','Local profile':'Hồ sơ trên máy','Profile saved':'Đã lưu hồ sơ','Enter a valid email address.':'Nhập địa chỉ email hợp lệ.','Choose an image smaller than 10 MB.':'Chọn ảnh nhỏ hơn 10 MB.','Could not save the profile. Check the picture and browser storage.':'Không thể lưu hồ sơ. Hãy kiểm tra ảnh và bộ nhớ trình duyệt.'});
+  Object.assign(words, {'Sign in':'Đăng nhập','Switch account':'Chuyển tài khoản','Switch local profile':'Chuyển hồ sơ trên máy','Online sign-in is not available in this local workspace yet.':'Đăng nhập trực tuyến chưa khả dụng trong không gian làm việc trên máy.','Local profiles are stored in this browser and do not sign you in to an online account.':'Hồ sơ được lưu trong trình duyệt này và không đăng nhập vào tài khoản trực tuyến.','Add local profile':'Thêm hồ sơ trên máy','Current':'Đang dùng','A profile could not be saved in this browser.':'Không thể lưu hồ sơ trong trình duyệt này.'});
+  const states={'Draft':'Bản nháp','Queued':'Đang chờ','Rendering':'Đang dựng','For review':'Chờ xem lại','Failed':'Thất bại','Needs input':'Cần bổ sung','Needs revision':'Cần chỉnh sửa','Approved':'Đã duyệt','Interrupted':'Bị gián đoạn'};
+  const records=new WeakMap();
+  let language=localStorage.getItem('cutroom-language')||'vi';
+  const switcher=document.createElement('button');switcher.id='languageSwitch';switcher.type='button';switcher.className='language-switch';
+  document.querySelector('header .right').prepend(switcher);
+  // Local workspace information is intentionally separate from online account authentication.
+  const account=document.createElement('details'); account.className='account-menu';
+  const menuIcon=(path)=>`<svg class="account-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${path}</svg>`;
+  account.innerHTML=`<summary aria-label="Workspace account information" title="Workspace account information"><span class="account-avatar" aria-hidden="true">C</span><span class="account-chevron" aria-hidden="true">⌄</span></summary><div class="account-panel"><div class="account-profile"><span class="account-avatar account-avatar-large" aria-hidden="true">C</span><div class="account-identity"><strong class="account-profile-name"></strong><small class="account-profile-email"></small><button type="button" class="account-edit-link" data-account-edit>Edit profile</button></div></div><p class="account-description">Profile details and picture are stored in this browser on this computer.</p><div class="account-group"><button type="button" class="account-row" data-account-login>${menuIcon('<path d="M14 3h5v18h-5M10 8l4 4-4 4M14 12H3"/>')}<span>About local profiles</span></button><button type="button" class="account-row" data-account-switch>${menuIcon('<rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="2"/><path d="M5 17c.3-2 1.5-3 4-3s3.7 1 4 3M16 9h3m-1.5-1.5L19 9l-1.5 1.5"/>')}<span>Switch local profile</span><span class="account-row-arrow" aria-hidden="true">›</span></button><button type="button" class="account-row" data-account-edit>${menuIcon('<circle cx="12" cy="8" r="3.5"/><path d="M5 20c.5-4 3-6 7-6s6.5 2 7 6"/>')}<span>Edit profile and picture</span></button><button type="button" class="account-row" data-account-workspace>${menuIcon('<path d="M3 10 12 3l9 7v10H3z"/><path d="M9 20v-6h6v6"/>')}<span>Workspace</span></button><button type="button" class="account-row" data-account-exports>${menuIcon('<rect x="3" y="4" width="18" height="16" rx="3"/><path d="M10 8.5 15 12l-5 3.5z"/>')}<span>Exports</span></button></div><div class="account-group"><button type="button" class="account-row" data-account-language>${menuIcon('<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 3 3 15 0 18M12 3c-3 3-3 15 0 18"/>')}<span>Display language</span><span id="accountLanguage" class="account-row-value"></span><span class="account-row-arrow" aria-hidden="true">›</span></button><button type="button" class="account-row" data-account-settings>${menuIcon('<circle cx="12" cy="12" r="3"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4m11.4 11.4 1.4 1.4M2 12h2m16 0h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/><circle cx="12" cy="12" r="7"/>')}<span>Workspace settings</span></button></div></div>`;
+  document.querySelector('header .right').append(account);
+  document.addEventListener('click',event=>{if(account.open&&!account.contains(event.target))account.open=false;const target=event.target.closest('[data-account-settings],[data-account-language],[data-account-workspace],[data-account-exports],[data-account-edit],[data-account-login],[data-account-switch]');if(!target)return;account.open=false;if(target.hasAttribute('data-account-login'))dialog('Local profiles','<p>Online sign-in is not available in this local workspace yet.</p><p>Local profiles are stored in this browser and do not sign you in to an online account.</p>');else if(target.hasAttribute('data-account-switch'))openProfileSwitcher();else if(target.hasAttribute('data-account-edit'))openProfileEditor();else if(target.hasAttribute('data-account-settings'))document.getElementById('settings').click();else if(target.hasAttribute('data-account-language'))switcher.click();else document.querySelector(target.hasAttribute('data-account-exports')?'[data-tab=exports]':'[data-tab=workspace]').click();});
+  document.addEventListener('keydown',event=>{if(event.key==='Escape'&&account.open){account.open=false;account.querySelector('summary').focus();}});
+
+  const profileKey='cutroom-local-profile', profilesKey='cutroom-local-profiles-v1';
+  const cleanProfile=stored=>({name:typeof stored?.name==='string'?stored.name:'',email:typeof stored?.email==='string'?stored.email:'',picture:typeof stored?.picture==='string'&&/^data:image\/(png|jpeg|webp);base64,/.test(stored.picture)?stored.picture:''});
+  let profiles=[],activeProfile='local-default',profile={name:'',email:'',picture:''};
+  try {const list=JSON.parse(localStorage.getItem(profilesKey)||'null');if(list&&Array.isArray(list.profiles)&&list.profiles.length){profiles=list.profiles.filter(x=>x&&typeof x.id==='string').map(x=>({id:x.id,...cleanProfile(x)}));activeProfile=profiles.some(x=>x.id===list.active)?list.active:profiles[0].id;}else{profiles=[{id:activeProfile,...cleanProfile(JSON.parse(localStorage.getItem(profileKey)||'{}'))}];}profile=cleanProfile(profiles.find(x=>x.id===activeProfile));} catch (_) {profiles=[{id:activeProfile,...profile}];}
+  function storeProfiles(next,active){localStorage.setItem(profilesKey,JSON.stringify({active,profiles:next}));profiles=next;activeProfile=active;profile=cleanProfile(next.find(x=>x.id===active));drawProfile();}
+  function openProfileSwitcher(){dialog('Switch local profile',`<p>Local profiles are stored in this browser and do not sign you in to an online account.</p><div class="profile-switch-list">${profiles.map(x=>`<button type="button" class="profile-switch-row" data-switch-profile="${esc(x.id)}"><span class="account-avatar" aria-hidden="true">${esc((x.name.trim().charAt(0)||'C').toLocaleUpperCase())}</span><span class="profile-switch-name">${esc(x.name|| (language==='vi'?'Hồ sơ trên máy':'Local profile'))}</span>${x.id===activeProfile?'<small>Current</small>':''}</button>`).join('')}</div><button type="button" class="soft" data-new-profile>Add local profile</button>`);}
+  document.addEventListener('click',event=>{const selection=event.target.closest('[data-switch-profile],[data-new-profile]');if(!selection)return;try{if(selection.hasAttribute('data-new-profile')){const id=crypto.randomUUID(),next=[...profiles,{id,name:'',email:'',picture:''}];storeProfiles(next,id);openProfileEditor();}else{const id=selection.dataset.switchProfile;if(!profiles.some(x=>x.id===id))return;storeProfiles(profiles,id);el('modal').close();}}catch(_){notify(language==='vi'?'Không thể lưu hồ sơ trong trình duyệt này.':'A profile could not be saved in this browser.');}});
+  function drawProfile(){
+    const name=profile.name|| (language==='vi'?'Làm việc trên máy':'Local workspace');
+    account.querySelector('.account-profile-name').textContent=name;
+    account.querySelector('.account-profile-email').textContent=profile.email|| (language==='vi'?'Hồ sơ trên máy':'Local profile');
+    const initial=(profile.name.trim().charAt(0)||'C').toLocaleUpperCase();
+    account.querySelectorAll('.account-avatar').forEach(avatar=>{avatar.replaceChildren();if(profile.picture){const img=document.createElement('img');img.src=profile.picture;img.alt='';avatar.append(img);}else avatar.textContent=initial;});
+  }
+  function openProfileEditor(){
+    dialog('Edit profile',`<p>Profile details and picture are stored in this browser on this computer.</p><div class="profile-edit-head"><span class="account-avatar account-avatar-large profile-preview" aria-hidden="true"></span><div><strong>Profile picture</strong><label class="profile-file-label" for="profilePicture">Choose an image</label><input id="profilePicture" type="file" accept="image/png,image/jpeg,image/webp"/><label class="profile-remove"><input id="profileRemove" type="checkbox"> Remove current picture</label></div></div><label for="profileName">Display name</label><input id="profileName" maxlength="80" value="${esc(profile.name)}"><label for="profileEmail">Email (optional)</label><input id="profileEmail" type="email" maxlength="254" value="${esc(profile.email)}"><div class="profile-actions"><button type="button" class="primary" data-save-profile>Save profile</button></div>`);
+    const preview=document.querySelector('.profile-preview');if(profile.picture){const img=document.createElement('img');img.src=profile.picture;img.alt='';preview.append(img);}else preview.textContent=(profile.name.trim().charAt(0)||'C').toLocaleUpperCase();
+  }
+  async function prepareProfileImage(file){
+    if(!file.type.startsWith('image/')||file.size>10*1024*1024)throw new Error(language==='vi'?'Chọn ảnh nhỏ hơn 10 MB.':'Choose an image smaller than 10 MB.');
+    const data=await new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(reader.result);reader.onerror=()=>reject(new Error(language==='vi'?'Không thể đọc ảnh.':'Could not read the image.'));reader.readAsDataURL(file);});
+    try {const img=new Image();img.src=data;await img.decode();const side=Math.min(img.naturalWidth,img.naturalHeight);if(!side)throw new Error('Invalid image');const canvas=document.createElement('canvas');canvas.width=256;canvas.height=256;const ctx=canvas.getContext('2d');if(!ctx)throw new Error('Canvas unavailable');ctx.drawImage(img,(img.naturalWidth-side)/2,(img.naturalHeight-side)/2,side,side,0,0,256,256);return canvas.toDataURL('image/jpeg',.86);}catch(_){throw new Error(language==='vi'?'Không thể đọc ảnh. Hãy chọn ảnh khác.':'Could not read the image. Choose another picture.');}
+  }
+  document.addEventListener('click',async event=>{const button=event.target.closest('[data-save-profile]');if(!button)return;const name=document.getElementById('profileName'),email=document.getElementById('profileEmail'),file=document.getElementById('profilePicture'),remove=document.getElementById('profileRemove');if(!email.checkValidity()){notify(language==='vi'?'Nhập địa chỉ email hợp lệ.':'Enter a valid email address.');return;}button.disabled=true;try{const picture=file.files[0]?await prepareProfileImage(file.files[0]):remove.checked?'':profile.picture;const next={name:name.value.trim(),email:email.value.trim(),picture};storeProfiles(profiles.map(x=>x.id===activeProfile?{id:x.id,...next}:x),activeProfile);el('modal').close();notify(language==='vi'?'Đã lưu hồ sơ':'Profile saved');}catch(error){notify(error.message|| (language==='vi'?'Không thể lưu hồ sơ. Hãy kiểm tra ảnh và bộ nhớ trình duyệt.':'Could not save the profile. Check the picture and browser storage.'));}finally{button.disabled=false;}});
+
+  function translate(raw){
+    const trimmed=raw.trim();if(!trimmed)return raw;
+    let out=words[trimmed] || words[trimmed.replace(/\s+/g, " ")];
+    if(!out){
+      out=trimmed
+        .replace(/^(\d+) latest cuts? shown · (\d+) versions? kept$/,'Hiển thị $1 bản mới nhất · đã giữ $2 phiên bản')
+        .replace(/^Rendered MP4 · /,'MP4 đã dựng · ').replace(/^From (.+) · source ([a-f0-9]+) · SHA /,'Từ $1 · nguồn $2 · SHA ')
+        .replace(/ · Take (\d+)(?= · [a-f0-9]+$)/,' · lần quay $1')
+        .replace(/^Review (v\d+)$/,'Xem lại $1').replace(/^(\d+) versions?$/,'$1 phiên bản')
+        .replace(/^(\d+) local images available for original scenes$/,'Có $1 hình ảnh trên máy cho cảnh gốc')
+        .replace(/^Original recording · /,'Bản quay gốc · ').replace(/^Source footage · not the edited cut · /,'Tư liệu gốc · không phải bản dựng · ')
+        .replace(/^Previous edited cut · /,'Bản dựng trước · ').replace(/^Edited cut · /,'Bản dựng đã chỉnh · ')
+        .replace(/^EDITED CUT · /,'BẢN DỰNG ĐÃ CHỈNH · ').replace(/^OPTIONAL INPUTS · /,'TƯ LIỆU TÙY CHỌN · ')
+        .replace(/^Caption in (v\d+): /,'Phụ đề trong $1: ').replace(/^Planned picture: /,'Hình ảnh dự kiến: ').replace(/^Hình ảnh dự kiến: Presenter(?= ·)/,'Hình ảnh dự kiến: Người nói').replace(/ · check the player · source /,' · kiểm tra trình phát · nguồn ')
+        .replace(/^This is (v\d+) of your edited video\.$/,'Đây là bản $1 của video đã chỉnh.')
+        .replace(/^Review & export (v\d+)$/,'Xem lại và xuất $1').replace(/^Play passage at (\d+:\d+): /,'Phát đoạn lúc $1: ')
+        .replace(/^Select (.+)$/,'Chọn $1').replace(/^Editing (.+)$/,'Đang chỉnh sửa $1')
+        .replace(/^(\d+) selected · (\d+) of (\d+) sources shown$/,'Đã chọn $1 · đang hiển thị $2 trên $3 bản quay')
+        .replace(/^(\d+) selected · (\d+) ready · (\d+) need input$/,'Đã chọn $1 · $2 sẵn sàng · $3 cần bổ sung')
+        .replace(/^Render (\d+) videos?$/,'Dựng $1 video').replace(/^Original · Take (\d+) · (.+) · (\d+) cuts?$/,'Bản gốc · lần quay $1 · $2 · $3 bản dựng')
+        .replace(/ · Script attached/,' · Đã thêm kịch bản').replace(/ · Needs script/,' · Cần kịch bản')
+        .replace(/^(\d+:\d+–\d+:\d+: )Low recognition confidence:/,'$1Độ tin cậy nhận dạng thấp:').replace(/^(\d+:\d+–\d+:\d+: )Possible repeated take; natural delivery not inferred from ASR\./,'$1Có thể là lần quay lặp; chưa thể xác định cách nói tự nhiên từ nhận dạng tự động.')
+        .replace(/ASR word timings · not human listening approval/,'Thời gian từ nhận dạng giọng nói · chưa được người nghe xác nhận').replace(/Conservative: uncertain retakes and meaningful pauses retained/,'Giữ lại các lần quay chưa chắc chắn và khoảng nghỉ có ý nghĩa')
+        .replace(/^Rendered cut (v\d+) · original recording: (.+) · source (.+)$/,'Bản dựng $1 · bản quay gốc: $2 · nguồn $3')
+        .replace(/^Lip-sync offset (\d+)$/,'Độ lệch khẩu hình $1')
+        .replace(/^Edited cut (v\d+)$/,'Bản dựng đã chỉnh $1').replace(/ · presenter$/,' · người nói')
+        .replace(/ · Latest cut$/,' · Bản dựng mới nhất').replace(/ · Previous cut$/,' · Bản dựng trước')
+        .replace(/Technical checks passed · editorial review needed/,'Đã kiểm tra kỹ thuật · cần xem lại nội dung')
+        .replace(/Set up local captions or attach this recording’s TXT\/SRT/,'Thiết lập phụ đề trên máy hoặc thêm tệp TXT/SRT cho bản quay này')
+        .replace(/Multilingual small model ~486MB, plus Python dependencies/,'Mô hình đa ngôn ngữ khoảng 486 MB cùng các thành phần Python')
+        .replace(/Transcribing locally; your recording stays on this computer/,'Đang tạo lời thoại trên máy; bản quay không rời khỏi máy này')
+        .replace(/Analyzing speech/,'Đang phân tích lời nói').replace(/Encoding and checking playback/,'Đang dựng video và kiểm tra phát lại').replace(/Running six-gate QC/,'Đang kiểm tra bản dựng')
+        .replace(/SRT cues must be ordered and fit within the recording\./,'Các đoạn SRT phải đúng thứ tự và nằm trong thời lượng bản quay.')
+        .replace(/Check the recording or script, correct the problem, then make the cut again\./,'Kiểm tra bản quay hoặc kịch bản, sửa lỗi rồi tạo lại bản dựng.')
+        .replace(/^Caption · source /,'Phụ đề · nguồn ').replace(/^Spoken phrase: /,'Lời thoại: ').replace(/^At source /,'Tại thời điểm nguồn ')
+        .replace(/^First cut queued for (.+)\.$/,'Đã đưa bản dựng đầu tiên của $1 vào hàng chờ.')
+        .replace(/^Imported (\d+) file(s?)$/,'Đã nhập $1 tệp')
+        .replace(/^Caption correction saved\. Make an updated cut to review it\.$/,'Đã lưu phụ đề. Hãy tạo bản dựng mới để xem lại.')
+        .replace(/^Shot choice saved\. Make an updated cut to review it\.$/,'Đã lưu cảnh. Hãy tạo bản dựng mới để xem lại.')
+        .replace(/^Entire take restored\. Make a new cut to review it\.$/,'Đã khôi phục toàn bộ bản quay. Hãy tạo bản dựng mới để xem lại.')
+        .replace(/ · (Draft|Queued|Rendering|For review|Failed|Needs input|Needs revision|Approved|Interrupted)$/,(m,s)=>' · '+states[s]);
+      if(states[out])out=states[out];
+    }
+    return raw.replace(trimmed,out);
+  }
+  function translateFor(el,raw){
+    if(el.closest('.room-beat small'))return raw.replace(/^Caption in (v\d+): /,'Phụ đề trong $1: ').replace(/^Planned picture: Presenter(?= ·)/,'Hình ảnh dự kiến: Người nói').replace(/^Planned picture: /,'Hình ảnh dự kiến: ').replace(/ · check the player · source /,' · kiểm tra trình phát · nguồn ');
+    return translate(raw);
+  }
+  function excluded(el){return !!el.closest('textarea,script,style,.room-beat strong,.timeline-clip span,.room-media-item strong,.room-recording strong,.clip-name,.refs .name,.exportrow .name,.passage p,.artifact-card blockquote,.occurrence,.account-profile-name,.account-profile-email,.profile-switch-name');}
+  function apply(root){
+    if(!root)return; const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT);let node;
+    while(node=walker.nextNode()){
+      if(!node.parentElement||excluded(node.parentElement)||node.parentElement===switcher)continue;
+      let rec=records.get(node);if(!rec||node.nodeValue!==rec.last){rec={original:node.nodeValue,last:node.nodeValue};records.set(node,rec);}
+      const next=language==='vi'?translateFor(node.parentElement,rec.original):rec.original;if(node.nodeValue!==next)node.nodeValue=next;rec.last=next;
+    }
+    const elements=root.nodeType===1?[root,...root.querySelectorAll('[placeholder],[aria-label],[title]')]:[...document.querySelectorAll('[placeholder],[aria-label],[title]')];
+    for(const el of elements){if(el===switcher||(excluded(el)&&el.tagName!=='TEXTAREA'))continue;for(const attr of ['placeholder','aria-label','title']){if(!el.hasAttribute(attr))continue;let map=records.get(el);if(!map||!map.attrs){map={attrs:{}};records.set(el,map);}const value=el.getAttribute(attr),previous=map.attrs[attr];if(!previous||value!==previous.last)map.attrs[attr]={original:value,last:value};const entry=map.attrs[attr],next=language==='vi'?translate(entry.original):entry.original;if(value!==next)el.setAttribute(attr,next);entry.last=next;}}
+  }
+  function update(){document.documentElement.lang=language==='vi'?'vi':'en';switcher.textContent=language==='vi'?'English':'Tiếng Việt';switcher.setAttribute('aria-label',language==='vi'?'Chuyển giao diện sang tiếng Anh':'Chuyển giao diện sang tiếng Việt');switcher.title=switcher.getAttribute('aria-label');document.getElementById('accountLanguage').textContent=language==='vi'?'Tiếng Việt':'English';drawProfile();apply(document.body);}
+  switcher.addEventListener('click',()=>{language=language==='vi'?'en':'vi';localStorage.setItem('cutroom-language',language);update();});
+  let scheduled=false;new MutationObserver(()=>{if(scheduled)return;scheduled=true;queueMicrotask(()=>{scheduled=false;apply(document.body);});}).observe(document.body,{childList:true,subtree:true});
+  update();
+})();
+let scenePlanDraft=null;
+async function openScenePlan(id){
+ const [view,catalog]=await Promise.all([req('/api/scene-plan?id='+encodeURIComponent(id)),req('/api/components')]);
+ scenePlanDraft={view,request_id:crypto.randomUUID()};
+ const observations=view.reference.observations;
+ const references=refs();
+ dialog('Scene plan & style board',`<p>Current recording · revision ${view.revision}. Words and source clocks stay with this episode. New scenes are previews until explicitly inserted.</p>
+ <div class="sceneplan-grid"><section><h3>Current passage → scene instance</h3>
+ <label>Spoken passage<select id="scenePlanPassage">${view.passages.map(p=>`<option value="${p.id}">${time(p.start)}–${time(p.end)} · ${esc(p.quote)}</option>`).join('')}</select></label>
+ <video id="scenePlanSource" controls playsinline src="/assets/${id}/media"></video><small id="scenePlanTiming"></small>
+ <label>Visible title<input id="scenePlanTitle" maxlength="140" value="${esc(view.passages[0]?.quote||'')}"></label>
+ <label>Editable component<select id="scenePlanComponent">${catalog.components.filter(c=>c.selectable_in_scene_plan).map(c=>`<option value="${c.id}">${c.id} · ${esc(c.name)} · native editable</option>`).join('')}${view.library.filter(x=>x.editable).map(x=>`<option value="library:${x.id}">${esc(x.title)} · template v${x.version}</option>`).join('')}</select></label>
+ <label>Style observation<select id="scenePlanObservation"><option value="">No reference treatment selected</option>${observations.map(o=>`<option value="${o.id}" ${!o.available?'disabled':''}>${esc(o.family)} · ${o.source_range.map(x=>Number(x).toFixed(3)+'s').join('–')} · ${esc(o.visual.slice(0,70))}${o.available?'':' · relink source'}</option>`).join('')}</select></label>
+ <video id="scenePlanReference" controls playsinline hidden></video><small id="scenePlanReferenceNote"></small>
+ ${compositionFields({})}<button type="button" class="primary" id="createPassageScene" ${!view.passages.length?'disabled':''}>Create scene preview</button>
+ <div id="scenePlanInstances">${view.passages.flatMap(p=>(p.scenes||[]).map(s=>`<p>${esc(p.quote)} · scene v${s.version} · ${s.locked?'Locked':esc(s.status)} <button type="button" class="soft" data-artifact-preview="${s.id}">Preview</button><button type="button" class="textbtn" data-artifact-edit="${s.id}">Edit instance</button></p>`)).join('')}</div>
+ </section><section><h3>Source-linked style board</h3><p>Observations describe reference treatment. They do not become this episode’s software proof.</p>
+ ${observations.map(o=>`<p>${esc(o.family)} · ${o.source_range.map(x=>Number(x).toFixed(3)+'s').join('–')} · ${esc(o.visual)}<br><small>Visual confidence ${o.visual_confidence} · Audio ${esc(o.audio_status)} · ${esc(o.state)}</small></p>`).join('')||'<p>No saved observations yet.</p>'}
+ <label>Reference source<select id="styleBoardAsset">${references.map(a=>`<option value="${a.id}">${esc(a.name)}</option>`).join('')}</select></label>
+ <video id="styleBoardSource" controls playsinline ${references.length?'':'hidden'}></video>
+ <div class="scene-controls"><label>Source in (s)<input type="number" id="styleBoardIn" min="0" step="any" value="0"></label><label>Source out (s)<input type="number" id="styleBoardOut" min="0" step="any" value="${Math.min(3,references[0]?.duration||3)}"></label></div>
+ <label>Scene family<select id="styleBoardFamily">${view.reference.families.map(f=>`<option>${f}</option>`).join('')}</select></label>
+ <label>Observed layout / motion<textarea id="styleBoardVisual" rows="3" maxlength="1500"></textarea></label><label>Visual confidence<input id="styleBoardConfidence" type="number" min="0" max="1" step=".1" value=".5"></label>
+ <label>Observer<input id="styleBoardReviewer" maxlength="120"></label><label><input type="checkbox" id="styleBoardCanListen"> I can hear this reference and inspected its audio</label><label>What was heard<textarea id="styleBoardAudio" rows="2" maxlength="1500" disabled></textarea></label>
+ <button type="button" class="soft" id="saveStyleObservation" ${!references.length?'disabled':''}>Save observation</button></section></div>`);
+ const selectPassage=()=>{const p=view.passages.find(p=>p.id===el('scenePlanPassage').value);if(!p)return;el('scenePlanSource').currentTime=p.start;el('scenePlanTiming').textContent=`Source ${p.start.toFixed(3)}–${p.end.toFixed(3)}s · ${p.timing}`;el('scenePlanTitle').value=state.artifacts[p.choice?.scene]?.plan.title||p.quote;el('scenePlanComponent').value=p.choice?.component||'05';el('scenePlanObservation').value=p.choice?.observation||'';el('scenePlanObservation').dispatchEvent(new Event('change'));const composition=state.artifacts[p.choice?.scene]?.plan.composition||{};el('scenePresenterLayout').value=composition.layout||'full_demo';el('scenePresenterShape').value=composition.pip_shape||'circle';el('scenePresenterCorner').value=composition.pip_corner||'bottom_right';el('scenePresenterSize').value=composition.pip_width??.25;all('[data-scene-presenter-crop]').forEach((field,i)=>field.value=composition.pip_crop?.[i]??[.5,.38,1][i]);};
+ el('scenePlanPassage').onchange=selectPassage;el('scenePlanSource').onloadedmetadata=()=>{const passage=view.passages.find(p=>p.id===el('scenePlanPassage').value);if(passage)el('scenePlanSource').currentTime=passage.start;};
+ el('scenePlanObservation').onchange=()=>{const o=observations.find(o=>o.id===el('scenePlanObservation').value),v=el('scenePlanReference');v.hidden=!o?.available;if(o?.available){v.src=`/assets/${o.seek_asset}/media#t=${o.source_range.join(',')}`;el('scenePlanReferenceNote').textContent=`${o.visual} · Audio ${o.audio_status}`;}else el('scenePlanReferenceNote').textContent='';};
+ const setReference=()=>{const a=state.assets[el('styleBoardAsset').value];if(a)el('styleBoardSource').src=`/assets/${a.id}/media`;};el('styleBoardAsset').onchange=setReference;setReference();selectPassage();
+ el('styleBoardCanListen').onchange=()=>el('styleBoardAudio').disabled=!el('styleBoardCanListen').checked;
+ el('saveStyleObservation').onclick=guard(async()=>{const a=state.assets[el('styleBoardAsset').value];await req('/api/style-board/save',{asset:a.id,source_sha256:a.source_sha256,source_range:[Number(el('styleBoardIn').value),Number(el('styleBoardOut').value)],family:el('styleBoardFamily').value,visual:el('styleBoardVisual').value,visual_confidence:Number(el('styleBoardConfidence').value),reviewer:el('styleBoardReviewer').value,can_listen:el('styleBoardCanListen').checked,audio:el('styleBoardAudio').value});await openScenePlan(id);});
+ el('createPassageScene').onclick=guard(async()=>{const button=el('createPassageScene');button.disabled=true;try{const r=await req('/api/scene-plan/create',{id,revision:view.revision,passage:el('scenePlanPassage').value,component:el('scenePlanComponent').value,title:el('scenePlanTitle').value,observation:el('scenePlanObservation').value||null,composition:readComposition(),request_id:scenePlanDraft.request_id});await refresh();dialog('Scene preview · review before insertion',`<video controls playsinline src="/artifacts/${r.scene}/preview"></video><p>Scene v${r.version}. Current source voice retained. No delivery sign-off or proof approval.</p><button type="button" class="soft" data-artifact-edit="${r.scene}">Edit instance</button><button type="button" class="primary" data-artifact-insert="${r.scene}">Insert in episode</button>`);}finally{if(button.isConnected)button.disabled=false;}});
+}

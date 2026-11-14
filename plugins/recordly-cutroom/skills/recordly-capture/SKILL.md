@@ -31,3 +31,18 @@ Retry the same logical request with the same request ID after lost response.
 Do not start a second capture on an unknown operation. Inspect status/native log.
 Never expose tokens, enable remote access, send recordings to a cloud server,
 change OS capture permissions, or delete prior media to make a test pass.
+
+
+## Capture source guard (0.1.2)
+
+The exact selected window ID/title is checked again after selection, every 300 ms
+while recording, and at stop. A changed/missing window or failed source check
+stops the capture, retains its source/native project, marks the take FAILED and
+blocks export. Deliberate navigation that changes the window title needs a new
+explicitly selected take. Never silently expand the allowed title list.
+
+MONITORED_NO_CHANGE_OBSERVED means only that polling saw no ID/title change.
+It does not prove pixel isolation, privacy, a real tutorial result or readiness.
+Inspect the decoded export for unwanted tabs/windows. Legacy captures are
+LEGACY_UNVERIFIED and retain their prior evidence. The 0.1.2 native Windows
+recapture remains pending; deterministic tests do not replace that test.

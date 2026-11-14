@@ -14,7 +14,8 @@ def save(ws,id_):
     if old:return old['id']
     library_id=uuid.uuid4().hex;folder=ws.root/'animations'/library_id;folder.mkdir(parents=True,exist_ok=False)
     media.ff('-i',Path(record['folder'])/'preview.mp4','-map','0:v:0','-c:v','copy','-an',folder/'preview.mp4')
-    entry=dict(id=library_id,kind='native_spec',title=plan['title'],type=plan['type'],scene_sha256=key,source_scene_id=id_,source_version=record['version'],
+    template_version=1+max((r.get('template_version',1) for r in ws.data.get('animation_library',{}).values() if r.get('source_scene_id')==id_),default=0)
+    entry=dict(id=library_id,kind='native_spec',template_family=id_,template_version=template_version,title=plan['title'],type=plan['type'],scene_sha256=key,source_scene_id=id_,source_version=record['version'],
         source_job=record['job'],template=copy.deepcopy(plan['animation']),preview_sha256=media.sha(folder/'preview.mp4'),
         status='TEMPLATE · rebind and review for each episode',preview_audio='none',media_is_reusable_proof=False,
         origin='Native vector specification; current-episode footage in preview is context only',folder=str(folder))

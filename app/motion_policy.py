@@ -60,6 +60,7 @@ def candidate(root):
 
 
 def infer(root,contexts,mode,source_sha256=None):
+    request_started=time.monotonic()
     if isinstance(mode,str) and mode.startswith('library:'):
         from animation_library import adapt
         return [adapt(root,mode.split(':',1)[1],c) for c in contexts]
@@ -82,12 +83,24 @@ def infer(root,contexts,mode,source_sha256=None):
     if decoder=='source_json_v1' and os.environ.get('CUTROOM_ANIMATION_DECODER_SITE'):
         request['decoder_site']=str(Path(os.environ['CUTROOM_ANIMATION_DECODER_SITE']).resolve(strict=True))
     run_id=uuid.uuid4().hex;run=Path(root)/'model-runs'/run_id;run.mkdir(parents=True,exist_ok=False)
-    media.write_json(run/'request.json',dict(**request,source_sha256=source_sha256,worker_sha256=media.sha(Path(__file__).parent/'motion_worker.py')))
+    import request_observability as observation
+    options=dict(decode_mode=decoder,max_new_tokens=request.get('max_new_tokens',1400),do_sample=False)
+    identity=dict(base_files=hashes,adapter_files=receipt['adapter_files'],checkpoint_sha256=record['checkpoint_sha256'],adapter_active=mode=='fine_tuned',model_version=record['version'],retrieval_version=receipt.get('retrieval_version',1),worker_sha256=media.sha(Path(__file__).parent/'motion_worker.py'),schema_sha256=media.sha(Path(motion_specs.__file__)),observer_sha256=media.sha(Path(observation.__file__)))
+    request['observability_identity']=identity
+    media.write_json(run/'request.json',dict(**request,source_sha256=source_sha256,worker_sha256=identity['worker_sha256']))
+    wire=json.dumps(request,ensure_ascii=False)
+    trace=dict(run_id=run_id,status='DISPATCHING',transport_sha256=observation.sha(wire.encode()),request_build_seconds=time.monotonic()-request_started,
+               rows=[dict(id=row['id'],receipt=observation.describe(row['context'],row['examples'],receipt['prompt_version'],identity,options)) for row in rows],
+               worker_wall_seconds=None,worker_observability=None)
+    media.write_json(run/'request-observability.json',trace)
     executable=os.environ.get('CUTROOM_ANIMATION_PYTHON',sys.executable)
-    proc=subprocess.run([executable,'-X','utf8',str(Path(__file__).parent/'motion_worker.py')],input=json.dumps(request,ensure_ascii=False),text=True,encoding='utf-8',capture_output=True,timeout=600,**media.launch_options())
+    dispatched=time.monotonic()
+    proc=subprocess.run([executable,'-X','utf8',str(Path(__file__).parent/'motion_worker.py')],input=wire,text=True,encoding='utf-8',capture_output=True,timeout=600,**media.launch_options())
     (run/'stdout.json').write_text(proc.stdout,encoding='utf-8');(run/'stderr.log').write_text(proc.stderr,encoding='utf-8')
+    trace.update(worker_wall_seconds=time.monotonic()-dispatched,status='WORKER_FAILED' if proc.returncode else 'WORKER_RETURNED');media.write_json(run/'request-observability.json',trace)
     if proc.returncode:raise ValueError('Animation worker failed; previous scenes retained. '+proc.stderr[-1000:])
     result=json.loads(proc.stdout)
+    trace['worker_observability']=result.get('observability');trace['predictions']=[dict(id=p['id'],error=p.get('error'),observability=p.get('observability')) for p in result.get('predictions',[])];media.write_json(run/'request-observability.json',trace)
     if not result.get('weights_loaded') or result.get('base_files')!=hashes or result.get('checkpoint_sha256')!=record['checkpoint_sha256']:raise ValueError('Worker did not load the expected checkpoint/base')
     if len(result['predictions'])!=len(contexts):raise ValueError('Worker returned an incomplete scene batch')
     answer=[]
@@ -95,5 +108,5 @@ def infer(root,contexts,mode,source_sha256=None):
         if prediction['id']!=row['id']:raise ValueError('Worker scene identity mismatch')
         if prediction.get('decoding',{}).get('mode')!=decoder:raise ValueError('Worker did not use the requested animation decoder')
         if prediction.get('error'):raise ValueError('Model spec rejected for scene '+row['id']+': '+prediction['error']+'. No rules fallback was substituted.')
-        answer.append(dict(spec=motion_specs.validate(prediction['spec'],row['context']),model=dict(mode=mode,weights_loaded=True,version=record['version'],checkpoint_sha256=record['checkpoint_sha256'],adapter_active=mode=='fine_tuned',device=result['device'],base_files=hashes,retrieved_ids=[e['id'] for e in row['examples']],raw_output=prediction['raw'],runtime_seconds=prediction['runtime_seconds'],inference_run_id=run_id,compiler=prediction.get('compiler',{}),decoding=prediction.get('decoding',{'mode':'unconstrained'}))))
+        answer.append(dict(spec=motion_specs.validate(prediction['spec'],row['context']),model=dict(mode=mode,weights_loaded=True,version=record['version'],checkpoint_sha256=record['checkpoint_sha256'],adapter_active=mode=='fine_tuned',device=result['device'],base_files=hashes,retrieved_ids=[e['id'] for e in row['examples']],raw_output=prediction['raw'],runtime_seconds=prediction['runtime_seconds'],request_observability=prediction.get('observability'),inference_run_id=run_id,compiler=prediction.get('compiler',{}),decoding=prediction.get('decoding',{'mode':'unconstrained'}))))
     return answer

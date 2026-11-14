@@ -126,7 +126,7 @@ class ArtifactStore:
                 with self.ws.lock:self.generating.discard(key)
         return [r['id'] for r in results]
     def edit(self,id_,changes,expected_version,regenerate=True):
-        allowed={'title','duration','at','position','intensity','sound','sounds','enabled','source_quote','passage_ids','occurrence','evidence','design','animation','locked'}
+        allowed={'title','duration','at','position','intensity','sound','sounds','enabled','source_quote','passage_ids','occurrence','evidence','design','animation','locked','composition'}
         if set(changes)-allowed:raise ValueError('Unknown scene setting.')
         with self.ws.lock:
             record=self.records()[id_];job=self.ws.data['jobs'][record['job']];self._check_job(job)
@@ -151,6 +151,7 @@ class ArtifactStore:
                     plan['animation'].update(spec=predicted['spec'],model=predicted['model'])
                 if 'duration' in changes:plan['animation']['context']['frames']=round(float(plan['duration'])*30)
                 motion_specs.validate(plan['animation']['spec'],plan['animation']['context'])
+            if plan.get('composition') and plan['kind']!='animation_spec':raise ValueError('Presenter composition is supported on native editable scenes; use cutaway PiP for footage.')
             if plan['kind']=='generated_video' and not plan.get('evidence'):raise ValueError('Preserve the generated illustration’s source and provenance.')
             if plan.get('evidence') and plan['kind']=='placeholder':
                 plan['kind']='software';plan['intended_visual']='Actual supplied screen footage; verify its own control, action and readable result.'
@@ -220,6 +221,8 @@ class ArtifactStore:
                     anchors={x['kind']:x['source_pts'] for x in entry['context']['anchors'] if x.get('source_pts') is not None and x['kind'] in ('control','contact','result')}
                     if 'control' in anchors:anchors['target']=anchors.pop('control')
                     plan['proof'].append(dict(id='motion-proof-'+r['id'],file=a['path'],start=start,end=end,source_start=proof.get('offset',0),artifact_type=scene['type'],artifact_kind='software',source_name=a['name'],anchors=anchors,**binding))
+                from engine.layouts import compose_scene
+                compose_scene(plan,scene,start,end,plan['proof'][-1] if proof else None)
                 continue
             evidence=scene.get('evidence') or {};binding=dict(demonstrates=evidence['for_repo']) if scene['kind']=='software' and evidence.get('for_repo') else {}
             plan['proof'].append(dict(id='artifact-'+r['id'],start=start,end=end,file=str(Path(r['folder'])/'preview.mp4'),source_start=0,artifact_id=r['id'],artifact_version=r['version'],artifact_type=scene['type'],artifact_kind=scene['kind'],source_name=scene['title'],**binding))

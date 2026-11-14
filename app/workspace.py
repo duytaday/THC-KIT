@@ -295,9 +295,18 @@ class Workspace:
                     raise ValueError("Cutaways must fit the recording without overlapping.")
                 end = q["at"] + q["duration"]
 
-    def update(self, ids, changes):
+    def update(self, ids, changes, expected_revisions=None):
         with self.lock:
+            import revisions
+            if not isinstance(ids,list) or not ids or any(not isinstance(k,str) for k in ids):
+                raise ValueError('Select one or more recording IDs.')
+            if not isinstance(changes,dict):raise ValueError('Supply changed settings as an object.')
             jobs = [self.data["jobs"][key] for key in dict.fromkeys(ids)]
+            if expected_revisions is not None:
+                if not isinstance(expected_revisions,dict) or set(expected_revisions)!=set(ids) or any(type(v) is not int for v in expected_revisions.values()):
+                    raise ValueError('Supply an integer revision for every selected recording.')
+                if any(j['revision']!=expected_revisions[j['id']] for j in jobs):
+                    raise revisions.Conflict('A selected recording changed. Reopen its settings before saving; your unsaved changes are preserved.')
             prepared = []
             for j in jobs:
                 if j["status"] in ACTIVE:
@@ -308,22 +317,28 @@ class Workspace:
                 for insert in opts['inserts']:insert.setdefault('id',ident())
                 self.valid(j, opts)
                 prepared.append(opts)
-            for j, opts in zip(jobs, prepared):
-                if opts != j["settings"]:
-                    if any(k in changes for k in ('events','inserts')):
-                        self.data.setdefault('corrections',[]).append(dict(id=ident(),job=j['id'],source=self.data['assets'][j['id']]['path'],source_sha256=media.sha(self.data['assets'][j['id']]['path']),before={k:copy.deepcopy(j['settings'][k]) for k in changes},after=copy.deepcopy(changes),reason=None,editor_confirmed=False,created=clock(),alignment='stable source anchors; not a training label until reviewed'))
-                    j.update(
-                        settings=opts,
-                        status="Draft",
-                        stage="",
-                        updated=clock(),
-                        revision=j["revision"] + 1,
-                    )
-                    if 'script' in changes:j.pop('script_issue',None)
-                    if 'script' in changes:self.artifacts.invalidate_script(j['id'],opts['script'])
-                    import revisions
-                    j['manual_style_fields']=sorted(set(j.get('manual_style_fields',[])) | (set(changes)&set(revisions.STYLE_FIELDS)))
-            self.save()
+            previous=copy.deepcopy(self.data)
+            try:
+                for j, opts in zip(jobs, prepared):
+                    if opts != j["settings"]:
+                        if any(k in changes for k in ('events','inserts')):
+                            self.data.setdefault('corrections',[]).append(dict(id=ident(),job=j['id'],source=self.data['assets'][j['id']]['path'],source_sha256=media.sha(self.data['assets'][j['id']]['path']),before={k:copy.deepcopy(j['settings'][k]) for k in changes},after=copy.deepcopy(changes),reason=None,editor_confirmed=False,created=clock(),alignment='stable source anchors; not a training label until reviewed'))
+                        j.update(
+                            settings=opts,
+                            status="Draft",
+                            stage="",
+                            updated=clock(),
+                            revision=j["revision"] + 1,
+                        )
+                        if 'script' in changes:j.pop('script_issue',None)
+                        if 'script' in changes:self.artifacts.invalidate_script(j['id'],opts['script'])
+                        import revisions
+                        j['manual_style_fields']=sorted(set(j.get('manual_style_fields',[])) | (set(changes)&set(revisions.STYLE_FIELDS)))
+                self.save()
+                return {j['id']:j['revision'] for j in jobs}
+            except BaseException:
+                self.data=previous
+                raise
 
     def assign_scripts(self,ids,scripts):
         with self.lock:
@@ -383,39 +398,53 @@ class Workspace:
         from engine.enhance import events_for
         return {'events':events_for(plan,[[0,host['duration'],0]]),'analysis':notes,'plan':plan}
 
-    def queue(self, ids, request_id=None):
+    def queue(self, ids, request_id=None, *, start=True):
         with self.lock:
-            if request_id and request_id in self.data.get('queue_requests',{}):return copy.deepcopy(self.data['queue_requests'][request_id])
+            import revisions
+            if not isinstance(ids,list) or any(not isinstance(k,str) for k in ids):raise ValueError('Choose recording IDs.')
+            request_payload=revisions.digest(sorted(set(ids)))
+            if request_id:
+                if not isinstance(request_id,str) or not 8<=len(request_id)<=128:raise ValueError('Use a stable queue request ID of 8–128 characters.')
+                if request_id in self.data.get('queue_requests',{}):
+                    if self.data.get('queue_request_payloads',{}).get(request_id)!=request_payload:
+                        raise revisions.Conflict('This queue ID has a different or legacy unverified payload. Inspect its prior job; use a new ID for a deliberate new render.')
+                    return copy.deepcopy(self.data['queue_requests'][request_id])
             self.tools = configure_tools(self.root)
             if not self.tools:
                 raise ValueError("FFmpeg and FFprobe must be installed before rendering.")
             jobs = [self.data["jobs"][key] for key in dict.fromkeys(ids)]
-            pending = []
-            skipped = []
-            for j in jobs:
-                if j["status"] in ACTIVE:
-                    continue
-                if j.get('archived'):
-                    skipped.append(self.data['assets'][j['id']]['name']);continue
-                try:
-                    if not j["settings"]["script"].strip() and not j.get('creator_requested'):
-                        raise ValueError("Add a script to render this recording.")
-                    if j.get('script_issue'):raise ValueError(j['script_issue'])
-                    self.valid(j, j["settings"])
-                except ValueError as err:
-                    j.update(status="Needs input", stage=str(err))
-                    skipped.append(self.data["assets"][j["id"]]["name"])
-                    continue
-                pending.append(j)
-            for j in pending:
-                j.update(status="Queued", stage="Waiting for an encoder")
-            result={"queued": len(pending), "skipped": skipped}
-            if request_id:
-                requests=self.data.setdefault('queue_requests',{});requests[request_id]=result
-                while len(requests)>200:requests.pop(next(iter(requests)))
-            self.save()
-            for j in pending:
-                self.pool.submit(self.run, j["id"])
+            before=copy.deepcopy(self.data)
+            try:
+                pending = []
+                skipped = []
+                for j in jobs:
+                    if j["status"] in ACTIVE:
+                        continue
+                    if j.get('archived'):
+                        skipped.append(self.data['assets'][j['id']]['name']);continue
+                    try:
+                        if not j["settings"]["script"].strip() and not j.get('creator_requested'):
+                            raise ValueError("Add a script to render this recording.")
+                        if j.get('script_issue'):raise ValueError(j['script_issue'])
+                        self.valid(j, j["settings"])
+                    except ValueError as err:
+                        j.update(status="Needs input", stage=str(err))
+                        skipped.append(self.data["assets"][j["id"]]["name"])
+                        continue
+                    pending.append(j)
+                for j in pending:
+                    j.update(status="Queued", stage="Waiting for an encoder")
+                result={"queued": len(pending), "skipped": skipped}
+                if request_id:
+                    requests=self.data.setdefault('queue_requests',{});requests[request_id]=result
+                    self.data.setdefault('queue_request_payloads',{})[request_id]=request_payload
+                self.save()
+            except BaseException:
+                self.data=before
+                raise
+            if start:
+                for j in pending:
+                    self.pool.submit(self.run, j["id"])
             return result
 
     def stage(self, key, s):
@@ -559,13 +588,40 @@ class Workspace:
             if temp.exists():
                 shutil.rmtree(temp, ignore_errors=True)
 
-    def first_cut(self,ids,niche=None,story_format=None):
+    def first_cut(self,ids,niche=None,story_format=None,request_id=None,expected_revisions=None):
+        if request_id is not None:
+            import revisions
+            if not isinstance(request_id,str) or not 8<=len(request_id)<=128:raise ValueError('Use a stable request ID of 8–128 characters.')
+            payload=revisions.digest(dict(ids=ids,niche=niche,story_format=story_format,revisions=expected_revisions))
+            with self.lock:
+                previous_request=self.data.get('first_cut_requests',{}).get(request_id)
+                if previous_request:
+                    if previous_request['payload']!=payload:raise revisions.Conflict('This request ID belongs to a different first-cut command.')
+                    return {**copy.deepcopy(previous_request['result']),'replayed':True}
+                if not isinstance(ids,list) or not ids or any(not isinstance(k,str) for k in ids):raise ValueError('Select recording IDs.')
+                if not isinstance(expected_revisions,dict) or set(expected_revisions)!=set(ids) or any(type(v) is not int for v in expected_revisions.values()):raise ValueError('Supply the revision of every selected recording.')
+                if any(self.data['jobs'][k]['revision']!=expected_revisions[k] for k in ids):raise revisions.Conflict('A selected recording changed. Reopen it before creating a new cut.')
+                if getattr(self,'_save_deferred',False):raise RuntimeError('Nested first-cut transaction')
+                before=copy.deepcopy(self.data);self._save_deferred=True
+                try:
+                    result=self._prepare_first_cut(ids,niche,story_format,start=False)
+                    result['replayed']=False
+                    self.data.setdefault('first_cut_requests',{})[request_id]=dict(payload=payload,result=copy.deepcopy(result))
+                    pending=[k for k in dict.fromkeys(ids) if before['jobs'][k]['status'] not in ACTIVE and self.data['jobs'][k]['status']=='Queued']
+                    self._save_deferred=False;self.save()
+                except BaseException:
+                    self.data=before;self._save_deferred=False;raise
+                for key in pending:self.pool.submit(self.run,key)
+                return result
+        return self._prepare_first_cut(ids,niche,story_format)
+
+    def _prepare_first_cut(self,ids,niche=None,story_format=None,*,start=True):
         with self.lock:
             jobs=[self.data['jobs'][key] for key in dict.fromkeys(ids)]
             if not jobs:raise ValueError('Add and select a recording first')
             missing=[];ready=[];prepared=[]
             for j in jobs:
-                if j['status'] in ACTIVE:continue
+                if j['status'] in ACTIVE or j.get('archived'):continue
                 updated=copy.deepcopy(j['settings'])
                 if niche is not None:updated['niche']=niche
                 if story_format is not None:updated['story_format']=story_format
@@ -580,7 +636,7 @@ class Workspace:
                     j['creator_preserve_script']=any(e['job']==j['id'] for e in self.data['exports']) or any(r['job']==j['id'] and (r.get('inserted') or r.get('locked')) for r in self.data.get('artifacts',{}).values())
                 ready.append(j['id'])
             self.save()
-        result=self.queue(ready) if ready else dict(queued=0,skipped=[])
+        result=(self.queue(ready) if start else self.queue(ready,start=False)) if ready else dict(queued=0,skipped=[])
         if missing:result.update(setup_required=True,speech_setup=self.speech_setup.snapshot(),needs_script_or_setup=missing)
         return result
 

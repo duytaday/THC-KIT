@@ -3,9 +3,10 @@ const {test}=require('node:test'),assert=require('node:assert/strict'),fs=requir
 const {controller,label,inside}=require('../bridge/main.cjs');
 async function fixture(backend='cuda-scale-cpu-pad'){
  const root=fs.mkdtempSync(path.join(os.tmpdir(),'recordly-unit-'));const native=path.join(root,'recordings');const projects=path.join(root,'projects');fs.mkdirSync(native);fs.mkdirSync(projects);
- const calls=[];const source={id:'window:123:0',name:'Synthetic unit window'};let present=true;
+ const calls=[];const source={id:'window:123:0',name:'Synthetic unit window'};let present=true,sourceError=false,changeOnSelect=false;
  const invoke=async(channel,...args)=>{calls.push({channel,args});
-  if(channel==='get-sources')return present?[source]:[];
+  if(channel==='get-sources'){if(sourceError)throw Error('Synthetic source listing error');return present?[source]:[];}
+  if(channel==='select-source'&&changeOnSelect)source.name='Unexpected window';
   if(channel==='get-recordings-directory')return {success:true,path:native};
   if(channel==='get-projects-directory')return {success:true,path:projects};
   if(channel==='stop-native-screen-recording'){const p=path.join(native,'recording-unit.mp4');fs.writeFileSync(p,'UNIT FIXTURE NOT VIDEO');return {success:true,path:p};}
@@ -15,7 +16,7 @@ async function fixture(backend='cuda-scale-cpu-pad'){
   if(channel==='finalize-exported-video'){fs.copyFileSync(args[0].tempPath,args[0].outputPath,fs.constants.COPYFILE_EXCL);return {success:true,path:args[0].outputPath};}
   return {success:true};
  };
- const c=await controller({root,invoke});return {root,c,calls,source,disappear:()=>present=false};
+ const c=await controller({root,invoke,sourceCheckMs:5});return {root,c,calls,source,disappear:()=>present=false,failSource:()=>sourceError=true,changeAfterSelection:()=>changeOnSelect=true};
 }
 const start=f=>({command:'start',request_id:'start-request-001',params:{window_id:f.source.id,expected_title:f.source.name,beat:'unit-beat',max_seconds:5}});
 test('Concurrent/reordered retries start native capture once; changed payload conflicts',async()=>{
@@ -65,4 +66,33 @@ test('Restored completed ledger responds without repeating native calls',async()
   const restored=await controller({root:f.root,invoke:async()=>{throw Error('No call expected');}});
   try{const response=await restored.dispatch(start(f));assert(response.replayed);assert.equal(response.capture_id,a.capture_id);}finally{restored.close();}
  }finally{f.c.close();}
+});
+
+async function stopped(f){
+ const deadline=Date.now()+2000;
+ while(Date.now()<deadline){const s=await f.c.dispatch({command:'status'});if(s.capture.stage==='STOPPED')return s.capture;await new Promise(r=>setTimeout(r,5));}
+ throw Error('Guard did not stop capture');
+}
+for(const [name,change,reason] of [
+ ['title change',f=>f.source.name='Different application title','SELECTED_WINDOW_TITLE_CHANGED'],
+ ['missing window',f=>f.disappear(),'SELECTED_WINDOW_MISSING'],
+ ['source list failure',f=>f.failSource(),'SOURCE_CHECK_UNAVAILABLE']
+])test('During capture: '+name+' stops once, preserves project and blocks export',async()=>{
+ const f=await fixture();try{
+  const a=await f.c.dispatch(start(f));change(f);const c=await stopped(f);
+  assert.equal(c.source_guard.status,'FAILED');assert.equal(c.source_guard.reason,reason);assert(fs.existsSync(c.source));assert(fs.existsSync(c.project));
+  assert.equal(f.calls.filter(c=>c.channel==='stop-native-screen-recording').length,1);
+  const again=await f.c.dispatch({command:'stop',request_id:'stop-after-guard',params:{capture_id:a.capture_id}});assert.equal(again.source_guard.status,'FAILED');
+  await assert.rejects(f.c.dispatch({command:'export',request_id:'guard-export-001',params:{capture_id:a.capture_id,name:'must-not-export'}}),/quarantined/);
+  assert(!f.calls.some(c=>c.channel==='native-static-layout-export'));
+ }finally{f.c.close();}
+});
+test('Selection race is rejected before native recording starts',async()=>{
+ const f=await fixture();try{f.changeAfterSelection();await assert.rejects(f.c.dispatch(start(f)),/changed after selection/);assert(!f.calls.some(c=>c.channel==='start-native-screen-recording'));}finally{f.c.close();}
+});
+test('Manual stop checks the source even before the first polling tick',async()=>{
+ const f=await fixture();try{const a=await f.c.dispatch(start(f));f.source.name='Unexpected';const c=await f.c.dispatch({command:'stop',request_id:'stop-before-tick',params:{capture_id:a.capture_id}});assert.equal(c.source_guard.status,'FAILED');assert.equal(c.source_guard.reason,'SELECTED_WINDOW_TITLE_CHANGED');}finally{f.c.close();}
+});
+test('Unchanged source records limited evidence without claiming isolation',async()=>{
+ const f=await fixture();try{const a=await f.c.dispatch(start(f));const c=await f.c.dispatch({command:'stop',request_id:'stop-clean-guard',params:{capture_id:a.capture_id}});assert.equal(c.source_guard.status,'MONITORED_NO_CHANGE_OBSERVED');assert(c.source_guard.checks>=1);assert.match(c.source_guard.limitation,/cannot prove pixel isolation/);}finally{f.c.close();}
 });

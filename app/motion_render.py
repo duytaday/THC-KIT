@@ -101,6 +101,8 @@ def preview(plan,folder,host,assets):
     proof=entry['context'].get('proof')
     if proof:
         a=assets[proof['asset']];render_plan['proof']=[dict(id='motion-proof',file=a['path'],start=at,end=at+duration,source_start=proof.get('offset',0),**({'crop':proof['crop']} if proof.get('crop') else {}))]
+    from engine.layouts import compose_scene
+    compose_scene(render_plan,plan,at,at+duration,render_plan['proof'][-1] if proof else None)
     edit.render(Path(host['path']),render_plan,folder,scene_preview=True)
     (folder/'edit.mp4').rename(folder/'preview.mp4');media.ff('-ss',min(.8,duration/2),'-i',folder/'preview.mp4','-frames:v','1','-vf','scale=270:480',folder/'thumbnail.jpg')
     result=copy.deepcopy(plan);result.update(duration=duration,preview_frames=entry['context']['frames'],preview_audio='Original source audio; no synthesis. Source/script alignment is recorded separately.',events=[])

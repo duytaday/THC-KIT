@@ -159,11 +159,12 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
     (out / "captions.ass").write_text(ass + "\n".join(lines) + "\n", encoding="utf-8-sig")
     if plan.get('motion_specs'):
         import motion_render
+        (out/'motion.ass').write_text(ass,encoding='utf-8-sig')
         receipts=[]
         for scene in plan['motion_specs']:
             start,end=interval(scene['source_start'],scene['source_end'])
             if abs((end-start)*FPS-scene['context']['frames'])>1:raise ValueError('Trim changed an animation span; reassign its source cues before render.')
-            receipts.append(motion_render.append_ass(out/'captions.ass',scene,round(start*FPS),show_status=scene_preview))
+            receipts.append(motion_render.append_ass(out/'motion.ass',scene,round(start*FPS),show_status=scene_preview))
         write_json(out/'motion-render-receipt.json',receipts)
     z = "1" + "".join("+0.08*" + p for p in pulses)
     fit = (
@@ -178,9 +179,13 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
     )
     args = ["-i", source]
     picture = "face"
-    pip_clips=[i for i,q in enumerate(plan.get('proof', []),1) if q.get('layout_decision',{}).get('resolved')=='presenter_pip']
-    if pip_clips:
-        graph.append('[face]split='+str(len(pip_clips)+1)+'[baseface]'+''.join(f'[hostpip{i}]' for i in pip_clips))
+    from . import layouts
+    presenter_scenes=[dict(start=q['start'],end=q['end'],decision=q['layout_decision']) for q in plan.get('proof',[]) if q.get('layout_decision',{}).get('resolved')=='presenter_pip']
+    presenter_scenes += list(plan.get('presenter_scenes',[]))
+    presenter_scenes.sort(key=lambda q:q['start'])
+    if any(a['end']>b['start']+1e-6 for a,b in zip(presenter_scenes,presenter_scenes[1:])):raise ValueError('Presenter layouts overlap. Keep one presenter layout per scene.')
+    if presenter_scenes:
+        graph.append('[face]split='+str(len(presenter_scenes)+1)+'[baseface]'+''.join(f'[hostpip{i}]' for i in range(len(presenter_scenes))))
         picture='baseface'
     prev_end = 0
     for i, clip in enumerate(plan.get("proof", []), 1):
@@ -214,14 +219,21 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
             f"[{picture}][proof{i}]overlay=eof_action=pass:enable='gte(t,{start})*lt(t,{end})'[mix{i}]"
         )
         picture = f"mix{i}"
-        if i in pip_clips:
-            x,y,w,h=clip['layout_decision']['rect']
-            graph.append(f'[hostpip{i}]scale={w}:{h},setsar=1[pip{i}]')
-            graph.append(f"[{picture}][pip{i}]overlay=x={x}:y={y}:eof_action=pass:enable='gte(t,{start})*lt(t,{end})'[pipmix{i}]")
-            picture=f'pipmix{i}'
     from . import enhance
     resolved_events=enhance.events_for(plan,clock)
     picture=enhance.visuals(graph,picture,plan,resolved_events,out,total,args)
+    # Explanatory backgrounds are authored illustration, never product proof.
+    for i,scene in enumerate(plan.get('presenter_scenes',[])):
+        start,end=interval(scene['start'],scene['end'])
+        graph.append(f"[{picture}]drawbox=x=0:y=0:w=iw:h=ih:color=0xf8f4eb:t=fill:enable='gte(t,{start})*lt(t,{end})'[explain{i}]")
+        picture=f'explain{i}'
+    if plan.get('motion_specs'):
+        graph.append(f'[{picture}]ass=motion.ass:fontsdir=fonts[motionpicture]');picture='motionpicture'
+    for i,scene in enumerate(presenter_scenes):
+        start,end=interval(scene['start'],scene['end']);decision=scene['decision'];x,y,w,h=decision['rect']
+        graph.append(layouts.presenter_filter(f'hostpip{i}',decision,f'pip{i}'))
+        graph.append(f"[{picture}][pip{i}]overlay=x={x}:y={y}:eof_action=pass:enable='gte(t,{start})*lt(t,{end})'[pipmix{i}]")
+        picture=f'pipmix{i}'
     audio = "speech"
     graph.append(f"[{picture}]ass=captions.ass:fontsdir=fonts[captioned]")
     brand=plan.get('branding')

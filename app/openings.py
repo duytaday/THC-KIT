@@ -66,7 +66,7 @@ def render(ws,job):
     import revision_cache
     if not revision_cache.same_packets(revision_cache.payloads(folder/'host.mp4','a:0'),revision_cache.payloads(folder/'proof.mp4','a:0')):raise ValueError('Audition audio packets differ')
     measured={k:media.verify_av(folder/(k+'.mp4'),length) for k in ('host','proof')}
-    receipt=dict(id=run,job=job,revision=revision,baseline_sha256=entry['sha256'],duration=length,rendered_opening_only=True,body_unchanged=True,audio_packets_identical=True,
+    receipt=dict(id=run,job=job,revision=revision,baseline_export=entry['id'],baseline_sha256=entry['sha256'],duration=length,rendered_opening_only=True,body_unchanged=True,audio_packets_identical=True,
         quote=' '.join(w[2] for page in plan['captions'] for w in page if start<=w[0]<start+length),source_range=[start,start+length],
         proof=dict(asset=a['id'],source_sha256=a['source_sha256'],source_range=[offset,offset+min(length,hold)],basis='Creator-assigned result anchor; needs visual review'),
         exports=measured,wall_seconds=round(time.monotonic()-began,3),status='EDITORIAL_AUDITION · NEEDS_REVIEW',listening='UNVERIFIED')

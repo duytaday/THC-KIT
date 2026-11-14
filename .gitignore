@@ -32,3 +32,6 @@ SESSION-CHECKLIST.md
 recordings/
 cache/
 runtime/
+
+# Local visual briefs; source/brand/font licenses remain versioned.
+/docs/creator-ui-reference/*.png

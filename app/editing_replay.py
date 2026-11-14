@@ -96,6 +96,8 @@ def run(config,out,app):
             current_master=latest['id'],current_master_sha256=latest['sha256'],verdict=latest['verdict'],
             source_interval=config.get('B_source_range' if job==b and number in ('T6','T7','T8') else 'A_source_range') if number in ('T6','T7','T8') else config.get('A_source_range'),
             master_interval=[0,latest['duration']],timeline_sha256=media.sha(folder/'timeline.json'),project_revision=state['jobs'][job]['revision'],**facts)
+        import request_observability
+        record['inference_request_observations']=request_observability.collect(editor.root)
         if editor.active_turn:
             record['public_turn_receipt']=editor.call('/api/conversations/complete',dict(turn=editor.active_turn))[0];editor.active_turn=None
         last_tool=len(editor.log)
@@ -103,7 +105,7 @@ def run(config,out,app):
         result['turns'][number]=all(assertions.values());media.write_json(out/'results.json',result)
     editor=Editor(app,out)
     try:
-        state=editor.state();result['tool_versions']=dict(app=state['version'],protocol=editing_evals.VERSION,grader_sha256=media.sha(Path(__file__)),renderer_sha256=fixed['implementation']['engine/edit.py'],effective_editor='Deterministic local planner/artifact tools; no conversational LLM invoked by this replay',grader='Mechanical assertions in editing_replay.py; no aesthetic or audio judgments')
+        state=editor.state();result['tool_versions']=dict(app=state['version'],protocol=editing_evals.VERSION,grader_sha256=media.sha(Path(__file__)),renderer_sha256=fixed['implementation']['engine/edit.py'],effective_editor='Deterministic local planner/artifact tools; no conversational LLM invoked by this replay',grader='Mechanical assertions in editing_replay.py; no aesthetic or audio judgments',request_observability=__import__('request_observability').VERSION)
         editor.begin_turn('T1','Create A. Propose three source-backed hooks, choose one, render its real demonstration and actual closing; request missing footage explicitly.')
         a=editor.import_(config['A'],'host');proof=editor.import_(config['proof'],'reference')
         settings=dict(script=Path(config['A_srt']).read_text(encoding='utf-8'),motion_profile='focus',music_mode='auto',music_gain_db=-24)
@@ -119,7 +121,7 @@ def run(config,out,app):
         settings['events']=[dict(id='demo-'+kind,kind=kind,anchor=dict(asset=proof,source_pts=q['anchors'][key],timeline_source_pts=q['at']+q['anchors'][key]-q['offset']),hold_frames=12 if kind=='contact' else 45,visual_disabled=True,origin='manual',sound=dict(id=sound,muted=False,gain_db=-20,offset_frames=0)) for kind,key,sound in [('contact','contact','click'),('result','result',config.get('confirmation_sound','chime'))]]
         if config.get('cta'):
             c=config['cta'];settings['events'].append(dict(id='actual-cta',kind='chapter',anchor=dict(source_pts=c['at']),hold_frames=c['hold_frames'],text=c['text'],origin='manual',sound=dict(id=None,muted=True)))
-        editor.call('/api/update',dict(ids=[a],changes=settings))
+        editor.call('/api/update',dict(ids=[a],revisions={a:editor.state()['jobs'][a]['revision']},changes=settings))
         ids=editor.call('/api/artifacts/generate',dict(ids=[a],animation_mode='rules',animation_style='maverick_fast'))[0]['ids'];state=editor.state();intro=next(state['artifacts'][id_] for id_ in ids if state['artifacts'][id_]['plan']['type']=='introduction');scene=intro['id']
         editor.call('/api/artifacts/insert',dict(id=scene,enabled=True));v1,wait=editor.render(a);result['render_wait_seconds'].append(wait)
         a1=Path(editor.root/'exports'/v1['id']);old_hash=media.sha(a1/'edit.mp4');timeline=json.loads((a1/'timeline.json').read_text());recipe=json.loads((a1/'render-project.json').read_text())
@@ -141,7 +143,7 @@ def run(config,out,app):
             changed=copy.deepcopy(payload);changed['action']['gain_db']=-31;_,conflict=editor.call('/api/feedback',changed,expect=(409,))
             once=len([f for f in editor.state().get('feedback',[]) if f['request_id']==payload['request_id']])==1 and all(r['note_id']==response['note_id'] for r in retries)
         else:
-            events=copy.deepcopy(settings['events']);events[0]['sound']['gain_db']=-29;editor.call('/api/update',dict(ids=[a],changes={'events':events}));once=False;conflict=None
+            events=copy.deepcopy(settings['events']);events[0]['sound']['gain_db']=-29;editor.call('/api/update',dict(ids=[a],revisions={a:editor.state()['jobs'][a]['revision']},changes={'events':events}));once=False;conflict=None
         v2,wait=editor.render(a);result['render_wait_seconds'].append(wait);a2=editor.root/'exports'/v2['id']
         voice_same=media.sha(a1/'voice.wav')==media.sha(a2/'voice.wav');music_same=media.sha(a1/'music.wav')==media.sha(a2/'music.wav')
         turn('T3','Soften the click; retry the same logical submission; render A V2.',{'one_logical_edit':once,'changed_payload_conflict':conflict==409,'voice_stem_unchanged':voice_same,'music_stem_unchanged':music_same,'v1_preserved':media.sha(a1/'edit.mp4')==old_hash},request_id=payload['request_id'],before_master=v1['id'],after_master=v2['id'],changed_fields=['events.demo-contact.sound.gain_db'])
@@ -153,7 +155,7 @@ def run(config,out,app):
         lock_body=dict(job=a,revision=reopened['jobs'][a]['revision'],fields=['style','motion_intensity','music_gain_db']);_,lock_code=editor.call('/api/style-locks',lock_body,expect=(200,404))
         turn('T5','Keep real approval pending; lock only typography, motion intensity and music gain.',{'selected_style_locks':lock_code==200,'approval_pending':editor.state()['exports'][-1]['verdict']!='READY'},human_signoff=None)
         editor.begin_turn('T6','Supply B with different footage and its own script. Transfer selected style; leave A and its approval state intact.')
-        b=editor.import_(config['B'],'host');b_script=Path(config['B_srt']).read_text(encoding='utf-8');editor.call('/api/update',dict(ids=[b],changes={'script':b_script}))
+        b=editor.import_(config['B'],'host');b_script=Path(config['B_srt']).read_text(encoding='utf-8');editor.call('/api/update',dict(ids=[b],revisions={b:editor.state()['jobs'][b]['revision']},changes={'script':b_script}))
         if lock_code==200:editor.call('/api/style-transfer',dict(source=a,targets=[b]))
         v_b,wait=editor.render(b);result['render_wait_seconds'].append(wait);state=editor.state();bdir=editor.root/'exports'/v_b['id'];b_recipe=json.loads((bdir/'render-project.json').read_text())
         same_a=[e for e in state['exports'] if e['job']==a]==[e for e in reopened['exports'] if e['job']==a]

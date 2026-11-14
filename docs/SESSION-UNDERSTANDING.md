@@ -179,8 +179,25 @@ inferred. Full held-out video quality and the pending SFX distinction remain ope
 Recordly plugin checkpoint13/11: capture/export smoke used a controlled local fixture,
 not a real client demo. Thirteen tests, real native capture and exports establish
 operation, not editorial approval. Explained same request ID means network retry
-and must reuse the original result; a deliberate new take uses a new ID. An
-open-ended restatement was requested; no answer yet, so mastery remains pending.
-- [ ] Explain why repeated delivery of one Recordly request must not start two takes.
+and must reuse the original result; a deliberate new take uses a new ID. The user restated: “1 lượt quay và cần đổi lại request id.”
+This verifies one logical request versus a deliberate new take.
+- [x] Distinguish a retry with the same Recordly request ID from a new take with a new ID.
 - [ ] Distinguish this silent fixture test from actual action/result proof and
   whole-master listening/QC. No mastery inferred from plugin installation.
+
+Latest audio instruction: “giọng nói quan trọng nên phải giữ xuyên suốt và thêm sound effect giúp tôn giọng nói hơn nữa nhé.” This overrides the earlier ambiguous music/SFX-only request. Keep the recorded narration in the episode, lower the bed from its detector, and retain independent cue controls. It is a direction, not an assertion that anyone has heard or approved the new export.
+
+- [x] Atomic revision conflict: user explained revision 8 must survive a stale revision 7 save; never relabel the stale draft as revision 8. Correct three-way merge requires base/current/local, stable scene IDs, delete-vs-edit handling and another atomic CAS after merging. Referenced projects.py/studio.py are not files in this inspected checkout; implementation here is Workspace/Handler.
+- [ ] Explain the boundary between a preserved local browser draft and implemented automatic three-way merge. Draft review/download is implemented; automatic merging is not yet claimed.
+- [ ] Next-sprint capability boundary: a circular presenter preview must match the actual exported mask, preserve one voice route and keep result/captions visible. Human mastery and actual export acceptance remain pending.
+
+- [x] Spatial presenter edit: user explicitly selected keeping words, captions, timing and SFX gain/mute unchanged, then inspecting that the new crop does not cover text/results. This resolves the earlier position-versus-sound confusion; actual master listening remains a separate pending review.
+
+
+14/11 follow-through: the user again stated that a crop/position-only revision
+keeps words, captions, timing and SFX gain/mute, and checks new obstruction.
+Verified as understanding; matching exported stem/caption hashes are separate
+mechanical evidence. A sampled fixture export exposed an unwanted window;
+source-ID/title monitoring is now tested but cannot establish pixel isolation.
+- [ ] Explain why no observed ID/title change and passing mechanical tests do
+  not establish readable real software proof or whole-master listening.

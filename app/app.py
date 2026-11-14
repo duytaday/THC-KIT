@@ -118,6 +118,16 @@ class Handler(BaseHTTPRequestHandler):
             u = urllib.parse.urlsplit(self.path)
             p = u.path
             ws = self.server.ws
+            if p == '/api/scene-plan':
+                import scene_plan
+                return self.result(scene_plan.read(ws,urllib.parse.parse_qs(u.query)['id'][0]))
+            if p == '/api/style-board':
+                import scene_plan
+                return self.result(scene_plan.board(ws))
+            if p == '/api/creator/editor':
+                import creator_editor
+                query=urllib.parse.parse_qs(u.query)
+                return self.result(creator_editor.read(ws,query['id'][0],query['export'][0]))
             if p == "/api/state":
                 return self.result({**ws.snapshot(), "key": self.server.secret})
             if p=='/api/evals/gallery/search':
@@ -280,7 +290,9 @@ class Handler(BaseHTTPRequestHandler):
             b = json.loads(self.rfile.read(n) or "{}")
             self._turn_request=b
             if p == "/api/update":
-                ws.update(b["ids"], b["changes"])
+                if 'revisions' not in b:raise ValueError('Supply revisions for every selected recording.')
+                committed=ws.update(b["ids"], b["changes"], b['revisions'])
+                return self.result({'ok':True,'revisions':committed})
             elif p=='/api/feedback':
                 import revisions
                 return self.result(revisions.submit(ws,b))
@@ -320,8 +332,14 @@ class Handler(BaseHTTPRequestHandler):
             elif p == '/api/benchmarks/review':
                 import video_benchmark
                 return self.result(video_benchmark.save_review(ws,b['id'],b['review']))
+            elif p in ('/api/style-board/save','/api/scene-plan/create'):
+                import scene_plan
+                return self.result((scene_plan.save_observation if p.endswith('/save') else scene_plan.create)(ws,b))
+            elif p in ('/api/creator/caption','/api/creator/shot'):
+                import creator_editor
+                return self.result((creator_editor.caption if p.endswith('/caption') else creator_editor.shot)(ws,b))
             elif p == '/api/creator/first-cut':
-                return self.result(ws.first_cut(b['ids'],b.get('niche'),b.get('story_format')))
+                return self.result(ws.first_cut(b['ids'],b.get('niche'),b.get('story_format'),b['request_id'],b['revisions']))
             elif p == '/api/creator/setup':
                 ws.speech_setup.start();return self.result(ws.speech_setup.snapshot())
             elif p == '/api/creator/openings':

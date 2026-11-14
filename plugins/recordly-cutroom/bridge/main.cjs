@@ -8,13 +8,13 @@ function exact(p,keys){if(!p||typeof p!=='object'||Array.isArray(p)||Object.keys
 async function atomic(file,obj){const tmp=file+'.'+crypto.randomUUID()+'.tmp';await fsp.writeFile(tmp,JSON.stringify(obj,null,2));await fsp.rename(tmp,file);}
 function editorDefaults(width,height){return {padding:{top:0,bottom:0,left:0,right:0,linked:true},borderRadius:0,shadowIntensity:0,backgroundBlur:0,showCursor:true,webcam:{enabled:false,sourcePath:null},cropRegion:{x:0,y:0,width:1,height:1},zoomRegions:[],trimRegions:[],clipRegions:[],speedRegions:[],annotationRegions:[],audioRegions:[],autoCaptions:[],sourceAudioTrackSettingsByClip:{},defaultSourceAudioTrackSettings:{},aspectRatio:width>=height?'16:9':'9:16',mp4FrameRate:30,exportFormat:'mp4',exportEncodingMode:'auto',exportQuality:'high'};}
 
-async function controller({root,invoke,version='1.4.0'}){
+async function controller({root,invoke,version='1.4.0',sourceCheckMs=300}){
  root=path.resolve(root);if(process.platform==='win32'&&!/^D:\\/i.test(root))throw Error('Recordly Cutroom data must stay on D');
  await fsp.mkdir(root,{recursive:true});root=await fsp.realpath(root);
  if(process.platform==='win32'&&!/^D:\\/i.test(root))throw Error('Resolved workspace must stay on D');
  const file=path.join(root,'capture-ledger.json');let state={requests:{},capture:null};
  if(fs.existsSync(file))state=JSON.parse(await fsp.readFile(file,'utf8'));
- let chain=Promise.resolve(),timer=null;const pending=new Map();
+ let chain=Promise.resolve(),timer=null,guardTimer=null,guardQueued=false;const pending=new Map();
  const ok=async(channel,...args)=>{const result=await invoke(channel,...args);if(result?.success===false)throw Error(result.message||result.error||channel+' failed');return result;};
  async function sources(){const data=await ok('get-sources',{types:['window'],thumbnailSize:{width:1,height:1},fetchWindowIcons:false});if(!Array.isArray(data))throw Error('Unexpected source list');return data.filter(s=>s.id?.startsWith('window:')).map(s=>({id:s.id,name:s.name,sourceType:'window'}));}
  function current(id){const c=state.capture;if(!c||c.id!==id)throw Error('Capture ID does not match current retained capture');return c;}
@@ -28,9 +28,25 @@ async function controller({root,invoke,version='1.4.0'}){
   if(nativePath!==target)await fsp.copyFile(nativePath,target,fs.constants.COPYFILE_EXCL);
   const loaded=await ok('open-project-file-at-path',target);c.project=target;return {project:target,project_id:JSON.parse(await fsp.readFile(target,'utf8')).projectId,reopened:loaded.success!==false};
  }
+ async function checkSource(c){
+  if(!c.source_guard||c.source_guard.status==='FAILED')return false;
+  let reason=null;
+  try{const observed=(await sources()).find(s=>s.id===c.window.id);if(!observed)reason='SELECTED_WINDOW_MISSING';else if(observed.name!==c.window.name)reason='SELECTED_WINDOW_TITLE_CHANGED';}
+  catch{reason='SOURCE_CHECK_UNAVAILABLE';}
+  c.source_guard.checks++;c.source_guard.last_checked_at=new Date().toISOString();
+  if(reason){c.source_guard.status='FAILED';c.source_guard.reason=reason;await atomic(file,state);return false;}
+  return true;
+ }
+ function monitor(c){
+  guardTimer=setInterval(()=>{
+   if(guardQueued||c.stage!=='CAPTURING')return;guardQueued=true;
+   chain=chain.then(async()=>{if(c.stage==='CAPTURING'&&!await checkSource(c))await stop(c);}).catch(async error=>{c.stage='STOP_FAILED';c.source_guard.error=String(error.message||error);await atomic(file,state);}).finally(()=>{guardQueued=false;});
+  },sourceCheckMs);guardTimer.unref?.();
+ }
  async function stop(c){
-  if(c.stage==='STOPPED')return {capture_id:c.id,stage:c.stage,source:c.source,project:c.project,metadata:c.metadata};
+  if(c.stage==='STOPPED')return {capture_id:c.id,stage:c.stage,source:c.source,project:c.project,metadata:c.metadata,source_guard:c.source_guard||null};
   if(c.stage!=='CAPTURING')throw Error('Capture outcome is unknown; inspect native diagnostics, do not start again');
+  clearInterval(guardTimer);guardTimer=null;await checkSource(c);
   c.stage='STOPPING';await atomic(file,state);clearTimeout(timer);timer=null;
   const result=await ok('stop-native-screen-recording');const source=await fsp.realpath(result.path);
   if(!inside(source,root)||path.extname(source).toLowerCase()!=='.mp4')throw Error('Native recording is outside this D workspace');
@@ -41,10 +57,11 @@ async function controller({root,invoke,version='1.4.0'}){
   await ok('set-current-recording-session',{videoPath:c.source,webcamPath:null,timeOffsetMs:0});
   const info=await ok('probe-native-video-metadata',c.source);c.metadata=info.metadata;
   if(!(c.metadata.width>0&&c.metadata.height>0&&c.metadata.duration>0))throw Error('Native capture metadata is incomplete');
+  if(c.source_guard?.status==='MONITORING')c.source_guard.status='MONITORED_NO_CHANGE_OBSERVED';
   c.stage='STOPPED';c.stopped_at=new Date().toISOString();
   const project=await save(c,c.beat+'-'+c.id.slice(0,8));await atomic(file,state);
   await atomic(path.join(folder,'capture.json'),{...c,source_sha256:sha(await fsp.readFile(c.source)),recorded_by:'Recordly native Windows capture IPC',audio:'mic/system/webcam disabled',review:'NEEDS_REVIEW'});
-  return {capture_id:c.id,stage:c.stage,source:c.source,...project,metadata:c.metadata};
+  return {capture_id:c.id,stage:c.stage,source:c.source,...project,metadata:c.metadata,source_guard:c.source_guard||null};
  }
  async function action(command,p){
   if(command==='sources'){exact(p,[]);return {sources:await sources()};}
@@ -59,9 +76,10 @@ async function controller({root,invoke,version='1.4.0'}){
    const dir=await ok('get-recordings-directory');if(!inside(path.resolve(dir.path),root))throw Error('Recordly recording directory is outside D workspace');
    await ok('set-recording-preferences',{microphoneEnabled:false,systemAudioEnabled:false,webcamEnabled:false});
    await ok('select-source',selected);
-   const c={id:crypto.randomUUID(),beat:p.beat,window:selected,stage:'STARTING',started_at:new Date().toISOString(),max_seconds:seconds};state.capture=c;await atomic(file,state);
+   if(!(await sources()).some(s=>s.id===selected.id&&s.name===selected.name))throw Error('Selected window changed after selection; no capture started.');
+   const c={id:crypto.randomUUID(),beat:p.beat,window:selected,stage:'STARTING',started_at:new Date().toISOString(),max_seconds:seconds,source_guard:{status:'MONITORING',checks:0,interval_ms:sourceCheckMs,limitation:'ID/title polling cannot prove pixel isolation; inspect decoded export.'}};state.capture=c;await atomic(file,state);
    await ok('start-native-screen-recording',selected,{capturesSystemAudio:false,capturesMicrophone:false});
-   c.stage='CAPTURING';await atomic(file,state);
+   c.stage='CAPTURING';await atomic(file,state);monitor(c);
    timer=setTimeout(()=>{chain=chain.then(()=>stop(c)).catch(async()=>{c.stage='STOP_FAILED';await atomic(file,state);});},seconds*1000);timer.unref?.();
    return {capture_id:c.id,stage:c.stage,window:selected,maximum_seconds:seconds,audio:'OFF',webcam:'OFF'};
   }
@@ -69,6 +87,7 @@ async function controller({root,invoke,version='1.4.0'}){
   if(command==='save_project'){exact(p,['capture_id','name']);const c=current(p.capture_id);const saved=await save(c,p.name);await atomic(file,state);return saved;}
   if(command==='export'){
    exact(p,['capture_id','name','width','height','seconds']);const c=current(p.capture_id);if(c.stage!=='STOPPED')throw Error('Stop capture before export');
+   if(c.source_guard?.status==='FAILED')throw Error('Capture quarantined: source changed or could not be checked. Retain project/source; record a new take.');
    const name=label(p.name);const width=p.width??1280,height=p.height??720,seconds=p.seconds??c.metadata.duration;
    if(!Number.isInteger(width)||!Number.isInteger(height)||width<360||height<360||width>3840||height>3840||width%2||height%2)throw Error('Even output dimensions360–3840required');
    if(typeof seconds!=='number'||!Number.isFinite(seconds)||seconds<=0||seconds>c.metadata.duration+.01)throw Error('Export duration outside recorded source');
@@ -79,7 +98,7 @@ async function controller({root,invoke,version='1.4.0'}){
    const native=await ok('native-static-layout-export',{inputPath:c.source,width,height,frameRate:30,bitrate:12000000,encodingMode:'auto',durationSec:seconds,contentWidth:cw,contentHeight:ch,offsetX:(width-cw)/2,offsetY:(height-ch)/2,backgroundColor:'#10151b',borderRadius:0,shadowIntensity:0,backgroundBlurPx:0,audioOptions:{audioMode:'none'}});
    if(native.encoderName!=='static-layout-h264-nvenc'||!native.metrics?.chunks?.length||!native.metrics.chunks.every(chunk=>chunk.backend==='cuda-scale-cpu-pad'))throw Error('Native compositor fell back to an unverified static backend; keep source/project and inspect the D log');
    await ok('finalize-exported-video',{tempPath:native.tempPath,fileName:name+'.mp4',outputPath:output});
-   const probe=await ok('probe-native-video-metadata',output);const receipt={capture_id:c.id,source:c.source,project:c.project,output,sha256:sha(await fsp.readFile(output)),metadata:probe.metadata,encoder:native.encoderName,metrics:native.metrics,renderer:'Recordly native-static-layout-export',animated_zoom:false,review:'NEEDS_REVIEW'};
+   const probe=await ok('probe-native-video-metadata',output);const receipt={capture_id:c.id,source:c.source,project:c.project,output,sha256:sha(await fsp.readFile(output)),metadata:probe.metadata,encoder:native.encoderName,metrics:native.metrics,renderer:'Recordly native-static-layout-export',animated_zoom:false,source_guard:c.source_guard||{status:'LEGACY_UNVERIFIED'},review:'NEEDS_REVIEW'};
    await atomic(path.join(folder,name+'.json'),receipt);return receipt;
   }
   throw Error('Unknown command');
@@ -93,7 +112,7 @@ async function controller({root,invoke,version='1.4.0'}){
   const promise=chain.then(async()=>{await atomic(file,state);try{const result=await action(command,params);state.requests[request_id]={fingerprint,stage:'DONE',result};await atomic(file,state);return result;}catch(error){state.requests[request_id].stage='FAILED';state.requests[request_id].error=String(error.message||error);await atomic(file,state);throw error;}});
   pending.set(request_id,promise);chain=promise.catch(()=>{});try{return await promise;}finally{pending.delete(request_id);}
  }
- return {dispatch,close:()=>clearTimeout(timer)};
+ return {dispatch,close:()=>{clearTimeout(timer);clearInterval(guardTimer);}};
 }
 
 function createHttpServer({token,control,version,isReady,fingerprint}){
