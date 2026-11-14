@@ -27,7 +27,7 @@ chấp thuận chất lượng toàn tập hay bằng chứng model dựng đẹ
 
 | Kiểm tra | Kết quả | Phạm vi |
 | --- | --- | --- |
-| Python application suite | 307 test: 294 đạt, 13 skip, 0 lỗi | Fixture/API; không kiểm editorial |
+| Python application suite | 310 test: 297 đạt, 13 skip, 0 lỗi | Fixture/API; không kiểm editorial |
 | Recordly plugin 0.1.2 | 19/19 đạt | IPC giả lập + HTTP/stdio thực; chưa quay lại native |
 | Chrome headless UI | 83 passage; seek/playback; 409; draft giữ base qua reload | MP4 thật; không xác nhận nghe |
 | UI 390 px | document rộng 390 px, không tràn trang | Layout giao diện |
@@ -104,3 +104,13 @@ media khách. Source và package internal vẫn phải truy vết version-manife
   first-pass acceptance và phút sửa/phút thành phẩm hiện null, không phải 0.
 - Quyền phân phối starter và kiểm trên Windows sạch chưa chốt. Package là
   internal candidate, không public binary và không bật adapter cho khách.
+
+
+## Lỗi preview annotation THC-51
+
+Kiểm tra độc lập xác nhận ở preview v002 00:01.000: nhãn STORYBOARD bị mặt tròn
+che. Đã tách vùng cần tránh chung cho chuyển động, caption và PiP, rồi chọn dải
+trống cho nhãn preview. Nếu không có chỗ an toàn, trả lỗi cần đổi bố cục thay vì
+che nội dung. Scene đã căn lời không nhận nhãn storyboard; master không nhận nhãn
+này. Ba regression mới đạt; suite hiện 310 test, 297 đạt và 13 skip. Cần xuất lại
+đúng scene qua UI và kiểm frame trước khi đóng bug; các version cũ vẫn giữ.

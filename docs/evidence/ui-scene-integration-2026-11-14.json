@@ -4,8 +4,8 @@
   "version": "0.14.0-dev22",
   "scope": "Local integration and synthetic development probes; no editorial approval or held-out quality gain",
   "application_tests": {
-    "discovered": 307,
-    "passed": 294,
+    "discovered": 310,
+    "passed": 297,
     "skipped": 13,
     "failed": 0
   },
@@ -248,5 +248,11 @@
   "model_quality_gain": "NOT_ESTABLISHED",
   "human_first_pass_acceptance": null,
   "human_repair_minutes_per_finished_minute": null,
-  "fresh_independent_episode_b": "MISSING"
+  "fresh_independent_episode_b": "MISSING",
+  "preview_annotation_fix": {
+    "issue": "THC-51",
+    "status": "SOURCE_AND_REGRESSION_TESTED_PENDING_NEW_EXPORT",
+    "approach": "Place preview-only status in a band avoiding swept motion, caption regions and actual PiP; preserve master content",
+    "tests": 3
+  }
 }

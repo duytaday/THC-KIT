@@ -72,14 +72,8 @@ def resolve(clip, protected):
     return result
 
 
-def compose_scene(render_plan, scene, start, end, proof=None):
-    composition=scene.get('composition') or {}
-    if not composition:return
-    if set(composition)-{'layout','pip_shape','pip_corner','pip_width','pip_crop'}:
-        raise ValueError('Unknown presenter composition field.')
-    layout,_,_=options(composition)
-    if layout=='full_demo':return
-    protected=[[60,310 if render_plan.get('caption_position')=='top' else 1420,960,160]]
+def protected_scene_regions(scene, caption_position=None):
+    protected=[[60,310 if caption_position=='top' else 1420,960,160]]
     animation=scene['animation'];ctx=animation['context'];spec=animation['spec']
     # A fixed corner must remain safe through entrances and replacement states.
     import motion_specs
@@ -98,8 +92,34 @@ def compose_scene(render_plan, scene, start, end, proof=None):
     for anchor in ctx['anchors']:
         if anchor.get('roi'):
             x,y,w,h=anchor['roi'];protected.append([x*W,y*H,w*W,h*H])
+    return protected
+
+
+def compose_scene(render_plan, scene, start, end, proof=None):
+    composition=scene.get('composition') or {}
+    if not composition:return
+    if set(composition)-{'layout','pip_shape','pip_corner','pip_width','pip_crop'}:
+        raise ValueError('Unknown presenter composition field.')
+    layout,_,_=options(composition)
+    if layout=='full_demo':return
+    protected=protected_scene_regions(scene,render_plan.get('caption_position'))
     decision=resolve(composition,protected)
     if decision['resolved']!='presenter_pip':
         raise ValueError('No safe presenter position. Reduce diameter, move the presenter or use full scene.')
     if proof is not None:proof['layout_decision']=decision
     else:render_plan.setdefault('presenter_scenes',[]).append(dict(start=start,end=end,decision=decision,background='paper_illustration'))
+
+
+def place_preview_annotation(render_plan, scene):
+    """Preview-only status must avoid the same swept motion, captions and PiP."""
+    if scene['animation']['context'].get('voice_aligned',False):return None
+    decisions=[q['decision'] for q in render_plan.get('presenter_scenes',[])]
+    decisions += [q['layout_decision'] for q in render_plan.get('proof',[]) if q.get('layout_decision',{}).get('resolved')=='presenter_pip']
+    if not decisions:return None  # Preserve existing full-scene previews.
+    occupied=protected_scene_regions(scene,render_plan.get('caption_position'))
+    occupied += [d['rect'] for d in decisions]
+    for cy in (1340,80,1780,1120,600,960):
+        rect=[60,cy-24,960,48]
+        if not any(intersects(rect,r) for r in occupied):
+            return dict(rect=rect,center=[540,cy],font_size=30,role='preview_only_storyboard_status')
+    raise ValueError('No clear area for the preview status label. Move or resize the presenter, or simplify the scene.')

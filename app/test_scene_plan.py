@@ -97,3 +97,27 @@ class CircularLayoutTests(__import__('unittest').TestCase):
         for q in (dict(pip_shape='triangle'),dict(pip_crop=[0,0,0]),dict(pip_crop=[True,.5,1])):
             with self.assertRaises(ValueError):layouts.options(q)
         with self.assertRaisesRegex(ValueError,'reduce its size'):layouts.resolve(dict(layout='presenter_pip',pip_shape='circle',pip_corner='top_left'),[[0,0,1080,500]])
+
+
+class PreviewAnnotationTests(__import__('unittest').TestCase):
+    def scene(self):
+        ctx=dict(request='intro',frames=150,texts=['Recordly'],anchors=[dict(id='speech',kind='speech',frame=0)],protected=[])
+        return dict(animation=dict(context=ctx,spec=motion_specs.rules(ctx)),composition=dict(layout='presenter_pip',pip_shape='circle',pip_corner='bottom_right',pip_crop=[.5,.45,1]))
+
+    def test_annotation_moves_clear_of_the_actual_circle_and_caption_regions(self):
+        scene=self.scene();plan={};layouts.compose_scene(plan,scene,0,5)
+        box=layouts.place_preview_annotation(plan,scene);self.assertIsNotNone(box)
+        self.assertFalse(layouts.intersects(box['rect'],plan['presenter_scenes'][0]['decision']['rect']))
+        self.assertFalse(layouts.intersects(box['rect'],[60,1420,960,160]))
+        self.assertNotEqual(box['center'],[540,1780])
+
+    def test_annotation_renderer_uses_placed_coordinates_without_changing_spec(self):
+        import motion_render,tempfile
+        scene=self.scene();plan={};layouts.compose_scene(plan,scene,0,5);entry=copy.deepcopy(scene['animation']);before=copy.deepcopy(entry['spec']);entry['preview_annotation']=layouts.place_preview_annotation(plan,scene)
+        with tempfile.TemporaryDirectory() as temp:
+            file=Path(temp)/'motion.ass';file.write_text('[Events]\n',encoding='utf8');receipt=motion_render.append_ass(file,entry,0,show_status=True);text=file.read_text(encoding='utf8')
+        x,y=entry['preview_annotation']['center'];self.assertIn('\\pos('+f'{x},{y}'+')',text);self.assertEqual(entry['spec'],before);self.assertEqual(receipt['preview_annotation'],entry['preview_annotation'])
+
+    def test_voice_aligned_scene_has_no_storyboard_annotation(self):
+        scene=self.scene();scene['animation']['context']['voice_aligned']=True
+        self.assertIsNone(layouts.place_preview_annotation({},scene))

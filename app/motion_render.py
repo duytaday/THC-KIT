@@ -78,10 +78,11 @@ def append_ass(path,entry,master_start_frame,*,show_status=False):
             record['state_rectangles']=[dict(frame=t,rect=schema.object_state(obj,anchors,t)[1]) for t in [start]+[anchors[c['anchor']]['frame'] for c in obj['changes']]]
         bounds.append(record)
     if show_status and not ctx.get('voice_aligned',False):
-        footer=r'{\an5\pos(540,1780)\fs30\bord3\shad0\1c&HFFFFFF&\3c&H101010&}STORYBOARD · CẦN THU / CĂN LỜI'
+        x,y=entry.get('preview_annotation',{}).get('center',[540,1780])
+        footer=r'{\an5\pos('+f'{x},{y}'+r')\fs30\bord3\shad0\1c&HFFFFFF&\3c&H101010&}STORYBOARD · CẦN THU / CĂN LỜI'
         rows.append(dialogue(9,master_start_frame,master_start_frame+n,footer))
     with Path(path).open('a',encoding='utf-8') as f:f.write('\n'+'\n'.join(rows)+'\n')
-    return dict(spec_version=1,frames=n,objects=bounds,watermark_source='Original vector primitives and supplied text only; no generative raster source',model=entry.get('model',{}),voice_aligned=ctx.get('voice_aligned',False))
+    return dict(spec_version=1,frames=n,objects=bounds,watermark_source='Original vector primitives and supplied text only; no generative raster source',model=entry.get('model',{}),voice_aligned=ctx.get('voice_aligned',False),preview_annotation=entry.get('preview_annotation') if show_status and not ctx.get('voice_aligned') else None)
 
 
 def sound_events(entry):
@@ -103,6 +104,9 @@ def preview(plan,folder,host,assets):
         a=assets[proof['asset']];render_plan['proof']=[dict(id='motion-proof',file=a['path'],start=at,end=at+duration,source_start=proof.get('offset',0),**({'crop':proof['crop']} if proof.get('crop') else {}))]
     from engine.layouts import compose_scene
     compose_scene(render_plan,plan,at,at+duration,render_plan['proof'][-1] if proof else None)
+    from engine.layouts import place_preview_annotation
+    annotation=place_preview_annotation(render_plan,plan)
+    if annotation:entry['preview_annotation']=annotation
     edit.render(Path(host['path']),render_plan,folder,scene_preview=True)
     (folder/'edit.mp4').rename(folder/'preview.mp4');media.ff('-ss',min(.8,duration/2),'-i',folder/'preview.mp4','-frames:v','1','-vf','scale=270:480',folder/'thumbnail.jpg')
     result=copy.deepcopy(plan);result.update(duration=duration,preview_frames=entry['context']['frames'],preview_audio='Original source audio; no synthesis. Source/script alignment is recorded separately.',events=[])
