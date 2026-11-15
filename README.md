@@ -2,6 +2,11 @@
 
 A local Codex workflow for English or Vietnamese presenter videos. Use a separate checkout for each client's work. Keep original media, briefs and revision folders on that client's machine.
 
+The [source-bound demo focus CLI](docs/DEMO-FOCUS-RECIPE.md) adds readable control
+zooms, actual result holds and independent rendered-pixel checks. Its reusable
+[recipe templates](examples/demo-focus/) require current-episode source and
+landmark rebinding. Exports still need their own master and listening review.
+
 ## Start
 
 Cutroom now includes a local batch UI, script-driven intro/demo artifacts and a

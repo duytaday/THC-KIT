@@ -1,0 +1,11 @@
+{
+  "source": "REPLACE_WITH_ABSOLUTE_ORIGINAL_RECORDING_PATH",
+  "source_sha256": "REPLACE_WITH_RECORDING_SHA256",
+  "source_seconds": 5,
+  "source_roi": [40, 100, 300, 50],
+  "expected_frame": 120,
+  "master_roi": [58, 304, 283, 47],
+  "search_frames": 6,
+  "min_correlation": 0.75,
+  "baseline_pcm_sha256": "REPLACE_WITH_A_DECODED_48KHZ_MONO_PCM_SHA256"
+}

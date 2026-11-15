@@ -134,6 +134,12 @@ class Handler(BaseHTTPRequestHandler):
                 return self.result(ws.evaluation_access.search(urllib.parse.parse_qs(u.query).get('q',[''])[0]))
             if p.startswith('/api/evals/gallery/clip/'):
                 return self.file(ws.evaluation_access.clip(p.rsplit('/',1)[-1]))
+            if p == '/api/motion-library':
+                import motion_catalog
+                return self.result(motion_catalog.inventory())
+            if p == '/api/motion-library/search':
+                import motion_catalog
+                return self.result(dict(sources=motion_catalog.search_sources(urllib.parse.parse_qs(u.query).get('q',[''])[0])))
             if p == '/api/components':
                 from components import inventory
                 return self.result(inventory())
@@ -388,6 +394,12 @@ class Handler(BaseHTTPRequestHandler):
                 ws.artifacts.edit(b['id'],b.get('changes',{}),b['version'])
             elif p == '/api/artifacts/insert':
                 ws.artifacts.insert(b['id'],bool(b['enabled']))
+            elif p == '/api/motion-library/recommend':
+                import motion_catalog
+                return self.result(motion_catalog.recommend(b))
+            elif p == '/api/animations/register-external':
+                import motion_catalog
+                return self.result(motion_catalog.register_render(ws,b))
             elif p == '/api/animations/save':
                 import animation_library
                 return self.result({'id':animation_library.save(ws,b['id'])})

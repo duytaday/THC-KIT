@@ -1,0 +1,11 @@
+"use strict";
+const fs = require("node:fs");
+const { easeOut, easeInOut, spring } = require("./vendor/motion.cjs");
+const q=JSON.parse(fs.readFileSync(0,"utf8"));
+if(!Number.isInteger(q.frames)||q.frames<1||q.frames>60)throw Error("Use 1–60 entrance frames");
+const names=["motion_ease_out","motion_ease_in_out","motion_spring"];
+if(!names.includes(q.easing))throw Error("Unknown Motion curve");
+const g=q.easing==="motion_spring"?spring({keyframes:[0,1],duration:q.frames/30*1000,bounce:.15}):null;
+const values=Array.from({length:q.frames+1},(_,i)=>i===0?0:i===q.frames?1:g?g.next(i/30*1000).value:(q.easing==="motion_ease_out"?easeOut:easeInOut)(i/q.frames));
+if(values.some(x=>!Number.isFinite(x)))throw Error("Non-finite Motion sample");
+process.stdout.write(JSON.stringify({engine:"motion",version:"14.14.0",fps:30,values}));

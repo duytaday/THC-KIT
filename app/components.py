@@ -24,5 +24,6 @@ def inventory():
                    requirements=['Current episode source interval and words']+(['Observed control/contact/result anchors'] if row['id'] in ('11','12','13') else []),
                    selectable_in_scene_plan=row['id'] in ('05','07','08','09','15','19'),
                    validation='Previously render-tested variant; current parameters need export verification' if row['render_tested'] else 'Implementation/specification only; selected variant needs render verification')
-    return dict(specified=len(rows),render_tested=len(tested),editorially_approved=0,
+    import motion_catalog
+    return dict(motion_library=motion_catalog.inventory(),specified=len(rows),render_tested=len(tested),editorially_approved=0,
                 evidence='docs/REAL-FOOTAGE-RESULTS.vi.md',components=rows)

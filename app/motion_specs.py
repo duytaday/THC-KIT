@@ -159,7 +159,7 @@ def validate(spec,context,*,check_hold=True):
             if type(k['frame']) is not int or not previous<k['frame']<=60:raise ValueError('Entrance keyframes must be ordered within60frames')
             previous=k['frame'];finite(k['x'],-1,1,'X offset');finite(k['y'],-1,1,'Y offset');finite(k['scale'],.7,1.15,'Scale');finite(k['opacity'],0,1,'Opacity')
             finite(k.get('rotation',0),-45,45,'Rotation degrees')
-            if k['ease'] not in ('linear','smoothstep','ease_out'):raise ValueError('Unsupported easing')
+            if k['ease'] not in ('linear','smoothstep','ease_out','motion_ease_out','motion_ease_in_out','motion_spring'):raise ValueError('Unsupported easing')
         if keys[0]['frame']!=0:raise ValueError('Entrance keyframes are object-relative; the first frame must be 0')
         if keys[-1]['opacity']!=1 or keys[-1]['x']!=0 or keys[-1]['y']!=0 or keys[-1]['scale']!=1 or keys[-1].get('rotation',0)!=0:raise ValueError('The entrance must end settled in its declared rectangle')
         if check_hold and lifetime_end(obj,context)-last-(0 if obj.get('changes') else keys[-1]['frame'])-exit_frames<hold:raise ValueError('Extend the scene to leave the final state readable')
@@ -264,7 +264,10 @@ def pose(keys,frame):
     for right in keys[1:]:
         if frame<=right['frame']:
             t=max(0,min(1,(frame-left['frame'])/(right['frame']-left['frame'])))
-            if right['ease']=='smoothstep':t=t*t*(3-2*t)
+            if right['ease'].startswith('motion_'):
+                from motion_bridge import progress
+                t=progress(right['ease'],max(0,frame-left['frame']),right['frame']-left['frame'])
+            elif right['ease']=='smoothstep':t=t*t*(3-2*t)
             elif right['ease']=='ease_out':t=1-(1-t)**3
             return {k:left.get(k,0)+(right.get(k,0)-left.get(k,0))*t for k in ('x','y','scale','opacity','rotation')}
         left=right

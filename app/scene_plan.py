@@ -130,6 +130,12 @@ def create(ws,body):
             for obj in spec['objects']:
                 if obj.get('text') is not None:obj['component']=component
             prediction=dict(spec=motion_specs.validate(spec,ctx),model=dict(mode='rules',weights_loaded=False,version='scene-selection-v1'))
+        if body.get('recipe_id'):
+            import motion_catalog
+            prediction['spec']=motion_catalog.apply_recipe(prediction['spec'],ctx,body['recipe_id'],reference)
+        elif body.get('motion_easing'):
+            import motion_bridge
+            prediction['spec']=motion_bridge.apply(prediction['spec'],ctx,body['motion_easing'])
         plan=motion_storyboard.attach(plan,ctx,at,prediction)
         plan['reference_evidence']=reference
         if body.get('composition'):plan['composition']=copy.deepcopy(body['composition'])

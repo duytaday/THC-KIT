@@ -82,7 +82,8 @@ def append_ass(path,entry,master_start_frame,*,show_status=False):
         footer=r'{\an5\pos('+f'{x},{y}'+r')\fs30\bord3\shad0\1c&HFFFFFF&\3c&H101010&}STORYBOARD · CẦN THU / CĂN LỜI'
         rows.append(dialogue(9,master_start_frame,master_start_frame+n,footer))
     with Path(path).open('a',encoding='utf-8') as f:f.write('\n'+'\n'.join(rows)+'\n')
-    return dict(spec_version=1,frames=n,objects=bounds,watermark_source='Original vector primitives and supplied text only; no generative raster source',model=entry.get('model',{}),voice_aligned=ctx.get('voice_aligned',False),preview_annotation=entry.get('preview_annotation') if show_status and not ctx.get('voice_aligned') else None)
+    from motion_bridge import receipt as motion_receipt
+    return dict(motion_engine=motion_receipt(spec),spec_version=1,frames=n,objects=bounds,watermark_source='Original vector primitives and supplied text only; no generative raster source',model=entry.get('model',{}),voice_aligned=ctx.get('voice_aligned',False),preview_annotation=entry.get('preview_annotation') if show_status and not ctx.get('voice_aligned') else None)
 
 
 def sound_events(entry):

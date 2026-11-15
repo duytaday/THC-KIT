@@ -1,0 +1,38 @@
+{
+  "format": "thc-demo-focus/1",
+  "revision": "REPLACE_WITH_EPISODE_REVISION",
+  "base": {
+    "file": "REPLACE_WITH_ABSOLUTE_BASE_CLIP_PATH",
+    "sha256": "REPLACE_WITH_BASE_SHA256"
+  },
+  "shots": [
+    {
+      "id": "context-to-control",
+      "file": "REPLACE_WITH_ABSOLUTE_ORIGINAL_RECORDING_PATH",
+      "sha256": "REPLACE_WITH_RECORDING_SHA256",
+      "at": 0,
+      "duration": 4,
+      "source_in": 0,
+      "base_crop": [0, 0, 720, 640],
+      "focus_crop": [180, 160, 360, 320],
+      "viewport": [20, 210, 680, 600],
+      "freeze": false,
+      "move": {"start_frame": 30, "frames": 30, "easing": "motion_ease_in_out"}
+    },
+    {
+      "id": "real-result-hold",
+      "file": "REPLACE_WITH_ABSOLUTE_ORIGINAL_RECORDING_PATH",
+      "sha256": "REPLACE_WITH_RECORDING_SHA256",
+      "at": 4,
+      "duration": 3,
+      "source_in": 5,
+      "base_crop": [0, 0, 720, 640],
+      "focus_crop": [0, 0, 720, 640],
+      "viewport": [20, 210, 680, 600],
+      "freeze": false,
+      "move": {"start_frame": 0, "frames": 1, "easing": "native_smoothstep"}
+    }
+  ],
+  "review": "NEEDS_REVIEW",
+  "listening": "UNVERIFIED"
+}

@@ -4,7 +4,7 @@ from pathlib import Path
 from engine import media
 from version import VERSION
 
-MODULES='animation_library app artifact_store artifacts asr_setup assignments audition author_audio benchmark_ui cache_probe components creator creator_editor editing_conversations editing_evals editing_styles encoder_setup evaluation_access generative generative_data generative_infer generative_package generative_train hook_review hyperframes_bridge learning learning_inventory motion_decisions motion_decode motion_hooks motion_learning motion_policy motion_render motion_specs motion_storyboard motion_worker openings planner_policy planner_worker proof_assignments qc_bridge reference_motion request_observability review_attestation revision_cache revisions scene_plan source_context speech speech_worker storyboard train_motion train_planner version video_benchmark viewer_quiz workspace'.split()
+MODULES='animation_library app artifact_store artifacts asr_setup assignments audition author_audio benchmark_ui cache_probe components creator creator_editor editing_conversations editing_evals editing_styles encoder_setup evaluation_access generative generative_data generative_infer generative_package generative_train hook_review hyperframes_bridge motion_bridge motion_catalog openshot_bridge openshot_worker learning learning_inventory motion_decisions motion_decode motion_hooks motion_learning motion_policy motion_render motion_specs motion_storyboard motion_worker openings planner_policy planner_worker proof_assignments qc_bridge reference_motion request_observability review_attestation revision_cache revisions scene_plan source_context speech speech_worker storyboard train_motion train_planner version video_benchmark viewer_quiz workspace'.split()
 ENGINE='__init__ cues edit enhance layouts media planner references'.split()
 UI='Be-Vietnam-Pro-OFL.txt app.js benchmark-review.html benchmark-review.js DM-Sans-LICENSE.txt dm-sans.woff2 icon.svg index.html style.css'.split()
 STAMP=(2026,11,12,0,0,0)
@@ -58,6 +58,8 @@ def main():
     for name in UI:copy(repo/'app/ui'/name,'app/ui/'+name)
     for directory,names in [('fonts',['DejaVuSans-Bold.ttf','LICENSE.txt']),('sounds',['catalog.json','peaks.json','chapter.wav','chime.wav','chime_fast.wav','click.wav','slide.wav','tap.wav']),('music',['catalog.json','calm.wav','tutorial.wav']),('benchmarks',['full-video-v1.json'])]:
         for name in names:copy(repo/'app'/directory/name,'app/'+directory+'/'+name)
+    for name in ('sample-motion.cjs','sources.json','source-index.json','package.json','package-lock.json','vendor/motion.cjs','vendor/MOTION-LICENSE.txt','vendor/provenance.json'):
+        copy(repo/'app/animation_runtime'/name,'app/animation_runtime/'+name)
     copy(repo/'app/THIRD_PARTY.txt','THIRD_PARTY.txt')
     runtime=a.starter/'runtime'
     allowed={'.pyd','.dll','.exe','.zip','._pth','.cat'}

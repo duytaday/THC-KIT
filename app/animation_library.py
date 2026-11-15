@@ -19,6 +19,8 @@ def save(ws,id_):
         source_job=record['job'],template=copy.deepcopy(plan['animation']),preview_sha256=media.sha(folder/'preview.mp4'),
         status='TEMPLATE · rebind and review for each episode',preview_audio='none',media_is_reusable_proof=False,
         origin='Native vector specification; current-episode footage in preview is context only',folder=str(folder))
+    from motion_bridge import receipt as motion_receipt
+    entry['motion_engine']=motion_receipt(plan['animation']['spec'])
     media.write_json(folder/'template.json',entry)
     with ws.lock:ws.data.setdefault('animation_library',{})[library_id]=entry;ws.save()
     return library_id

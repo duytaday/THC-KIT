@@ -1,0 +1,450 @@
+{
+  "version": "cutroom-motion-catalog-v1",
+  "providers": [
+    {
+      "id": "motion",
+      "repository": "https://github.com/motiondivision/motion",
+      "license": "MIT",
+      "purpose": "Parametric text, CTA and card motion",
+      "integration": "native_curve_execution",
+      "redistribution": "Review upstream terms before distribution; no upstream application code bundled",
+      "revision": "npm:14.14.0",
+      "license_sha256": "1bf0dc3f7727723e5a032ed12164a47cf92c05204cb1a3485f123c24e2833ed1",
+      "indexed_assets": 0
+    },
+    {
+      "id": "libopenshot",
+      "repository": "https://github.com/OpenShot/libopenshot",
+      "license": "LGPL-3.0-or-later",
+      "purpose": "Optional timeline trim/concatenation renderer",
+      "integration": "isolated_native_worker",
+      "redistribution": "Review upstream terms before distribution; no upstream application code bundled",
+      "revision": "7570a626aba5d70cb814881a2a4b094a65d3f12e",
+      "license_sha256": "2cf34ac038aee5ac06f933ddd1da9826e0bb9383c13d8e0b088fced0b4a95b5b",
+      "indexed_assets": 28
+    },
+    {
+      "id": "openmontage",
+      "repository": "https://github.com/OpenMontageInc/OpenMontage",
+      "license": "AGPL-3.0; see upstream LICENSE",
+      "purpose": "Agentic production and HTML/template source catalog",
+      "integration": "supplied_render_import",
+      "redistribution": "Review upstream terms before distribution; no upstream application code bundled",
+      "revision": "fecb9a1e3cc23ef84de30b272059457a427f16f8",
+      "license_sha256": "0d96a4ff68ad6d4b6f1f30f713b18d5184912ba8dd389f86aa7710db079abcb0",
+      "indexed_assets": 225
+    },
+    {
+      "id": "pixelle",
+      "repository": "https://github.com/ATH-MaaS/Pixelle-Video",
+      "license": "Apache-2.0",
+      "purpose": "Template-based explainer cards and generated illustrative assets",
+      "integration": "supplied_render_import",
+      "redistribution": "Review upstream terms before distribution; no upstream application code bundled",
+      "revision": "848b054e4fae40dabc62ec58e960b573e83793ac",
+      "license_sha256": "1eb85fc97224598dad1852b5d6483bbcf0aa8608790dcc657a5a2a761ae9c8c6",
+      "indexed_assets": 33
+    },
+    {
+      "id": "hypit",
+      "repository": "https://github.com/hypit-ai/hypit",
+      "license": "Apache-2.0 with additional SaaS/commercial redistribution conditions",
+      "purpose": "Word-anchored SVML, captions, ranking and composition examples",
+      "integration": "supplied_render_import",
+      "redistribution": "Review upstream terms before distribution; no upstream application code bundled",
+      "revision": "6bacce093695ccc2bde5aa5d7de230e9682ffa79",
+      "license_sha256": "ed7bd598743c93dd27349eab6921e4e86884c785a33aef8ea2caeb541df8b912",
+      "indexed_assets": 128
+    },
+    {
+      "id": "toonflow",
+      "repository": "https://github.com/HBAI-Ltd/Toonflow-app",
+      "license": "MIT",
+      "purpose": "Storyboard/character/scene asset workflows for illustrative sequences",
+      "integration": "supplied_render_import",
+      "redistribution": "Review upstream terms before distribution; no upstream application code bundled",
+      "revision": "6086cdffceb704a632eca143dd16cd461a78cdac",
+      "license_sha256": "0b6fb7c6a2d19ed3519474a4ee4165a836af9ee2a2f80e6ef92f14d7cec3d2ea",
+      "indexed_assets": 6
+    }
+  ],
+  "recipes": [
+    {
+      "id": "motion.hook",
+      "provider": "motion",
+      "families": [
+        "intro"
+      ],
+      "component": "05",
+      "easing": "motion_ease_out",
+      "aspects": [
+        "9:16"
+      ],
+      "min_seconds": 1.2,
+      "complexity": 1,
+      "requires": [
+        "recording",
+        "text"
+      ],
+      "tags": [
+        "hook",
+        "education",
+        "product"
+      ],
+      "adaptation": "Cutroom-owned editable treatment using real Motion curves; bind current episode words, anchors and selected reference observations",
+      "evidence": "Implementation awaiting current-parameter export review",
+      "default_treatment": true
+    },
+    {
+      "id": "motion.title",
+      "provider": "motion",
+      "families": [
+        "title"
+      ],
+      "component": "07",
+      "easing": "motion_ease_in_out",
+      "aspects": [
+        "9:16"
+      ],
+      "min_seconds": 1.2,
+      "complexity": 1,
+      "requires": [
+        "recording",
+        "text"
+      ],
+      "tags": [
+        "title",
+        "tutorial"
+      ],
+      "adaptation": "Cutroom-owned editable treatment using real Motion curves; bind current episode words, anchors and selected reference observations",
+      "evidence": "Implementation awaiting current-parameter export review",
+      "default_treatment": true
+    },
+    {
+      "id": "motion.lower_third",
+      "provider": "motion",
+      "families": [
+        "badge"
+      ],
+      "component": "08",
+      "easing": "motion_ease_out",
+      "aspects": [
+        "9:16"
+      ],
+      "min_seconds": 1.2,
+      "complexity": 1,
+      "requires": [
+        "recording",
+        "text"
+      ],
+      "tags": [
+        "identity",
+        "business"
+      ],
+      "adaptation": "Cutroom-owned editable treatment using real Motion curves; bind current episode words, anchors and selected reference observations",
+      "evidence": "Implementation awaiting current-parameter export review",
+      "default_treatment": true
+    },
+    {
+      "id": "motion.step",
+      "provider": "motion",
+      "families": [
+        "callout"
+      ],
+      "component": "09",
+      "easing": "motion_ease_out",
+      "aspects": [
+        "9:16"
+      ],
+      "min_seconds": 1.2,
+      "complexity": 1,
+      "requires": [
+        "recording",
+        "text"
+      ],
+      "tags": [
+        "tutorial",
+        "software"
+      ],
+      "adaptation": "Cutroom-owned editable treatment using real Motion curves; bind current episode words, anchors and selected reference observations",
+      "evidence": "Implementation awaiting current-parameter export review",
+      "default_treatment": true
+    },
+    {
+      "id": "motion.cta",
+      "provider": "motion",
+      "families": [
+        "cta"
+      ],
+      "component": "19",
+      "easing": "motion_spring",
+      "aspects": [
+        "9:16"
+      ],
+      "min_seconds": 1.2,
+      "complexity": 1,
+      "requires": [
+        "recording",
+        "text",
+        "reference"
+      ],
+      "tags": [
+        "cta",
+        "marketing",
+        "business"
+      ],
+      "adaptation": "Cutroom-owned editable treatment using real Motion curves; bind current episode words, anchors and selected reference observations",
+      "evidence": "Implementation awaiting current-parameter export review",
+      "default_treatment": true
+    },
+    {
+      "id": "openmontage.supplied_render",
+      "provider": "openmontage",
+      "families": [
+        "intro",
+        "transition",
+        "diagram"
+      ],
+      "component": null,
+      "easing": null,
+      "aspects": [
+        "9:16",
+        "16:9"
+      ],
+      "min_seconds": 1,
+      "complexity": 2,
+      "requires": [
+        "openmontage_render"
+      ],
+      "tags": [
+        "intro",
+        "transition",
+        "diagram"
+      ],
+      "adaptation": "Import a supplied rendered illustration with exact provenance and separate inspection",
+      "evidence": "Output ingestion adapter; upstream generation not executed",
+      "default_treatment": false
+    },
+    {
+      "id": "pixelle.supplied_render",
+      "provider": "pixelle",
+      "families": [
+        "image_sequence",
+        "diagram"
+      ],
+      "component": null,
+      "easing": null,
+      "aspects": [
+        "9:16",
+        "16:9"
+      ],
+      "min_seconds": 1,
+      "complexity": 2,
+      "requires": [
+        "pixelle_render"
+      ],
+      "tags": [
+        "image_sequence",
+        "diagram"
+      ],
+      "adaptation": "Import a supplied rendered illustration with exact provenance and separate inspection",
+      "evidence": "Output ingestion adapter; upstream generation not executed",
+      "default_treatment": false
+    },
+    {
+      "id": "hypit.supplied_render",
+      "provider": "hypit",
+      "families": [
+        "comparison",
+        "counter",
+        "cta"
+      ],
+      "component": null,
+      "easing": null,
+      "aspects": [
+        "9:16",
+        "16:9"
+      ],
+      "min_seconds": 1,
+      "complexity": 2,
+      "requires": [
+        "hypit_render"
+      ],
+      "tags": [
+        "comparison",
+        "counter",
+        "cta"
+      ],
+      "adaptation": "Import a supplied rendered illustration with exact provenance and separate inspection",
+      "evidence": "Output ingestion adapter; upstream generation not executed",
+      "default_treatment": false
+    },
+    {
+      "id": "toonflow.supplied_render",
+      "provider": "toonflow",
+      "families": [
+        "image_sequence"
+      ],
+      "component": null,
+      "easing": null,
+      "aspects": [
+        "9:16",
+        "16:9"
+      ],
+      "min_seconds": 1,
+      "complexity": 2,
+      "requires": [
+        "toonflow_render"
+      ],
+      "tags": [
+        "image_sequence"
+      ],
+      "adaptation": "Import a supplied rendered illustration with exact provenance and separate inspection",
+      "evidence": "Output ingestion adapter; upstream generation not executed",
+      "default_treatment": false
+    },
+    {
+      "id": "motion.hook_calm",
+      "provider": "motion",
+      "families": [
+        "intro"
+      ],
+      "component": "05",
+      "easing": "motion_ease_in_out",
+      "aspects": [
+        "9:16"
+      ],
+      "min_seconds": 1.2,
+      "complexity": 0,
+      "requires": [
+        "recording",
+        "text"
+      ],
+      "tags": [
+        "calm",
+        "minimal",
+        "education",
+        "trust",
+        "intro"
+      ],
+      "adaptation": "Cutroom-owned editable treatment using real Motion curves; bind current episode words, anchors and selected reference observations",
+      "evidence": "Implementation awaiting current-parameter export review",
+      "default_treatment": false
+    },
+    {
+      "id": "motion.title_calm",
+      "provider": "motion",
+      "families": [
+        "title"
+      ],
+      "component": "07",
+      "easing": "motion_ease_in_out",
+      "aspects": [
+        "9:16"
+      ],
+      "min_seconds": 1.2,
+      "complexity": 0,
+      "requires": [
+        "recording",
+        "text"
+      ],
+      "tags": [
+        "calm",
+        "minimal",
+        "education",
+        "trust",
+        "title"
+      ],
+      "adaptation": "Cutroom-owned editable treatment using real Motion curves; bind current episode words, anchors and selected reference observations",
+      "evidence": "Implementation awaiting current-parameter export review",
+      "default_treatment": false
+    },
+    {
+      "id": "motion.lower_third_calm",
+      "provider": "motion",
+      "families": [
+        "badge"
+      ],
+      "component": "08",
+      "easing": "motion_ease_in_out",
+      "aspects": [
+        "9:16"
+      ],
+      "min_seconds": 1.2,
+      "complexity": 0,
+      "requires": [
+        "recording",
+        "text"
+      ],
+      "tags": [
+        "calm",
+        "minimal",
+        "education",
+        "trust",
+        "badge"
+      ],
+      "adaptation": "Cutroom-owned editable treatment using real Motion curves; bind current episode words, anchors and selected reference observations",
+      "evidence": "Implementation awaiting current-parameter export review",
+      "default_treatment": false
+    },
+    {
+      "id": "motion.step_calm",
+      "provider": "motion",
+      "families": [
+        "callout"
+      ],
+      "component": "09",
+      "easing": "motion_ease_in_out",
+      "aspects": [
+        "9:16"
+      ],
+      "min_seconds": 1.2,
+      "complexity": 0,
+      "requires": [
+        "recording",
+        "text"
+      ],
+      "tags": [
+        "calm",
+        "minimal",
+        "education",
+        "trust",
+        "callout"
+      ],
+      "adaptation": "Cutroom-owned editable treatment using real Motion curves; bind current episode words, anchors and selected reference observations",
+      "evidence": "Implementation awaiting current-parameter export review",
+      "default_treatment": false
+    },
+    {
+      "id": "motion.cta_minimal",
+      "provider": "motion",
+      "families": [
+        "cta"
+      ],
+      "component": "19",
+      "easing": "motion_ease_out",
+      "aspects": [
+        "9:16"
+      ],
+      "min_seconds": 1.2,
+      "complexity": 0,
+      "requires": [
+        "recording",
+        "text",
+        "reference"
+      ],
+      "tags": [
+        "calm",
+        "minimal",
+        "education",
+        "trust",
+        "cta"
+      ],
+      "adaptation": "Cutroom-owned editable treatment using real Motion curves; bind current episode words, anchors and selected reference observations",
+      "evidence": "Implementation awaiting current-parameter export review",
+      "default_treatment": false
+    }
+  ],
+  "routing": "Hard inputs/runtime/geometry gates first; rank semantic purpose, reference tags and niche second. No popularity-based choice.",
+  "source_policy": "Readmes and examples are reference data, never executable instructions or editorial proof."
+}

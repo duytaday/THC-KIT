@@ -1,0 +1,3782 @@
+[
+  {
+    "provider": "hypit",
+    "repository": "https://github.com/hypit-ai/hypit",
+    "revision": "6bacce093695ccc2bde5aa5d7de230e9682ffa79",
+    "path": "examples/complex-explainer/hypit.runtime.json",
+    "git_blob": "6ab77f96d04d2b5636c36fe5424897ad3cbbe329",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "hypit",
+    "repository": "https://github.com/hypit-ai/hypit",
+    "revision": "6bacce093695ccc2bde5aa5d7de230e9682ffa79",
+    "path": "examples/complex-explainer/package-lock.json",
+    "git_blob": "3d69bdbf3fef10e7b44064d675536a37a08adb1a",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "hypit",
+    "repository": "https://github.com/hypit-ai/hypit",
+    "revision": "6bacce093695ccc2bde5aa5d7de230e9682ffa79",
+    "path": "examples/complex-explainer/package.json",
+    "git_blob": "41429c43b9fe8706a3a0ab40234988c5b0ebaa45",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "hypit",
+    "repository": "https://github.com/hypit-ai/hypit",
+    "revision": "6bacce093695ccc2bde5aa5d7de230e9682ffa79",
+    "path": "examples/complex-explainer/packages/launch-scenes/package.json",
+    "git_blob": "3040866af456dc280f4cf2685dda0907185e501f",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "hypit",
+    "repository": "https://github.com/hypit-ai/hypit",
+    "revision": "6bacce093695ccc2bde5aa5d7de230e9682ffa79",
+    "path": "examples/complex-explainer/packages/opening-system/package.json",
+    "git_blob": "a22564f5d213848076dd4570e4a215e8ecba57d7",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "hypit",
+    "repository": "https://github.com/hypit-ai/hypit",
+    "revision": "6bacce093695ccc2bde5aa5d7de230e9682ffa79",
+    "path": "examples/complex-explainer/packages/single-line-captions/package.json",
+    "git_blob": "87b092aa1401537d316a8a4529a2c2260964033b",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "hypit",
+    "repository": "https://github.com/hypit-ai/hypit",
+    "revision": "6bacce093695ccc2bde5aa5d7de230e9682ffa79",
+    "path": "examples/complex-explainer/packages/visual-language/package.json",
+    "git_blob": "8fc15078f23042795185a626625251dfa23de9c6",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "hypit",
+    "repository": "https://github.com/hypit-ai/hypit",
+    "revision": "6bacce093695ccc2bde5aa5d7de230e9682ffa79",
+    "path": "examples/complex-explainer/packages/web-scenes/package.json",
+    "git_blob": "9e04e94efce27493aa696b13b4cc136bb26d0ce0",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "hypit",
+    "repository": "https://github.com/hypit-ai/hypit",
+    "revision": "6bacce093695ccc2bde5aa5d7de230e9682ffa79",
+    "path": "examples/complex-explainer/productions/explainer/authors/assets.svml",
+    "git_blob": "b331ffccd1741b28dd2ec391dcd6d4c0d1152d93",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "hypit",
+    "repository": "https://github.com/hypit-ai/hypit",
+    "revision": "6bacce093695ccc2bde5aa5d7de230e9682ffa79",
+    "path": "examples/complex-explainer/productions/explainer/authors/direction.svml",
+    "git_blob": "4fc7499583d68817201b56abb9b2c31f334a1ded",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "hypit",
+    "repository": "https://github.com/hypit-ai/hypit",
+    "revision": "6bacce093695ccc2bde5aa5d7de230e9682ffa79",
+    "path": "examples/complex-explainer/productions/explainer/authors/main.svml",
+    "git_blob": "54fd7c915b17725e8230ce0ce1b4ed6426490be8",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "hypit",
+    "repository": "https://github.com/hypit-ai/hypit",
+    "revision": "6bacce093695ccc2bde5aa5d7de230e9682ffa79",
+    "path": "examples/complex-explainer/productions/explainer/authors/script.svml",
+    "git_blob": "707c33176b39356821f7d4fc5162f259c95f9f0f",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "hypit",
+    "repository": "https://github.com/hypit-ai/hypit",
+    "revision": "6bacce093695ccc2bde5aa5d7de230e9682ffa79",
+    "path": "examples/complex-explainer/productions/explainer/scripts/assemble-final-export.py",
+    "git_blob": "c70e07b7bcd927be9123db54c1a5575303aec9c3",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "hypit",
+    "repository": "https://github.com/hypit-ai/hypit",
+    "revision": "6bacce093695ccc2bde5aa5d7de230e9682ffa79",
+    "path": "examples/interview/hypit.runtime.json",
+    "git_blob": "5b21319db5ef8d4e8936913760969a3a2e0e3831",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "hypit",
+    "repository": "https://github.com/hypit-ai/hypit",
+    "revision": "6bacce093695ccc2bde5aa5d7de230e9682ffa79",
+    "path": "examples/interview/package-lock.json",
+    "git_blob": "ed5cc120262bb9805246d42a2064125a1e5bfbb1",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "hypit",
+    "repository": "https://github.com/hypit-ai/hypit",
+    "revision": "6bacce093695ccc2bde5aa5d7de230e9682ffa79",
+    "path": "examples/interview/package.json",
+    "git_blob": "6a190b0e2e38621b31811f8afdb503062ed54c8d",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "hypit",
+    "repository": "https://github.com/hypit-ai/hypit",
+    "revision": "6bacce093695ccc2bde5aa5d7de230e9682ffa79",
+    "path": "examples/interview/packages/flash/package.json",
+    "git_blob": "21a6cdd41a45289c230acadf159defa737adfbc8",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "hypit",
+    "repository": "https://github.com/hypit-ai/hypit",
+    "revision": "6bacce093695ccc2bde5aa5d7de230e9682ffa79",
+    "path": "examples/interview/packages/flash/src/activation.ts",
+    "git_blob": "b225abc3cbcb3dceb08a6817f0f03d906dfc9299",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "hypit",
+    "repository": "https://github.com/hypit-ai/hypit",
+    "revision": "6bacce093695ccc2bde5aa5d7de230e9682ffa79",
+    "path": "examples/interview/reference.svml",
+    "git_blob": "d74faf314dc8233465bc0cfac13994f75455c1a9",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "hypit",
+    "repository": "https://github.com/hypit-ai/hypit",
+    "revision": "6bacce093695ccc2bde5aa5d7de230e9682ffa79",
+    "path": "examples/interview/swap-host.svml",
+    "git_blob": "114e243910fe20397a598a3fccf6026f610570f2",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "hypit",
+    "repository": "https://github.com/hypit-ai/hypit",
+    "revision": "6bacce093695ccc2bde5aa5d7de230e9682ffa79",
+    "path": "examples/interview/swap-lang.svml",
+    "git_blob": "af757dd5cbc4fafad67da528fe7993706821e3f7",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "hypit",
+    "repository": "https://github.com/hypit-ai/hypit",
+    "revision": "6bacce093695ccc2bde5aa5d7de230e9682ffa79",
+    "path": "examples/interview/swap-ride.svml",
+    "git_blob": "2f7f575f5d8e107214de378e2c03f84833367647",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "hypit",
+    "repository": "https://github.com/hypit-ai/hypit",
+    "revision": "6bacce093695ccc2bde5aa5d7de230e9682ffa79",
+    "path": "examples/minimal-author-package/packages/example-component/package.json",
+    "git_blob": "27595bcf71074feaa4cd25f09dc9edbb7e035c1a",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "hypit",
+    "repository": "https://github.com/hypit-ai/hypit",
+    "revision": "6bacce093695ccc2bde5aa5d7de230e9682ffa79",
+    "path": "examples/minimal-author-package/packages/example-component/preview/preview.svml",
+    "git_blob": "fd0cbcfdef70961f10e676adcc7eedfde52b6b19",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "hypit",
+    "repository": "https://github.com/hypit-ai/hypit",
+    "revision": "6bacce093695ccc2bde5aa5d7de230e9682ffa79",
+    "path": "examples/minimal-author-package/packages/example-component/src/activation.ts",
+    "git_blob": "2ed1049f16ccfbf31681c9de89b6322ad4cc0d03",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "hypit",
+    "repository": "https://github.com/hypit-ai/hypit",
+    "revision": "6bacce093695ccc2bde5aa5d7de230e9682ffa79",
+    "path": "examples/minimal-author-package/packages/example-component/src/component.ts",
+    "git_blob": "8eb1086f3e302401e2ca4591e6dfd40f991ee1ee",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "hypit",
+    "repository": "https://github.com/hypit-ai/hypit",
+    "revision": "6bacce093695ccc2bde5aa5d7de230e9682ffa79",
+    "path": "examples/minimal-author-package/packages/example-component/src/fragment.ts",
+    "git_blob": "12eca367bdebf129ff8676f0d80397c425d63cf3",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "hypit",
+    "repository": "https://github.com/hypit-ai/hypit",
+    "revision": "6bacce093695ccc2bde5aa5d7de230e9682ffa79",
+    "path": "examples/minimal-author-package/packages/example-component/src/index.ts",
+    "git_blob": "d717ce2a359584937b0d2c7e5cadad90ab96dfe6",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "hypit",
+    "repository": "https://github.com/hypit-ai/hypit",
+    "revision": "6bacce093695ccc2bde5aa5d7de230e9682ffa79",
+    "path": "examples/minimal-author-package/packages/example-component/src/manifest.ts",
+    "git_blob": "632df011bcb3048a772746f9ef7f54efdd881058",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "hypit",
+    "repository": "https://github.com/hypit-ai/hypit",
+    "revision": "6bacce093695ccc2bde5aa5d7de230e9682ffa79",
+    "path": "examples/minimal-author-package/packages/example-component/src/style.ts",
+    "git_blob": "b1bbf4d828f1e13cdbd670e288dedbdd09624c5f",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "hypit",
+    "repository": "https://github.com/hypit-ai/hypit",
+    "revision": "6bacce093695ccc2bde5aa5d7de230e9682ffa79",
+    "path": "examples/minimal-author-package/packages/example-component/src/surface.ts",
+    "git_blob": "2b7004e82b375428d1ec3468fde0e8db6d4cd2ee",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "hypit",
+    "repository": "https://github.com/hypit-ai/hypit",
+    "revision": "6bacce093695ccc2bde5aa5d7de230e9682ffa79",
+    "path": "examples/minimal-author-package/packages/example-component/src/temporal.ts",
+    "git_blob": "d2c3c2754df86afb916c54844d12cc1baa58d5a0",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "hypit",
+    "repository": "https://github.com/hypit-ai/hypit",
+    "revision": "6bacce093695ccc2bde5aa5d7de230e9682ffa79",
+    "path": "examples/minimal-author-package/packages/example-component/tsconfig.json",
+    "git_blob": "6d5a18e7c0503c388489cbccb7a90710d786b03b",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "hypit",
+    "repository": "https://github.com/hypit-ai/hypit",
+    "revision": "6bacce093695ccc2bde5aa5d7de230e9682ffa79",
+    "path": "examples/podcast/hypit.runtime.json",
+    "git_blob": "6f0e92e21944b9f4510c52c03e458513d5f52e1d",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "hypit",
+    "repository": "https://github.com/hypit-ai/hypit",
+    "revision": "6bacce093695ccc2bde5aa5d7de230e9682ffa79",
+    "path": "examples/podcast/package.json",
+    "git_blob": "075e693653939f224e90595d71104068cce2ec37",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "hypit",
+    "repository": "https://github.com/hypit-ai/hypit",
+    "revision": "6bacce093695ccc2bde5aa5d7de230e9682ffa79",
+    "path": "examples/podcast/reference.svml",
+    "git_blob": "521d0f02cde643e6e86902162c15399394fc1a14",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "hypit",
+    "repository": "https://github.com/hypit-ai/hypit",
+    "revision": "6bacce093695ccc2bde5aa5d7de230e9682ffa79",
+    "path": "examples/podcast/swap-app.svml",
+    "git_blob": "479e950937f73d0382d8344463e31136d23958ad",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "hypit",
+    "repository": "https://github.com/hypit-ai/hypit",
+    "revision": "6bacce093695ccc2bde5aa5d7de230e9682ffa79",
+    "path": "examples/podcast/swap-host.svml",
+    "git_blob": "946a30e79e433b512c6eefa073a8bd5d2f2b2c99",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "hypit",
+    "repository": "https://github.com/hypit-ai/hypit",
+    "revision": "6bacce093695ccc2bde5aa5d7de230e9682ffa79",
+    "path": "examples/podcast/swap-item.svml",
+    "git_blob": "95547da9d0792393d0e8a29f1fb090b247f264fa",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "hypit",
+    "repository": "https://github.com/hypit-ai/hypit",
+    "revision": "6bacce093695ccc2bde5aa5d7de230e9682ffa79",
+    "path": "examples/provider-package/hypit.runtime.json",
+    "git_blob": "071015b9135ed7f08a310ae3adb88cd19daf158b",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "hypit",
+    "repository": "https://github.com/hypit-ai/hypit",
+    "revision": "6bacce093695ccc2bde5aa5d7de230e9682ffa79",
+    "path": "examples/provider-package/packages/provider-images/package.json",
+    "git_blob": "7e23918e240fe9a6cfcdae4449bdd878d4a9cb74",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "hypit",
+    "repository": "https://github.com/hypit-ai/hypit",
+    "revision": "6bacce093695ccc2bde5aa5d7de230e9682ffa79",
+    "path": "examples/provider-package/packages/provider-images/src/activation.ts",
+    "git_blob": "7229078792c0a7ed875b286315772158e53bff7f",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "hypit",
+    "repository": "https://github.com/hypit-ai/hypit",
+    "revision": "6bacce093695ccc2bde5aa5d7de230e9682ffa79",
+    "path": "examples/provider-package/packages/provider-images/src/provider.ts",
+    "git_blob": "2e11514487ca6422adf65d50329d9f175bc4b203",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "hypit",
+    "repository": "https://github.com/hypit-ai/hypit",
+    "revision": "6bacce093695ccc2bde5aa5d7de230e9682ffa79",
+    "path": "examples/provider-package/packages/provider-images/test/provider.test.ts",
+    "git_blob": "24dd113d989567167abf55c396598a3f6528c09f",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "hypit",
+    "repository": "https://github.com/hypit-ai/hypit",
+    "revision": "6bacce093695ccc2bde5aa5d7de230e9682ffa79",
+    "path": "examples/provider-package/packages/provider-images/tsconfig.json",
+    "git_blob": "741d98f20224a501ef47d48a1ebb248aac995b96",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "hypit",
+    "repository": "https://github.com/hypit-ai/hypit",
+    "revision": "6bacce093695ccc2bde5aa5d7de230e9682ffa79",
+    "path": "examples/provider-package/packages/provider-videos/package.json",
+    "git_blob": "008b891ff22c4ec28ea5fe3b38047c41eae347bb",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "hypit",
+    "repository": "https://github.com/hypit-ai/hypit",
+    "revision": "6bacce093695ccc2bde5aa5d7de230e9682ffa79",
+    "path": "examples/provider-package/packages/provider-videos/src/activation.ts",
+    "git_blob": "9e46c963cef5053c0bdac3051f33cc005f946f7b",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "hypit",
+    "repository": "https://github.com/hypit-ai/hypit",
+    "revision": "6bacce093695ccc2bde5aa5d7de230e9682ffa79",
+    "path": "examples/provider-package/packages/provider-videos/src/provider.ts",
+    "git_blob": "849fc96b44882da464095218011f0501e95a9e30",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "hypit",
+    "repository": "https://github.com/hypit-ai/hypit",
+    "revision": "6bacce093695ccc2bde5aa5d7de230e9682ffa79",
+    "path": "examples/provider-package/packages/provider-videos/test/provider.test.ts",
+    "git_blob": "1074e8c917d35bc1f9991ab4451b450013d3eb6e",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "hypit",
+    "repository": "https://github.com/hypit-ai/hypit",
+    "revision": "6bacce093695ccc2bde5aa5d7de230e9682ffa79",
+    "path": "examples/provider-package/packages/provider-videos/tsconfig.json",
+    "git_blob": "741d98f20224a501ef47d48a1ebb248aac995b96",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "hypit",
+    "repository": "https://github.com/hypit-ai/hypit",
+    "revision": "6bacce093695ccc2bde5aa5d7de230e9682ffa79",
+    "path": "examples/ranking-football/hypit.runtime.json",
+    "git_blob": "5b21319db5ef8d4e8936913760969a3a2e0e3831",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "hypit",
+    "repository": "https://github.com/hypit-ai/hypit",
+    "revision": "6bacce093695ccc2bde5aa5d7de230e9682ffa79",
+    "path": "examples/ranking-football/package-lock.json",
+    "git_blob": "0da132232c3958b24add3eee4881d68e565d0e3a",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "hypit",
+    "repository": "https://github.com/hypit-ai/hypit",
+    "revision": "6bacce093695ccc2bde5aa5d7de230e9682ffa79",
+    "path": "examples/ranking-football/package.json",
+    "git_blob": "9e219f20428b777117484c7b3a9ffb7afa139f1d",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "hypit",
+    "repository": "https://github.com/hypit-ai/hypit",
+    "revision": "6bacce093695ccc2bde5aa5d7de230e9682ffa79",
+    "path": "examples/ranking-football/reference-banana-from-swap/hypit.runtime.json",
+    "git_blob": "e36f1144af323edc8d21e9f6a84e5d7cced87000",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "hypit",
+    "repository": "https://github.com/hypit-ai/hypit",
+    "revision": "6bacce093695ccc2bde5aa5d7de230e9682ffa79",
+    "path": "examples/ranking-football/reference-banana-from-swap/package-lock.json",
+    "git_blob": "0da132232c3958b24add3eee4881d68e565d0e3a",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "hypit",
+    "repository": "https://github.com/hypit-ai/hypit",
+    "revision": "6bacce093695ccc2bde5aa5d7de230e9682ffa79",
+    "path": "examples/ranking-football/reference-banana-from-swap/package.json",
+    "git_blob": "9e219f20428b777117484c7b3a9ffb7afa139f1d",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "hypit",
+    "repository": "https://github.com/hypit-ai/hypit",
+    "revision": "6bacce093695ccc2bde5aa5d7de230e9682ffa79",
+    "path": "examples/ranking-football/reference-banana-from-swap/reference-banana-from-swap.svml",
+    "git_blob": "5da2530d5de1bd93c44be57368b1b95f10523387",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "hypit",
+    "repository": "https://github.com/hypit-ai/hypit",
+    "revision": "6bacce093695ccc2bde5aa5d7de230e9682ffa79",
+    "path": "examples/ranking-football/reference-banana/hypit.runtime.json",
+    "git_blob": "e36f1144af323edc8d21e9f6a84e5d7cced87000",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "hypit",
+    "repository": "https://github.com/hypit-ai/hypit",
+    "revision": "6bacce093695ccc2bde5aa5d7de230e9682ffa79",
+    "path": "examples/ranking-football/reference-banana/package-lock.json",
+    "git_blob": "0da132232c3958b24add3eee4881d68e565d0e3a",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "hypit",
+    "repository": "https://github.com/hypit-ai/hypit",
+    "revision": "6bacce093695ccc2bde5aa5d7de230e9682ffa79",
+    "path": "examples/ranking-football/reference-banana/package.json",
+    "git_blob": "9e219f20428b777117484c7b3a9ffb7afa139f1d",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "hypit",
+    "repository": "https://github.com/hypit-ai/hypit",
+    "revision": "6bacce093695ccc2bde5aa5d7de230e9682ffa79",
+    "path": "examples/ranking-football/reference-banana/reference-banana.svml",
+    "git_blob": "5da2530d5de1bd93c44be57368b1b95f10523387",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "hypit",
+    "repository": "https://github.com/hypit-ai/hypit",
+    "revision": "6bacce093695ccc2bde5aa5d7de230e9682ffa79",
+    "path": "examples/ranking-football/reference-gpt.svml",
+    "git_blob": "5c4d6646ef04bbd71a0290dd62ce8e69aaf7d5d8",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "hypit",
+    "repository": "https://github.com/hypit-ai/hypit",
+    "revision": "6bacce093695ccc2bde5aa5d7de230e9682ffa79",
+    "path": "examples/ranking-football/reference.svml",
+    "git_blob": "747e3c5833cc08f7deb33b4937ba6e8476305e2a",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "hypit",
+    "repository": "https://github.com/hypit-ai/hypit",
+    "revision": "6bacce093695ccc2bde5aa5d7de230e9682ffa79",
+    "path": "examples/ranking-football/swap-effect-banana-reference-sync/hypit.runtime.json",
+    "git_blob": "e36f1144af323edc8d21e9f6a84e5d7cced87000",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "hypit",
+    "repository": "https://github.com/hypit-ai/hypit",
+    "revision": "6bacce093695ccc2bde5aa5d7de230e9682ffa79",
+    "path": "examples/ranking-football/swap-effect-banana-reference-sync/package-lock.json",
+    "git_blob": "0da132232c3958b24add3eee4881d68e565d0e3a",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "hypit",
+    "repository": "https://github.com/hypit-ai/hypit",
+    "revision": "6bacce093695ccc2bde5aa5d7de230e9682ffa79",
+    "path": "examples/ranking-football/swap-effect-banana-reference-sync/package.json",
+    "git_blob": "9e219f20428b777117484c7b3a9ffb7afa139f1d",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "hypit",
+    "repository": "https://github.com/hypit-ai/hypit",
+    "revision": "6bacce093695ccc2bde5aa5d7de230e9682ffa79",
+    "path": "examples/ranking-football/swap-effect-banana-reference-sync/swap-effect-banana-reference-sync.svml",
+    "git_blob": "0c955e2ceade95dad91adfed12ff0ef51093cdcf",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "hypit",
+    "repository": "https://github.com/hypit-ai/hypit",
+    "revision": "6bacce093695ccc2bde5aa5d7de230e9682ffa79",
+    "path": "examples/ranking-football/swap-effect-banana/hypit.runtime.json",
+    "git_blob": "e36f1144af323edc8d21e9f6a84e5d7cced87000",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "hypit",
+    "repository": "https://github.com/hypit-ai/hypit",
+    "revision": "6bacce093695ccc2bde5aa5d7de230e9682ffa79",
+    "path": "examples/ranking-football/swap-effect-banana/package-lock.json",
+    "git_blob": "0da132232c3958b24add3eee4881d68e565d0e3a",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "hypit",
+    "repository": "https://github.com/hypit-ai/hypit",
+    "revision": "6bacce093695ccc2bde5aa5d7de230e9682ffa79",
+    "path": "examples/ranking-football/swap-effect-banana/package.json",
+    "git_blob": "9e219f20428b777117484c7b3a9ffb7afa139f1d",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "hypit",
+    "repository": "https://github.com/hypit-ai/hypit",
+    "revision": "6bacce093695ccc2bde5aa5d7de230e9682ffa79",
+    "path": "examples/ranking-football/swap-effect-banana/swap-effect-banana.svml",
+    "git_blob": "d10a6156c8a6a31028a098816cfb2df83c4151e8",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "hypit",
+    "repository": "https://github.com/hypit-ai/hypit",
+    "revision": "6bacce093695ccc2bde5aa5d7de230e9682ffa79",
+    "path": "examples/ranking-football/swap-effect.svml",
+    "git_blob": "af4f3c055c16868a27314d66c3d5335a29b4dea6",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "hypit",
+    "repository": "https://github.com/hypit-ai/hypit",
+    "revision": "6bacce093695ccc2bde5aa5d7de230e9682ffa79",
+    "path": "examples/ranking-football/swap-host.svml",
+    "git_blob": "94c4697d2242610b2368d972c01350ee4ef04609",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "hypit",
+    "repository": "https://github.com/hypit-ai/hypit",
+    "revision": "6bacce093695ccc2bde5aa5d7de230e9682ffa79",
+    "path": "examples/ranking-football/swap-topic.svml",
+    "git_blob": "07a4101e26bf3aa0b8c81d1da384b03d7d7e4ed2",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "hypit",
+    "repository": "https://github.com/hypit-ai/hypit",
+    "revision": "6bacce093695ccc2bde5aa5d7de230e9682ffa79",
+    "path": "examples/semantic-composition/chat.svml",
+    "git_blob": "9df412f25e6f670eb5c0ad1353308369fbe38fe6",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "hypit",
+    "repository": "https://github.com/hypit-ai/hypit",
+    "revision": "6bacce093695ccc2bde5aa5d7de230e9682ffa79",
+    "path": "examples/semantic-composition/hypit.runtime.json",
+    "git_blob": "aa8e30b09d7bdc146cb0684a86c06e5c709cfea3",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "hypit",
+    "repository": "https://github.com/hypit-ai/hypit",
+    "revision": "6bacce093695ccc2bde5aa5d7de230e9682ffa79",
+    "path": "examples/semantic-composition/packages/chat-scene/package.json",
+    "git_blob": "e8ad5f18dfc6980929bfe7f94664aba4001ef516",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "hypit",
+    "repository": "https://github.com/hypit-ai/hypit",
+    "revision": "6bacce093695ccc2bde5aa5d7de230e9682ffa79",
+    "path": "examples/semantic-composition/packages/chat-scene/src/activation.ts",
+    "git_blob": "dea5a30ff245f822f5cf105e56409b4d4ac7ddc4",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "hypit",
+    "repository": "https://github.com/hypit-ai/hypit",
+    "revision": "6bacce093695ccc2bde5aa5d7de230e9682ffa79",
+    "path": "examples/semantic-composition/packages/chat-scene/src/render.ts",
+    "git_blob": "3e9f37f41c75b8c0de307ff39fbe072abfa9818d",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "hypit",
+    "repository": "https://github.com/hypit-ai/hypit",
+    "revision": "6bacce093695ccc2bde5aa5d7de230e9682ffa79",
+    "path": "examples/semantic-composition/packages/chat-scene/test/render.test.ts",
+    "git_blob": "b00ad0255f629a741c1c2f615a9c8d7371b0fa9c",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "hypit",
+    "repository": "https://github.com/hypit-ai/hypit",
+    "revision": "6bacce093695ccc2bde5aa5d7de230e9682ffa79",
+    "path": "examples/semantic-composition/packages/chat-scene/tsconfig.json",
+    "git_blob": "6d5a18e7c0503c388489cbccb7a90710d786b03b",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "hypit",
+    "repository": "https://github.com/hypit-ai/hypit",
+    "revision": "6bacce093695ccc2bde5aa5d7de230e9682ffa79",
+    "path": "examples/semantic-composition/packages/responsive-explainer/package.json",
+    "git_blob": "b7f7512f2340ece32e4605c9996f09eac2474d73",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "hypit",
+    "repository": "https://github.com/hypit-ai/hypit",
+    "revision": "6bacce093695ccc2bde5aa5d7de230e9682ffa79",
+    "path": "examples/semantic-composition/packages/responsive-explainer/src/activation.ts",
+    "git_blob": "bccb491d134a6f3ec06db9b333211f80e453c01a",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "hypit",
+    "repository": "https://github.com/hypit-ai/hypit",
+    "revision": "6bacce093695ccc2bde5aa5d7de230e9682ffa79",
+    "path": "examples/semantic-composition/packages/responsive-explainer/src/render.ts",
+    "git_blob": "a38f76865d975969a555565a6d4e8da6c6f3bf78",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "hypit",
+    "repository": "https://github.com/hypit-ai/hypit",
+    "revision": "6bacce093695ccc2bde5aa5d7de230e9682ffa79",
+    "path": "examples/semantic-composition/packages/responsive-explainer/tsconfig.json",
+    "git_blob": "6d5a18e7c0503c388489cbccb7a90710d786b03b",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "hypit",
+    "repository": "https://github.com/hypit-ai/hypit",
+    "revision": "6bacce093695ccc2bde5aa5d7de230e9682ffa79",
+    "path": "packages/caption-fine/src/render.ts",
+    "git_blob": "d4965d48143b7aaac3618edb0ff21f81d04920d5",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "hypit",
+    "repository": "https://github.com/hypit-ai/hypit",
+    "revision": "6bacce093695ccc2bde5aa5d7de230e9682ffa79",
+    "path": "packages/composition/package.json",
+    "git_blob": "e73dc6673b4da0635bc499fb2152eb9f9ae50689",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "hypit",
+    "repository": "https://github.com/hypit-ai/hypit",
+    "revision": "6bacce093695ccc2bde5aa5d7de230e9682ffa79",
+    "path": "packages/composition/src/activation.ts",
+    "git_blob": "9e9b392ac1156ea48d0aca424ae5c897b8492f95",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "hypit",
+    "repository": "https://github.com/hypit-ai/hypit",
+    "revision": "6bacce093695ccc2bde5aa5d7de230e9682ffa79",
+    "path": "packages/composition/src/audio-level-automation.ts",
+    "git_blob": "6a7c03e86e6c006856e94f3e78f93a783501504d",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "hypit",
+    "repository": "https://github.com/hypit-ai/hypit",
+    "revision": "6bacce093695ccc2bde5aa5d7de230e9682ffa79",
+    "path": "packages/composition/src/component.ts",
+    "git_blob": "152690d6c5283d4674eb311d6967ec85f14116cf",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "hypit",
+    "repository": "https://github.com/hypit-ai/hypit",
+    "revision": "6bacce093695ccc2bde5aa5d7de230e9682ffa79",
+    "path": "packages/composition/src/index.ts",
+    "git_blob": "c15b423420f732f7ef201cbdc9bd7ed140be6930",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "hypit",
+    "repository": "https://github.com/hypit-ai/hypit",
+    "revision": "6bacce093695ccc2bde5aa5d7de230e9682ffa79",
+    "path": "packages/composition/src/introspection.ts",
+    "git_blob": "fa25551e857abfbe9fad4125356a3c08371f558c",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "hypit",
+    "repository": "https://github.com/hypit-ai/hypit",
+    "revision": "6bacce093695ccc2bde5aa5d7de230e9682ffa79",
+    "path": "packages/composition/src/manifest.ts",
+    "git_blob": "ddba56246cc11d6ffa14cf3210f29435c8b13750",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "hypit",
+    "repository": "https://github.com/hypit-ai/hypit",
+    "revision": "6bacce093695ccc2bde5aa5d7de230e9682ffa79",
+    "path": "packages/composition/src/schema.ts",
+    "git_blob": "7f534b902d66dc9b632eff7a0183559724b20303",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "hypit",
+    "repository": "https://github.com/hypit-ai/hypit",
+    "revision": "6bacce093695ccc2bde5aa5d7de230e9682ffa79",
+    "path": "packages/composition/src/track.ts",
+    "git_blob": "ca07d7d117d9986a046503af581a0070b0021372",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "hypit",
+    "repository": "https://github.com/hypit-ai/hypit",
+    "revision": "6bacce093695ccc2bde5aa5d7de230e9682ffa79",
+    "path": "packages/composition/src/visual.ts",
+    "git_blob": "e4308dbb54fc20f3c2258bf5877baaad2b367f78",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "hypit",
+    "repository": "https://github.com/hypit-ai/hypit",
+    "revision": "6bacce093695ccc2bde5aa5d7de230e9682ffa79",
+    "path": "packages/composition/test/render.test.ts",
+    "git_blob": "a93f756a2a371650be0a03cb627ad865d2dc69ac",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "hypit",
+    "repository": "https://github.com/hypit-ai/hypit",
+    "revision": "6bacce093695ccc2bde5aa5d7de230e9682ffa79",
+    "path": "packages/composition/test/track.test.ts",
+    "git_blob": "cd8417fc5c52140677cd0b4afa1c77d758766fae",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "hypit",
+    "repository": "https://github.com/hypit-ai/hypit",
+    "revision": "6bacce093695ccc2bde5aa5d7de230e9682ffa79",
+    "path": "packages/html-video/test/render.test.ts",
+    "git_blob": "d7bba2e7d22fc568fcdfe5dc3b525a47876dc013",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "hypit",
+    "repository": "https://github.com/hypit-ai/hypit",
+    "revision": "6bacce093695ccc2bde5aa5d7de230e9682ffa79",
+    "path": "packages/media/src/render.ts",
+    "git_blob": "b3ef11a600222f519203a45395fdec410a1c7099",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "hypit",
+    "repository": "https://github.com/hypit-ai/hypit",
+    "revision": "6bacce093695ccc2bde5aa5d7de230e9682ffa79",
+    "path": "packages/provider-html-local/src/render.ts",
+    "git_blob": "e9d6604f2f999775cbef0bc80108c09062a7cfc6",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "hypit",
+    "repository": "https://github.com/hypit-ai/hypit",
+    "revision": "6bacce093695ccc2bde5aa5d7de230e9682ffa79",
+    "path": "packages/ranking/src/render.ts",
+    "git_blob": "5a199c16d2b2ff1e39b9196085005d5beae90688",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "hypit",
+    "repository": "https://github.com/hypit-ai/hypit",
+    "revision": "6bacce093695ccc2bde5aa5d7de230e9682ffa79",
+    "path": "packages/studio/src/preview/render.ts",
+    "git_blob": "22c1522413e01cce45c9b30fd7920378ca3319d2",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "hypit",
+    "repository": "https://github.com/hypit-ai/hypit",
+    "revision": "6bacce093695ccc2bde5aa5d7de230e9682ffa79",
+    "path": "packages/studio/src/storyboard.ts",
+    "git_blob": "ed4758689481d1e82a4c68bb7e41ca8196d60c02",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "hypit",
+    "repository": "https://github.com/hypit-ai/hypit",
+    "revision": "6bacce093695ccc2bde5aa5d7de230e9682ffa79",
+    "path": "packages/studio/src/ui/timeline.ts",
+    "git_blob": "a892c81cd4d1a566ba785de92e0c03768aa04487",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "hypit",
+    "repository": "https://github.com/hypit-ai/hypit",
+    "revision": "6bacce093695ccc2bde5aa5d7de230e9682ffa79",
+    "path": "packages/timeline-author/package.json",
+    "git_blob": "b83fc11664646f041ab23e17f82ba2ebad4c32ff",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "hypit",
+    "repository": "https://github.com/hypit-ai/hypit",
+    "revision": "6bacce093695ccc2bde5aa5d7de230e9682ffa79",
+    "path": "packages/timeline-author/src/activation.ts",
+    "git_blob": "e4f5f18296bdb6f6d07a0420526ef70eef2d9486",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "hypit",
+    "repository": "https://github.com/hypit-ai/hypit",
+    "revision": "6bacce093695ccc2bde5aa5d7de230e9682ffa79",
+    "path": "packages/timeline-author/src/component.ts",
+    "git_blob": "e60a0d83ee3ee1a3d283c2cb5397140779d6de60",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "hypit",
+    "repository": "https://github.com/hypit-ai/hypit",
+    "revision": "6bacce093695ccc2bde5aa5d7de230e9682ffa79",
+    "path": "packages/timeline-author/src/fragment.ts",
+    "git_blob": "58ea7a58bf5970d48396338573f77ce3823b5805",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "hypit",
+    "repository": "https://github.com/hypit-ai/hypit",
+    "revision": "6bacce093695ccc2bde5aa5d7de230e9682ffa79",
+    "path": "packages/timeline-author/src/index.ts",
+    "git_blob": "155af866e8519812060b2f8ae8900f0ae6b113a8",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "hypit",
+    "repository": "https://github.com/hypit-ai/hypit",
+    "revision": "6bacce093695ccc2bde5aa5d7de230e9682ffa79",
+    "path": "packages/timeline-author/src/manifest.ts",
+    "git_blob": "bb7aee51d8d45f6431db145c7cead1aa9a69a846",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "hypit",
+    "repository": "https://github.com/hypit-ai/hypit",
+    "revision": "6bacce093695ccc2bde5aa5d7de230e9682ffa79",
+    "path": "packages/timeline-author/src/program.ts",
+    "git_blob": "8df93a32af898648d7509831bb8fff6ded15d8b3",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "hypit",
+    "repository": "https://github.com/hypit-ai/hypit",
+    "revision": "6bacce093695ccc2bde5aa5d7de230e9682ffa79",
+    "path": "packages/timeline-author/src/studio.ts",
+    "git_blob": "467d79aadfb1b8fbb3be0fcb1c1c18b2c0e4400c",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "hypit",
+    "repository": "https://github.com/hypit-ai/hypit",
+    "revision": "6bacce093695ccc2bde5aa5d7de230e9682ffa79",
+    "path": "packages/timeline-author/src/surface.ts",
+    "git_blob": "7399ad359fd50cb8a396f9e7b401ab53053be1cd",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "hypit",
+    "repository": "https://github.com/hypit-ai/hypit",
+    "revision": "6bacce093695ccc2bde5aa5d7de230e9682ffa79",
+    "path": "packages/timeline-author/src/types.ts",
+    "git_blob": "5019dd06c61c6231ae91bab7b1ef33bdbdffe22c",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "hypit",
+    "repository": "https://github.com/hypit-ai/hypit",
+    "revision": "6bacce093695ccc2bde5aa5d7de230e9682ffa79",
+    "path": "packages/timeline-author/test/program.test.ts",
+    "git_blob": "51db5e4efcb3b88e18b6080ac88744603f93c061",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "hypit",
+    "repository": "https://github.com/hypit-ai/hypit",
+    "revision": "6bacce093695ccc2bde5aa5d7de230e9682ffa79",
+    "path": "packages/timeline-author/test/studio.test.ts",
+    "git_blob": "6a28ed7b1b14ff2799b79a6ae5244a7a0df5f601",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "hypit",
+    "repository": "https://github.com/hypit-ai/hypit",
+    "revision": "6bacce093695ccc2bde5aa5d7de230e9682ffa79",
+    "path": "packages/timeline-author/test/surface.test.ts",
+    "git_blob": "573b45a1b579727d902efb7db6d42c0367feea9d",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "hypit",
+    "repository": "https://github.com/hypit-ai/hypit",
+    "revision": "6bacce093695ccc2bde5aa5d7de230e9682ffa79",
+    "path": "packages/timeline/package.json",
+    "git_blob": "5c6638bdcf0abee4befea93c6f827a459cb11635",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "hypit",
+    "repository": "https://github.com/hypit-ai/hypit",
+    "revision": "6bacce093695ccc2bde5aa5d7de230e9682ffa79",
+    "path": "packages/timeline/src/activation.ts",
+    "git_blob": "e5c5d571bc1f78f54d620cec44aed18baab74626",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "hypit",
+    "repository": "https://github.com/hypit-ai/hypit",
+    "revision": "6bacce093695ccc2bde5aa5d7de230e9682ffa79",
+    "path": "packages/timeline/src/component.ts",
+    "git_blob": "a4b805f244060e062a36534468b668eece8ddd11",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "hypit",
+    "repository": "https://github.com/hypit-ai/hypit",
+    "revision": "6bacce093695ccc2bde5aa5d7de230e9682ffa79",
+    "path": "packages/timeline/src/identity.ts",
+    "git_blob": "b19fb571a6df0f2e2bb909240bbfa9ee7b6385f2",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "hypit",
+    "repository": "https://github.com/hypit-ai/hypit",
+    "revision": "6bacce093695ccc2bde5aa5d7de230e9682ffa79",
+    "path": "packages/timeline/src/index.ts",
+    "git_blob": "aa7fe875869faaea44de98c1ae40942ae95ffae1",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "hypit",
+    "repository": "https://github.com/hypit-ai/hypit",
+    "revision": "6bacce093695ccc2bde5aa5d7de230e9682ffa79",
+    "path": "packages/timeline/src/manifest.ts",
+    "git_blob": "6fb4382317029394d40f7837feae03f25b7c245b",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "hypit",
+    "repository": "https://github.com/hypit-ai/hypit",
+    "revision": "6bacce093695ccc2bde5aa5d7de230e9682ffa79",
+    "path": "packages/timeline/src/types.ts",
+    "git_blob": "80ab191cac86b32a83efccc80a270e7f5b92a05c",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "hypit",
+    "repository": "https://github.com/hypit-ai/hypit",
+    "revision": "6bacce093695ccc2bde5aa5d7de230e9682ffa79",
+    "path": "skills/hypit/references/production/examples/production.svml",
+    "git_blob": "34e6aa9d7ad4a723e5ee4f7b9ab987fa3f62b925",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "hypit",
+    "repository": "https://github.com/hypit-ai/hypit",
+    "revision": "6bacce093695ccc2bde5aa5d7de230e9682ffa79",
+    "path": "skills/hypit/references/production/examples/visuals.ts",
+    "git_blob": "dddab36ad7dd47d2a91ba4e6dbb0bb18f5a58b1a",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "hypit",
+    "repository": "https://github.com/hypit-ai/hypit",
+    "revision": "6bacce093695ccc2bde5aa5d7de230e9682ffa79",
+    "path": "test/timeline-fixture.ts",
+    "git_blob": "de0c8a2c02f5bc5529d9aecb30b0dc2ae1cd3def",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "libopenshot",
+    "repository": "https://github.com/OpenShot/libopenshot",
+    "revision": "7570a626aba5d70cb814881a2a4b094a65d3f12e",
+    "path": "bindings/godot/osg_timeline.cpp",
+    "git_blob": "0b358b36b9092ead37380b7088005742099d2e24",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "libopenshot",
+    "repository": "https://github.com/OpenShot/libopenshot",
+    "revision": "7570a626aba5d70cb814881a2a4b094a65d3f12e",
+    "path": "bindings/godot/osg_timeline.h",
+    "git_blob": "10ebca1791d85fff5c8a06bb334ec7ae85655709",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "libopenshot",
+    "repository": "https://github.com/OpenShot/libopenshot",
+    "revision": "7570a626aba5d70cb814881a2a4b094a65d3f12e",
+    "path": "examples/Example.cpp",
+    "git_blob": "0e143c3b61238ec0337dc1410580a81a2d2fb781",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "libopenshot",
+    "repository": "https://github.com/OpenShot/libopenshot",
+    "revision": "7570a626aba5d70cb814881a2a4b094a65d3f12e",
+    "path": "examples/Example.py",
+    "git_blob": "f43f0908ccbe68d850948d22f6856e32bdd5455d",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "libopenshot",
+    "repository": "https://github.com/OpenShot/libopenshot",
+    "revision": "7570a626aba5d70cb814881a2a4b094a65d3f12e",
+    "path": "examples/ExampleHtml.cpp",
+    "git_blob": "e97b3352fc70fe02b1cfee968f3e03729dbd6555",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "libopenshot",
+    "repository": "https://github.com/OpenShot/libopenshot",
+    "revision": "7570a626aba5d70cb814881a2a4b094a65d3f12e",
+    "path": "examples/ExampleHtml.py",
+    "git_blob": "5938063a031f30268d153a089d547563b5cafb35",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "libopenshot",
+    "repository": "https://github.com/OpenShot/libopenshot",
+    "revision": "7570a626aba5d70cb814881a2a4b094a65d3f12e",
+    "path": "examples/Example_opencv.cpp",
+    "git_blob": "e621551afe95035e536000e60b2198ca7516db00",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "libopenshot",
+    "repository": "https://github.com/OpenShot/libopenshot",
+    "revision": "7570a626aba5d70cb814881a2a4b094a65d3f12e",
+    "path": "examples/OpenShot Wipe Tests.py",
+    "git_blob": "9ff418fe990124e5fa38eaabe1bad230f1b4da04",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "libopenshot",
+    "repository": "https://github.com/OpenShot/libopenshot",
+    "revision": "7570a626aba5d70cb814881a2a4b094a65d3f12e",
+    "path": "examples/TimelineBenchmark.cpp",
+    "git_blob": "b53324b37376531052719960b6c4b5693e5c07a4",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "libopenshot",
+    "repository": "https://github.com/OpenShot/libopenshot",
+    "revision": "7570a626aba5d70cb814881a2a4b094a65d3f12e",
+    "path": "examples/TimelineExportBenchmark.cpp",
+    "git_blob": "3739de5ba0429e6c8aa625a76d320793816ea5d5",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "libopenshot",
+    "repository": "https://github.com/OpenShot/libopenshot",
+    "revision": "7570a626aba5d70cb814881a2a4b094a65d3f12e",
+    "path": "examples/VulkanBenchmark.cpp",
+    "git_blob": "aba5b0266ef76203994c5318d4324278092a8523",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "libopenshot",
+    "repository": "https://github.com/OpenShot/libopenshot",
+    "revision": "7570a626aba5d70cb814881a2a4b094a65d3f12e",
+    "path": "examples/qt-demo/main.cpp",
+    "git_blob": "9dfaa050e303cbab9bb185c4df3eb73b3a40277c",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "libopenshot",
+    "repository": "https://github.com/OpenShot/libopenshot",
+    "revision": "7570a626aba5d70cb814881a2a4b094a65d3f12e",
+    "path": "examples/run-timeline-benchmarks.py",
+    "git_blob": "a3fffc862677c6e74931db7d68debc8f5addcb89",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "libopenshot",
+    "repository": "https://github.com/OpenShot/libopenshot",
+    "revision": "7570a626aba5d70cb814881a2a4b094a65d3f12e",
+    "path": "src/KeyFrame.cpp",
+    "git_blob": "6751efbabac35ae437e0db68e6157eb919a00eb1",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "libopenshot",
+    "repository": "https://github.com/OpenShot/libopenshot",
+    "revision": "7570a626aba5d70cb814881a2a4b094a65d3f12e",
+    "path": "src/KeyFrame.h",
+    "git_blob": "865404f5953f8de88b08f8bcf5129740f261767f",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "libopenshot",
+    "repository": "https://github.com/OpenShot/libopenshot",
+    "revision": "7570a626aba5d70cb814881a2a4b094a65d3f12e",
+    "path": "src/Qt/VideoRenderWidget.cpp",
+    "git_blob": "8ed7f35d56f0661cbc9a8a892e8af0728a45f78a",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "libopenshot",
+    "repository": "https://github.com/OpenShot/libopenshot",
+    "revision": "7570a626aba5d70cb814881a2a4b094a65d3f12e",
+    "path": "src/Qt/VideoRenderWidget.h",
+    "git_blob": "782ceafd20a455ee367445e078dee93a19cb2c41",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "libopenshot",
+    "repository": "https://github.com/OpenShot/libopenshot",
+    "revision": "7570a626aba5d70cb814881a2a4b094a65d3f12e",
+    "path": "src/Qt/VideoRenderer.cpp",
+    "git_blob": "c5173c002b353daddba779dc8e2099c09cf063a1",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "libopenshot",
+    "repository": "https://github.com/OpenShot/libopenshot",
+    "revision": "7570a626aba5d70cb814881a2a4b094a65d3f12e",
+    "path": "src/Qt/VideoRenderer.h",
+    "git_blob": "a1db7ee34dfaaae0f4276743a43a0cbfa1a40a19",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "libopenshot",
+    "repository": "https://github.com/OpenShot/libopenshot",
+    "revision": "7570a626aba5d70cb814881a2a4b094a65d3f12e",
+    "path": "src/RendererBase.cpp",
+    "git_blob": "2b7250f3804560c512273e0cbb6e03b09c2afe5b",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "libopenshot",
+    "repository": "https://github.com/OpenShot/libopenshot",
+    "revision": "7570a626aba5d70cb814881a2a4b094a65d3f12e",
+    "path": "src/RendererBase.h",
+    "git_blob": "b060e24b5cea86c7cb709f77ee345ea8cadd4f2f",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "libopenshot",
+    "repository": "https://github.com/OpenShot/libopenshot",
+    "revision": "7570a626aba5d70cb814881a2a4b094a65d3f12e",
+    "path": "src/Timeline.cpp",
+    "git_blob": "2ea496ebcefc947d1c8bd946260f0a9b21456e55",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "libopenshot",
+    "repository": "https://github.com/OpenShot/libopenshot",
+    "revision": "7570a626aba5d70cb814881a2a4b094a65d3f12e",
+    "path": "src/Timeline.h",
+    "git_blob": "7da1d2b2facde97a3c99f40e2a668bd98df9e5fc",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "libopenshot",
+    "repository": "https://github.com/OpenShot/libopenshot",
+    "revision": "7570a626aba5d70cb814881a2a4b094a65d3f12e",
+    "path": "src/TimelineBase.cpp",
+    "git_blob": "1c2732ce848dbab51c2e91590162b71a6e8d0be9",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "libopenshot",
+    "repository": "https://github.com/OpenShot/libopenshot",
+    "revision": "7570a626aba5d70cb814881a2a4b094a65d3f12e",
+    "path": "src/TimelineBase.h",
+    "git_blob": "46194c501369fbe9f432ca069a141699de833e97",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "libopenshot",
+    "repository": "https://github.com/OpenShot/libopenshot",
+    "revision": "7570a626aba5d70cb814881a2a4b094a65d3f12e",
+    "path": "tests/KeyFrame.cpp",
+    "git_blob": "08a1e7b5db7889167d50df92a83e33649c779db9",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "libopenshot",
+    "repository": "https://github.com/OpenShot/libopenshot",
+    "revision": "7570a626aba5d70cb814881a2a4b094a65d3f12e",
+    "path": "tests/RendererBase.cpp",
+    "git_blob": "b353335e0066ffc077f2d110161d3151854c3f5c",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "libopenshot",
+    "repository": "https://github.com/OpenShot/libopenshot",
+    "revision": "7570a626aba5d70cb814881a2a4b094a65d3f12e",
+    "path": "tests/Timeline.cpp",
+    "git_blob": "881cd3224c428208c6e37bcd961326e379e7ca8f",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "openmontage",
+    "repository": "https://github.com/OpenMontageInc/OpenMontage",
+    "revision": "fecb9a1e3cc23ef84de30b272059457a427f16f8",
+    "path": ".agents/skills/beautiful-mermaid/scripts/render.ts",
+    "git_blob": "959a17de86b569945448ef2b60e4af8587a8d027",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "openmontage",
+    "repository": "https://github.com/OpenMontageInc/OpenMontage",
+    "revision": "fecb9a1e3cc23ef84de30b272059457a427f16f8",
+    "path": ".agents/skills/bfl-api/references/code-examples/python-client.py",
+    "git_blob": "c0483b56c74979d96a0aa6d4dec121a010ba8a00",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "openmontage",
+    "repository": "https://github.com/OpenMontageInc/OpenMontage",
+    "revision": "fecb9a1e3cc23ef84de30b272059457a427f16f8",
+    "path": ".agents/skills/bfl-api/references/code-examples/typescript-client.ts",
+    "git_blob": "82483371fd1b418b3ae90d88d76cb8abca494acd",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "openmontage",
+    "repository": "https://github.com/OpenMontageInc/OpenMontage",
+    "revision": "fecb9a1e3cc23ef84de30b272059457a427f16f8",
+    "path": ".agents/skills/hyperframes-animation/examples/brand-reveal-assemble-zoom.html",
+    "git_blob": "31950a9e6cf36fbe50879a7601032693a91deb21",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "openmontage",
+    "repository": "https://github.com/OpenMontageInc/OpenMontage",
+    "revision": "fecb9a1e3cc23ef84de30b272059457a427f16f8",
+    "path": ".agents/skills/hyperframes-animation/examples/comparison-split-cards.html",
+    "git_blob": "d60e753aea56df33cc8664c1757898c96f92ae41",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "openmontage",
+    "repository": "https://github.com/OpenMontageInc/OpenMontage",
+    "revision": "fecb9a1e3cc23ef84de30b272059457a427f16f8",
+    "path": ".agents/skills/hyperframes-animation/examples/concept-demo-decode-pan.html",
+    "git_blob": "af4efcf614a120aeb8d135de1061797cfc8064ad",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "openmontage",
+    "repository": "https://github.com/OpenMontageInc/OpenMontage",
+    "revision": "fecb9a1e3cc23ef84de30b272059457a427f16f8",
+    "path": ".agents/skills/hyperframes-animation/examples/cta-morph-press.html",
+    "git_blob": "3896aa43a38c26c07a56256246d7ab5cc9655ca3",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "openmontage",
+    "repository": "https://github.com/OpenMontageInc/OpenMontage",
+    "revision": "fecb9a1e3cc23ef84de30b272059457a427f16f8",
+    "path": ".agents/skills/hyperframes-animation/examples/cta-orbit-collapse.html",
+    "git_blob": "ad5d77e935a07758022666e6a35003b3856015a8",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "openmontage",
+    "repository": "https://github.com/OpenMontageInc/OpenMontage",
+    "revision": "fecb9a1e3cc23ef84de30b272059457a427f16f8",
+    "path": ".agents/skills/hyperframes-animation/examples/demo-page-scroll-spotlight.html",
+    "git_blob": "4557db48dc5eba07e85627d337ade88db88c564a",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "openmontage",
+    "repository": "https://github.com/OpenMontageInc/OpenMontage",
+    "revision": "fecb9a1e3cc23ef84de30b272059457a427f16f8",
+    "path": ".agents/skills/hyperframes-animation/examples/hook-counter-burst.html",
+    "git_blob": "7d2ae6f62d3ef15a35ccf6428b30b47b6ee4347c",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "openmontage",
+    "repository": "https://github.com/OpenMontageInc/OpenMontage",
+    "revision": "fecb9a1e3cc23ef84de30b272059457a427f16f8",
+    "path": ".agents/skills/hyperframes-animation/examples/messaging-multi-phrase.html",
+    "git_blob": "b641d96e83131746ebbcd619079f3762318e03fd",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "openmontage",
+    "repository": "https://github.com/OpenMontageInc/OpenMontage",
+    "revision": "fecb9a1e3cc23ef84de30b272059457a427f16f8",
+    "path": ".agents/skills/hyperframes-animation/examples/metric-video-text-pivot.html",
+    "git_blob": "01fb553342f4078754d9ec130e2f7e06288a1da5",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "openmontage",
+    "repository": "https://github.com/OpenMontageInc/OpenMontage",
+    "revision": "fecb9a1e3cc23ef84de30b272059457a427f16f8",
+    "path": ".agents/skills/hyperframes-animation/examples/problem-mockup-overwhelm.html",
+    "git_blob": "a5f7800456103173abc6a537104c89ec30e316f7",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "openmontage",
+    "repository": "https://github.com/OpenMontageInc/OpenMontage",
+    "revision": "fecb9a1e3cc23ef84de30b272059457a427f16f8",
+    "path": ".agents/skills/hyperframes-animation/examples/proof-logo-chain.html",
+    "git_blob": "52df7b20b5055c8cd65422ae46ec859141d05a97",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "openmontage",
+    "repository": "https://github.com/OpenMontageInc/OpenMontage",
+    "revision": "fecb9a1e3cc23ef84de30b272059457a427f16f8",
+    "path": ".agents/skills/hyperframes-animation/examples/takeover-ticker-displace.html",
+    "git_blob": "6c1a23baa04d54ce305f0e6ea73e1e4d1e17b3aa",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "openmontage",
+    "repository": "https://github.com/OpenMontageInc/OpenMontage",
+    "revision": "fecb9a1e3cc23ef84de30b272059457a427f16f8",
+    "path": ".agents/skills/hyperframes-animation/examples/workflow-approve-press.html",
+    "git_blob": "a5de4d62ab7356bbb269bb8455b66074f43553b1",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "openmontage",
+    "repository": "https://github.com/OpenMontageInc/OpenMontage",
+    "revision": "fecb9a1e3cc23ef84de30b272059457a427f16f8",
+    "path": ".agents/skills/hyperframes-creative/templates/design-picker.html",
+    "git_blob": "6cb6f0878dc1b1e7296664b193c080a91babc335",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "openmontage",
+    "repository": "https://github.com/OpenMontageInc/OpenMontage",
+    "revision": "fecb9a1e3cc23ef84de30b272059457a427f16f8",
+    "path": ".agents/skills/manimce-best-practices/examples/3d_visualization.py",
+    "git_blob": "22a65bbbe79bf8b66c2d2b9e6db8157b5aedf4c7",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "openmontage",
+    "repository": "https://github.com/OpenMontageInc/OpenMontage",
+    "revision": "fecb9a1e3cc23ef84de30b272059457a427f16f8",
+    "path": ".agents/skills/manimce-best-practices/examples/attention/__init__.py",
+    "git_blob": "14a667fe2f4c4ee1939cab0c57aa5dfad9e85c2d",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "openmontage",
+    "repository": "https://github.com/OpenMontageInc/OpenMontage",
+    "revision": "fecb9a1e3cc23ef84de30b272059457a427f16f8",
+    "path": ".agents/skills/manimce-best-practices/examples/attention/helpers.py",
+    "git_blob": "fd2bb6cfe8617c52351450dc30b5ad23b25c34e1",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "openmontage",
+    "repository": "https://github.com/OpenMontageInc/OpenMontage",
+    "revision": "fecb9a1e3cc23ef84de30b272059457a427f16f8",
+    "path": ".agents/skills/manimce-best-practices/examples/attention/scenes.py",
+    "git_blob": "7950dddfcdc256b6c88d415cf840a353a861d768",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "openmontage",
+    "repository": "https://github.com/OpenMontageInc/OpenMontage",
+    "revision": "fecb9a1e3cc23ef84de30b272059457a427f16f8",
+    "path": ".agents/skills/manimce-best-practices/examples/basic_animations.py",
+    "git_blob": "e4e1dc7fdecd2248d136996a77961ac7b210b828",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "openmontage",
+    "repository": "https://github.com/OpenMontageInc/OpenMontage",
+    "revision": "fecb9a1e3cc23ef84de30b272059457a427f16f8",
+    "path": ".agents/skills/manimce-best-practices/examples/graph_plotting.py",
+    "git_blob": "5d583e3877790314a99b8fdafac20e04861b9979",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "openmontage",
+    "repository": "https://github.com/OpenMontageInc/OpenMontage",
+    "revision": "fecb9a1e3cc23ef84de30b272059457a427f16f8",
+    "path": ".agents/skills/manimce-best-practices/examples/lorenz_attractor.py",
+    "git_blob": "800ec4c890d9b29af3f2bde5076335f242df9413",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "openmontage",
+    "repository": "https://github.com/OpenMontageInc/OpenMontage",
+    "revision": "fecb9a1e3cc23ef84de30b272059457a427f16f8",
+    "path": ".agents/skills/manimce-best-practices/examples/math_visualization.py",
+    "git_blob": "65cf83d0100afe9bdc048367b03a09841954f429",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "openmontage",
+    "repository": "https://github.com/OpenMontageInc/OpenMontage",
+    "revision": "fecb9a1e3cc23ef84de30b272059457a427f16f8",
+    "path": ".agents/skills/manimce-best-practices/examples/updater_patterns.py",
+    "git_blob": "9b2cf35a960433fa76b27d92e9cd1204b5516407",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "openmontage",
+    "repository": "https://github.com/OpenMontageInc/OpenMontage",
+    "revision": "fecb9a1e3cc23ef84de30b272059457a427f16f8",
+    "path": ".agents/skills/manimce-best-practices/templates/basic_scene.py",
+    "git_blob": "6959df2223750432497499bfca1c73c91bb88884",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "openmontage",
+    "repository": "https://github.com/OpenMontageInc/OpenMontage",
+    "revision": "fecb9a1e3cc23ef84de30b272059457a427f16f8",
+    "path": ".agents/skills/manimce-best-practices/templates/camera_scene.py",
+    "git_blob": "3f8ad7f18550c673622618ffdf1fd27afe9aa1be",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "openmontage",
+    "repository": "https://github.com/OpenMontageInc/OpenMontage",
+    "revision": "fecb9a1e3cc23ef84de30b272059457a427f16f8",
+    "path": ".agents/skills/manimce-best-practices/templates/threed_scene.py",
+    "git_blob": "72181f4ccc4b5bc7001dd077f275fa74ce074f10",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "openmontage",
+    "repository": "https://github.com/OpenMontageInc/OpenMontage",
+    "revision": "fecb9a1e3cc23ef84de30b272059457a427f16f8",
+    "path": ".agents/skills/manimgl-best-practices/examples/attention_arcs_animation.py",
+    "git_blob": "5c09fc40f9d4994172030b368d1a8b27c2e9e9dd",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "openmontage",
+    "repository": "https://github.com/OpenMontageInc/OpenMontage",
+    "revision": "fecb9a1e3cc23ef84de30b272059457a427f16f8",
+    "path": ".agents/skills/manimgl-best-practices/examples/attention_pattern_dots.py",
+    "git_blob": "312ffc0adb39a1daf794aea316f742d1c105c63e",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "openmontage",
+    "repository": "https://github.com/OpenMontageInc/OpenMontage",
+    "revision": "fecb9a1e3cc23ef84de30b272059457a427f16f8",
+    "path": ".agents/skills/manimgl-best-practices/examples/attention_scenes.py",
+    "git_blob": "4a832a26eeedf5a55579bbb88024dd9d87fc05e8",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "openmontage",
+    "repository": "https://github.com/OpenMontageInc/OpenMontage",
+    "revision": "fecb9a1e3cc23ef84de30b272059457a427f16f8",
+    "path": ".agents/skills/manimgl-best-practices/examples/attention_softmax_masking.py",
+    "git_blob": "e39b6f500e9780a66ea3b49f31d4ce0718a96c8b",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "openmontage",
+    "repository": "https://github.com/OpenMontageInc/OpenMontage",
+    "revision": "fecb9a1e3cc23ef84de30b272059457a427f16f8",
+    "path": ".agents/skills/manimgl-best-practices/examples/autoregressive_flow.py",
+    "git_blob": "a2a302fa419432d87d816dcd1c5155e670d549dc",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "openmontage",
+    "repository": "https://github.com/OpenMontageInc/OpenMontage",
+    "revision": "fecb9a1e3cc23ef84de30b272059457a427f16f8",
+    "path": ".agents/skills/manimgl-best-practices/examples/basic_multihead.py",
+    "git_blob": "b99cbc6830baf48190802fb4371a572032028f72",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "openmontage",
+    "repository": "https://github.com/OpenMontageInc/OpenMontage",
+    "revision": "fecb9a1e3cc23ef84de30b272059457a427f16f8",
+    "path": ".agents/skills/manimgl-best-practices/examples/bloch_sphere_3d.py",
+    "git_blob": "a0e2637234c6557ccc53c1e915e858f4ba5d93e9",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "openmontage",
+    "repository": "https://github.com/OpenMontageInc/OpenMontage",
+    "revision": "fecb9a1e3cc23ef84de30b272059457a427f16f8",
+    "path": ".agents/skills/manimgl-best-practices/examples/block_collision_basic.py",
+    "git_blob": "7b76bb772bc155f74c432423841f183a0dba5bf2",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "openmontage",
+    "repository": "https://github.com/OpenMontageInc/OpenMontage",
+    "revision": "fecb9a1e3cc23ef84de30b272059457a427f16f8",
+    "path": ".agents/skills/manimgl-best-practices/examples/blocks_3d.py",
+    "git_blob": "8d01dad4769eb98962a3901f266f534ab7c434e1",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "openmontage",
+    "repository": "https://github.com/OpenMontageInc/OpenMontage",
+    "revision": "fecb9a1e3cc23ef84de30b272059457a427f16f8",
+    "path": ".agents/skills/manimgl-best-practices/examples/collision_phase_space.py",
+    "git_blob": "c9ce4b82ed52b4967381697e9201031cee4978f5",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "openmontage",
+    "repository": "https://github.com/OpenMontageInc/OpenMontage",
+    "revision": "fecb9a1e3cc23ef84de30b272059457a427f16f8",
+    "path": ".agents/skills/manimgl-best-practices/examples/complex_s_plane.py",
+    "git_blob": "8a3b8465c2fb963871b2e6fe22683232b165fc4a",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "openmontage",
+    "repository": "https://github.com/OpenMontageInc/OpenMontage",
+    "revision": "fecb9a1e3cc23ef84de30b272059457a427f16f8",
+    "path": ".agents/skills/manimgl-best-practices/examples/cost_function.py",
+    "git_blob": "1fbcb1d86425aa1d6212a4fb6400aee8a04c4d66",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "openmontage",
+    "repository": "https://github.com/OpenMontageInc/OpenMontage",
+    "revision": "fecb9a1e3cc23ef84de30b272059457a427f16f8",
+    "path": ".agents/skills/manimgl-best-practices/examples/cube_projection_3d.py",
+    "git_blob": "ceb1fde083e0377fc8787567c053e4917685d908",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "openmontage",
+    "repository": "https://github.com/OpenMontageInc/OpenMontage",
+    "revision": "fecb9a1e3cc23ef84de30b272059457a427f16f8",
+    "path": ".agents/skills/manimgl-best-practices/examples/damped_solutions_splane.py",
+    "git_blob": "63400dc41dcb1cd5ddcb9931c3505a35d7003a01",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "openmontage",
+    "repository": "https://github.com/OpenMontageInc/OpenMontage",
+    "revision": "fecb9a1e3cc23ef84de30b272059457a427f16f8",
+    "path": ".agents/skills/manimgl-best-practices/examples/dot_product_visualization.py",
+    "git_blob": "018e829b067e45054edba3437fb7075e0c3d1b6e",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "openmontage",
+    "repository": "https://github.com/OpenMontageInc/OpenMontage",
+    "revision": "fecb9a1e3cc23ef84de30b272059457a427f16f8",
+    "path": ".agents/skills/manimgl-best-practices/examples/double_slit_interference.py",
+    "git_blob": "203f811021845522926b5e868153abb4c3101c49",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "openmontage",
+    "repository": "https://github.com/OpenMontageInc/OpenMontage",
+    "revision": "fecb9a1e3cc23ef84de30b272059457a427f16f8",
+    "path": ".agents/skills/manimgl-best-practices/examples/eigenvalue_equations.py",
+    "git_blob": "e72ca73162b4d939359cb5a2e1662bc7465ed7cb",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "openmontage",
+    "repository": "https://github.com/OpenMontageInc/OpenMontage",
+    "revision": "fecb9a1e3cc23ef84de30b272059457a427f16f8",
+    "path": ".agents/skills/manimgl-best-practices/examples/eigenvector_flow_field.py",
+    "git_blob": "1efbf4d15383c1db579f686bc20f41873bea9a43",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "openmontage",
+    "repository": "https://github.com/OpenMontageInc/OpenMontage",
+    "revision": "fecb9a1e3cc23ef84de30b272059457a427f16f8",
+    "path": ".agents/skills/manimgl-best-practices/examples/eigenvector_matrix_transformation.py",
+    "git_blob": "997d6672e53e062671ddc59516e7f15915bb283b",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "openmontage",
+    "repository": "https://github.com/OpenMontageInc/OpenMontage",
+    "revision": "fecb9a1e3cc23ef84de30b272059457a427f16f8",
+    "path": ".agents/skills/manimgl-best-practices/examples/elastic_collision_vectors.py",
+    "git_blob": "0f0127521d40276c4e2b1072e48130d774349efb",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "openmontage",
+    "repository": "https://github.com/OpenMontageInc/OpenMontage",
+    "revision": "fecb9a1e3cc23ef84de30b272059457a427f16f8",
+    "path": ".agents/skills/manimgl-best-practices/examples/embedding_matrix.py",
+    "git_blob": "56fb104ad0fa1900f7ab3d6a1ce779cbd6040faf",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "openmontage",
+    "repository": "https://github.com/OpenMontageInc/OpenMontage",
+    "revision": "fecb9a1e3cc23ef84de30b272059457a427f16f8",
+    "path": ".agents/skills/manimgl-best-practices/examples/equation_transforms.py",
+    "git_blob": "567fb7fd709f4aca9c0d731b712a9eb3e3973609",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "openmontage",
+    "repository": "https://github.com/OpenMontageInc/OpenMontage",
+    "revision": "fecb9a1e3cc23ef84de30b272059457a427f16f8",
+    "path": ".agents/skills/manimgl-best-practices/examples/exponential_derivative.py",
+    "git_blob": "e7c76a579f75623a5d2a56b53debf7d28837ad28",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "openmontage",
+    "repository": "https://github.com/OpenMontageInc/OpenMontage",
+    "revision": "fecb9a1e3cc23ef84de30b272059457a427f16f8",
+    "path": ".agents/skills/manimgl-best-practices/examples/fibonacci_eigenvalues.py",
+    "git_blob": "5e64f0b61f5ecd65d505ff506464eec213333428",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "openmontage",
+    "repository": "https://github.com/OpenMontageInc/OpenMontage",
+    "revision": "fecb9a1e3cc23ef84de30b272059457a427f16f8",
+    "path": ".agents/skills/manimgl-best-practices/examples/gradient_descent_basic.py",
+    "git_blob": "4eeccb5f19d3d9eed9ea08fded9d85970294ffcf",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "openmontage",
+    "repository": "https://github.com/OpenMontageInc/OpenMontage",
+    "revision": "fecb9a1e3cc23ef84de30b272059457a427f16f8",
+    "path": ".agents/skills/manimgl-best-practices/examples/hexagon_cube_correspondence.py",
+    "git_blob": "6e5356f34c6b8f979cc3e76ae66a76536de3f955",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "openmontage",
+    "repository": "https://github.com/OpenMontageInc/OpenMontage",
+    "revision": "fecb9a1e3cc23ef84de30b272059457a427f16f8",
+    "path": ".agents/skills/manimgl-best-practices/examples/integration_visualization.py",
+    "git_blob": "a2df0b483534f1dc0184e27d640e070bad0ed0c1",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "openmontage",
+    "repository": "https://github.com/OpenMontageInc/OpenMontage",
+    "revision": "fecb9a1e3cc23ef84de30b272059457a427f16f8",
+    "path": ".agents/skills/manimgl-best-practices/examples/laplace_integral.py",
+    "git_blob": "84935c88652e500c8842a44f21dc710af71caa00",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "openmontage",
+    "repository": "https://github.com/OpenMontageInc/OpenMontage",
+    "revision": "fecb9a1e3cc23ef84de30b272059457a427f16f8",
+    "path": ".agents/skills/manimgl-best-practices/examples/light_polarization.py",
+    "git_blob": "311e9f9ab5fae6ba21816ea79f138cbc9d1d78ea",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "openmontage",
+    "repository": "https://github.com/OpenMontageInc/OpenMontage",
+    "revision": "fecb9a1e3cc23ef84de30b272059457a427f16f8",
+    "path": ".agents/skills/manimgl-best-practices/examples/linear_regression.py",
+    "git_blob": "826bc75abeafe4feceff058e6c88f5557c3e50de",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "openmontage",
+    "repository": "https://github.com/OpenMontageInc/OpenMontage",
+    "revision": "fecb9a1e3cc23ef84de30b272059457a427f16f8",
+    "path": ".agents/skills/manimgl-best-practices/examples/llm_prediction_pipeline.py",
+    "git_blob": "40cb867baf64f694f8b5762297bf53bd7e86268c",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "openmontage",
+    "repository": "https://github.com/OpenMontageInc/OpenMontage",
+    "revision": "fecb9a1e3cc23ef84de30b272059457a427f16f8",
+    "path": ".agents/skills/manimgl-best-practices/examples/lorenz_attractor.py",
+    "git_blob": "96a042749189f66913ab69b60c314bbe2b03d6fd",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "openmontage",
+    "repository": "https://github.com/OpenMontageInc/OpenMontage",
+    "revision": "fecb9a1e3cc23ef84de30b272059457a427f16f8",
+    "path": ".agents/skills/manimgl-best-practices/examples/lozenge_tiling.py",
+    "git_blob": "ccaefd190d05611a5cf8b63e6d93e5adcf9598b1",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "openmontage",
+    "repository": "https://github.com/OpenMontageInc/OpenMontage",
+    "revision": "fecb9a1e3cc23ef84de30b272059457a427f16f8",
+    "path": ".agents/skills/manimgl-best-practices/examples/max_random_process.py",
+    "git_blob": "2a3aae92c87300aa2a8f5f169716ddc10cc26e8d",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "openmontage",
+    "repository": "https://github.com/OpenMontageInc/OpenMontage",
+    "revision": "fecb9a1e3cc23ef84de30b272059457a427f16f8",
+    "path": ".agents/skills/manimgl-best-practices/examples/mlp_forward_pass.py",
+    "git_blob": "6ed20c4cf0285d077624bc41779cefd09654dd33",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "openmontage",
+    "repository": "https://github.com/OpenMontageInc/OpenMontage",
+    "revision": "fecb9a1e3cc23ef84de30b272059457a427f16f8",
+    "path": ".agents/skills/manimgl-best-practices/examples/mlp_network_icon.py",
+    "git_blob": "fdbb2ea081adedbbc6864728d672cd87e5ceb48a",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "openmontage",
+    "repository": "https://github.com/OpenMontageInc/OpenMontage",
+    "revision": "fecb9a1e3cc23ef84de30b272059457a427f16f8",
+    "path": ".agents/skills/manimgl-best-practices/examples/mlp_neuron_activation.py",
+    "git_blob": "78663fe45023d54da8e726948f2e93fe0aaa2975",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "openmontage",
+    "repository": "https://github.com/OpenMontageInc/OpenMontage",
+    "revision": "fecb9a1e3cc23ef84de30b272059457a427f16f8",
+    "path": ".agents/skills/manimgl-best-practices/examples/mlp_neurons_flow.py",
+    "git_blob": "c50c04cfbb72d31d8c514a88bb4dcc949b3630d4",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "openmontage",
+    "repository": "https://github.com/OpenMontageInc/OpenMontage",
+    "revision": "fecb9a1e3cc23ef84de30b272059457a427f16f8",
+    "path": ".agents/skills/manimgl-best-practices/examples/mlp_relu_visualization.py",
+    "git_blob": "aa833f91e58ae6010e2b29b3f79f61aa39983ef3",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "openmontage",
+    "repository": "https://github.com/OpenMontageInc/OpenMontage",
+    "revision": "fecb9a1e3cc23ef84de30b272059457a427f16f8",
+    "path": ".agents/skills/manimgl-best-practices/examples/mlp_vector_space.py",
+    "git_blob": "5a35fd3891faab923eacb512212138225e0c7ed8",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "openmontage",
+    "repository": "https://github.com/OpenMontageInc/OpenMontage",
+    "revision": "fecb9a1e3cc23ef84de30b272059457a427f16f8",
+    "path": ".agents/skills/manimgl-best-practices/examples/mlp_weight_matrix.py",
+    "git_blob": "ddcad7f41489d1814aa5448ab670097830087982",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "openmontage",
+    "repository": "https://github.com/OpenMontageInc/OpenMontage",
+    "revision": "fecb9a1e3cc23ef84de30b272059457a427f16f8",
+    "path": ".agents/skills/manimgl-best-practices/examples/multi_head_attention.py",
+    "git_blob": "4e564f906591a9590a43d70d75f9cb59a136d7d0",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "openmontage",
+    "repository": "https://github.com/OpenMontageInc/OpenMontage",
+    "revision": "fecb9a1e3cc23ef84de30b272059457a427f16f8",
+    "path": ".agents/skills/manimgl-best-practices/examples/network_block_flow.py",
+    "git_blob": "44a041f8205087cd4084b921a263ebca7062e15b",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "openmontage",
+    "repository": "https://github.com/OpenMontageInc/OpenMontage",
+    "revision": "fecb9a1e3cc23ef84de30b272059457a427f16f8",
+    "path": ".agents/skills/manimgl-best-practices/examples/neural_network_basic.py",
+    "git_blob": "28bf41fe7d62175143c93382290b7ae774c22426",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "openmontage",
+    "repository": "https://github.com/OpenMontageInc/OpenMontage",
+    "revision": "fecb9a1e3cc23ef84de30b272059457a427f16f8",
+    "path": ".agents/skills/manimgl-best-practices/examples/parallax_starfield.py",
+    "git_blob": "581dbce972a8568d603a5d48712ac447f150890f",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "openmontage",
+    "repository": "https://github.com/OpenMontageInc/OpenMontage",
+    "revision": "fecb9a1e3cc23ef84de30b272059457a427f16f8",
+    "path": ".agents/skills/manimgl-best-practices/examples/probability_distribution.py",
+    "git_blob": "5d37ad3948874acdbf18fc231f18e1906f4c01ac",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "openmontage",
+    "repository": "https://github.com/OpenMontageInc/OpenMontage",
+    "revision": "fecb9a1e3cc23ef84de30b272059457a427f16f8",
+    "path": ".agents/skills/manimgl-best-practices/examples/probability_output.py",
+    "git_blob": "4c3cb1534d837ac9e7762cb1f089752a81123cd9",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "openmontage",
+    "repository": "https://github.com/OpenMontageInc/OpenMontage",
+    "revision": "fecb9a1e3cc23ef84de30b272059457a427f16f8",
+    "path": ".agents/skills/manimgl-best-practices/examples/quantum_gates.py",
+    "git_blob": "64a5cd204b8283b9b469629f7f7c8392ad7abe05",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "openmontage",
+    "repository": "https://github.com/OpenMontageInc/OpenMontage",
+    "revision": "fecb9a1e3cc23ef84de30b272059457a427f16f8",
+    "path": ".agents/skills/manimgl-best-practices/examples/qubit_state_vector.py",
+    "git_blob": "fd48eb8d6a75847949deccb42c66e2e2a2566614",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "openmontage",
+    "repository": "https://github.com/OpenMontageInc/OpenMontage",
+    "revision": "fecb9a1e3cc23ef84de30b272059457a427f16f8",
+    "path": ".agents/skills/manimgl-best-practices/examples/query_key_dot_products.py",
+    "git_blob": "c60d2112a7e4a228ea5d837e355e33bfc3b1442b",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "openmontage",
+    "repository": "https://github.com/OpenMontageInc/OpenMontage",
+    "revision": "fecb9a1e3cc23ef84de30b272059457a427f16f8",
+    "path": ".agents/skills/manimgl-best-practices/examples/query_key_space_mapping.py",
+    "git_blob": "52dc777626954057859fe34cc5ed31b5af679749",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "openmontage",
+    "repository": "https://github.com/OpenMontageInc/OpenMontage",
+    "revision": "fecb9a1e3cc23ef84de30b272059457a427f16f8",
+    "path": ".agents/skills/manimgl-best-practices/examples/radial_wave_visualization.py",
+    "git_blob": "fc2153a959d39daff6d60300d123269afb99c109",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "openmontage",
+    "repository": "https://github.com/OpenMontageInc/OpenMontage",
+    "revision": "fecb9a1e3cc23ef84de30b272059457a427f16f8",
+    "path": ".agents/skills/manimgl-best-practices/examples/rotating_exponentials.py",
+    "git_blob": "b81b4f12b6db60129fd5cf30625079f2320505a0",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "openmontage",
+    "repository": "https://github.com/OpenMontageInc/OpenMontage",
+    "revision": "fecb9a1e3cc23ef84de30b272059457a427f16f8",
+    "path": ".agents/skills/manimgl-best-practices/examples/semantic_similarity.py",
+    "git_blob": "16e1c5b6049c32de3023e7f595e0a68c57cd6dc5",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "openmontage",
+    "repository": "https://github.com/OpenMontageInc/OpenMontage",
+    "revision": "fecb9a1e3cc23ef84de30b272059457a427f16f8",
+    "path": ".agents/skills/manimgl-best-practices/examples/simple_test.py",
+    "git_blob": "ecd796dab2cf24d4a22f9a9297a0314bf1473381",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "openmontage",
+    "repository": "https://github.com/OpenMontageInc/OpenMontage",
+    "revision": "fecb9a1e3cc23ef84de30b272059457a427f16f8",
+    "path": ".agents/skills/manimgl-best-practices/examples/softmax_visualization.py",
+    "git_blob": "28790f9a5463257164ce89d3f493192d78819d95",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "openmontage",
+    "repository": "https://github.com/OpenMontageInc/OpenMontage",
+    "revision": "fecb9a1e3cc23ef84de30b272059457a427f16f8",
+    "path": ".agents/skills/manimgl-best-practices/examples/solve_damped_ode.py",
+    "git_blob": "f6dfa3292893457a31bae68e4a5ae367421bc34f",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "openmontage",
+    "repository": "https://github.com/OpenMontageInc/OpenMontage",
+    "revision": "fecb9a1e3cc23ef84de30b272059457a427f16f8",
+    "path": ".agents/skills/manimgl-best-practices/examples/spring_mass_system.py",
+    "git_blob": "c06bdf9fd799e16846da38a981d5f4f796e6da76",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "openmontage",
+    "repository": "https://github.com/OpenMontageInc/OpenMontage",
+    "revision": "fecb9a1e3cc23ef84de30b272059457a427f16f8",
+    "path": ".agents/skills/manimgl-best-practices/examples/sqrt_random_process.py",
+    "git_blob": "2225d0e2d171edfd568582955d85f8a221997d9a",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "openmontage",
+    "repository": "https://github.com/OpenMontageInc/OpenMontage",
+    "revision": "fecb9a1e3cc23ef84de30b272059457a427f16f8",
+    "path": ".agents/skills/manimgl-best-practices/examples/superposition_effect.py",
+    "git_blob": "0477bff24efe82e6d884fecf9b59be4cfdc1c6ad",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "openmontage",
+    "repository": "https://github.com/OpenMontageInc/OpenMontage",
+    "revision": "fecb9a1e3cc23ef84de30b272059457a427f16f8",
+    "path": ".agents/skills/manimgl-best-practices/examples/three_d_surfaces.py",
+    "git_blob": "80211373232542a10fb94b25e2678ccd288e8546",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "openmontage",
+    "repository": "https://github.com/OpenMontageInc/OpenMontage",
+    "revision": "fecb9a1e3cc23ef84de30b272059457a427f16f8",
+    "path": ".agents/skills/manimgl-best-practices/examples/three_d_vector_space.py",
+    "git_blob": "834648d64611d34529c8cc689c442b0c52e851dc",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "openmontage",
+    "repository": "https://github.com/OpenMontageInc/OpenMontage",
+    "revision": "fecb9a1e3cc23ef84de30b272059457a427f16f8",
+    "path": ".agents/skills/manimgl-best-practices/examples/token_embeddings_flow.py",
+    "git_blob": "fa4fa1e988db4b09cc2fce7ca6b7082e8f633cd7",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "openmontage",
+    "repository": "https://github.com/OpenMontageInc/OpenMontage",
+    "revision": "fecb9a1e3cc23ef84de30b272059457a427f16f8",
+    "path": ".agents/skills/manimgl-best-practices/examples/token_probability_distribution.py",
+    "git_blob": "2f187b9bbbae59e69fca5cf85ce86e31bf8bb849",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "openmontage",
+    "repository": "https://github.com/OpenMontageInc/OpenMontage",
+    "revision": "fecb9a1e3cc23ef84de30b272059457a427f16f8",
+    "path": ".agents/skills/manimgl-best-practices/examples/token_sampling.py",
+    "git_blob": "4182a147cf8a216f4de666684a69408b81c72505",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "openmontage",
+    "repository": "https://github.com/OpenMontageInc/OpenMontage",
+    "revision": "fecb9a1e3cc23ef84de30b272059457a427f16f8",
+    "path": ".agents/skills/manimgl-best-practices/examples/token_to_embedding.py",
+    "git_blob": "848700b2df742a56895c74f586f0a00721e9cc7b",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "openmontage",
+    "repository": "https://github.com/OpenMontageInc/OpenMontage",
+    "revision": "fecb9a1e3cc23ef84de30b272059457a427f16f8",
+    "path": ".agents/skills/manimgl-best-practices/examples/tokenization_demo.py",
+    "git_blob": "27aaa66ad8148e851518ab35f53004c23f6cfe1b",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "openmontage",
+    "repository": "https://github.com/OpenMontageInc/OpenMontage",
+    "revision": "fecb9a1e3cc23ef84de30b272059457a427f16f8",
+    "path": ".agents/skills/manimgl-best-practices/examples/transit_animation.py",
+    "git_blob": "2a92ecbbe255d6e84a6df5c0e52e7707e98b32e1",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "openmontage",
+    "repository": "https://github.com/OpenMontageInc/OpenMontage",
+    "revision": "fecb9a1e3cc23ef84de30b272059457a427f16f8",
+    "path": ".agents/skills/manimgl-best-practices/examples/value_matrix_transform.py",
+    "git_blob": "39aa55c0e06087401dbc0a1389947afe3001cea2",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "openmontage",
+    "repository": "https://github.com/OpenMontageInc/OpenMontage",
+    "revision": "fecb9a1e3cc23ef84de30b272059457a427f16f8",
+    "path": ".agents/skills/manimgl-best-practices/examples/vector_fields.py",
+    "git_blob": "64a0360e4ccb7c2a78337004792bc831be2c023d",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "openmontage",
+    "repository": "https://github.com/OpenMontageInc/OpenMontage",
+    "revision": "fecb9a1e3cc23ef84de30b272059457a427f16f8",
+    "path": ".agents/skills/manimgl-best-practices/examples/wave_amplitude_visualization.py",
+    "git_blob": "a8acd99114ff0b8f8dcc673a5e0dc28ed62dc363",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "openmontage",
+    "repository": "https://github.com/OpenMontageInc/OpenMontage",
+    "revision": "fecb9a1e3cc23ef84de30b272059457a427f16f8",
+    "path": ".agents/skills/manimgl-best-practices/examples/weight_matrix_product.py",
+    "git_blob": "94f0723633c9d1d90293de545102c8e7f0292520",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "openmontage",
+    "repository": "https://github.com/OpenMontageInc/OpenMontage",
+    "revision": "fecb9a1e3cc23ef84de30b272059457a427f16f8",
+    "path": ".agents/skills/manimgl-best-practices/examples/weights_vs_data.py",
+    "git_blob": "4ba0f617d37d55f6b0e3c6eeb94693a8c393f6a5",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "openmontage",
+    "repository": "https://github.com/OpenMontageInc/OpenMontage",
+    "revision": "fecb9a1e3cc23ef84de30b272059457a427f16f8",
+    "path": ".agents/skills/manimgl-best-practices/examples/word_vector_analogy.py",
+    "git_blob": "e977d7fd905cb43ecb3591ad24b111a9b401b23f",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "openmontage",
+    "repository": "https://github.com/OpenMontageInc/OpenMontage",
+    "revision": "fecb9a1e3cc23ef84de30b272059457a427f16f8",
+    "path": ".agents/skills/manimgl-best-practices/examples/zone_plate_hologram.py",
+    "git_blob": "88af6ac9a1599741fc50c89761abfd4b74299eee",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "openmontage",
+    "repository": "https://github.com/OpenMontageInc/OpenMontage",
+    "revision": "fecb9a1e3cc23ef84de30b272059457a427f16f8",
+    "path": ".agents/skills/manimgl-best-practices/templates/3d_scene.py",
+    "git_blob": "a9c13dca130a4fd0994512f3c49c7bfc7757dd1b",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "openmontage",
+    "repository": "https://github.com/OpenMontageInc/OpenMontage",
+    "revision": "fecb9a1e3cc23ef84de30b272059457a427f16f8",
+    "path": ".agents/skills/manimgl-best-practices/templates/basic_scene.py",
+    "git_blob": "1df13734c48c2da232503010c63b070ae4068676",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "openmontage",
+    "repository": "https://github.com/OpenMontageInc/OpenMontage",
+    "revision": "fecb9a1e3cc23ef84de30b272059457a427f16f8",
+    "path": ".agents/skills/manimgl-best-practices/templates/interactive_scene.py",
+    "git_blob": "b9352f7b7dfe871cb01da79886138912ea860d42",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "openmontage",
+    "repository": "https://github.com/OpenMontageInc/OpenMontage",
+    "revision": "fecb9a1e3cc23ef84de30b272059457a427f16f8",
+    "path": ".agents/skills/manimgl-best-practices/templates/math_scene.py",
+    "git_blob": "bdab3585346b91024280bde810ee8541ce2be198",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "openmontage",
+    "repository": "https://github.com/OpenMontageInc/OpenMontage",
+    "revision": "fecb9a1e3cc23ef84de30b272059457a427f16f8",
+    "path": ".agents/skills/music-to-video/references/templates/card-flyby/index.html",
+    "git_blob": "b329e0876c6b799e8491078cc0b6035de656f0b1",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "openmontage",
+    "repository": "https://github.com/OpenMontageInc/OpenMontage",
+    "revision": "fecb9a1e3cc23ef84de30b272059457a427f16f8",
+    "path": ".agents/skills/music-to-video/references/templates/card-flyby/program.json",
+    "git_blob": "be751265a73debb891010525ecf2d3a916c9cda0",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "openmontage",
+    "repository": "https://github.com/OpenMontageInc/OpenMontage",
+    "revision": "fecb9a1e3cc23ef84de30b272059457a427f16f8",
+    "path": ".agents/skills/music-to-video/references/templates/held-message-living-field/index.html",
+    "git_blob": "dfff11c89d8728111fc993aebb2db9148c084b4f",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "openmontage",
+    "repository": "https://github.com/OpenMontageInc/OpenMontage",
+    "revision": "fecb9a1e3cc23ef84de30b272059457a427f16f8",
+    "path": ".agents/skills/music-to-video/references/templates/held-text-strobe-burst/index.html",
+    "git_blob": "c6b7ba6f9009e580c5c9d103e3cda09843768e30",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "openmontage",
+    "repository": "https://github.com/OpenMontageInc/OpenMontage",
+    "revision": "fecb9a1e3cc23ef84de30b272059457a427f16f8",
+    "path": ".agents/skills/music-to-video/references/templates/intro-kinetic-cascade/index.html",
+    "git_blob": "2dcf26456ccb1f40a1f84e93bc9a11fe5c06d546",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "openmontage",
+    "repository": "https://github.com/OpenMontageInc/OpenMontage",
+    "revision": "fecb9a1e3cc23ef84de30b272059457a427f16f8",
+    "path": ".agents/skills/music-to-video/references/templates/intro-kinetic-cascade/program.json",
+    "git_blob": "0c83b9553cd423020b8904cbcf21182b37be4d10",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "openmontage",
+    "repository": "https://github.com/OpenMontageInc/OpenMontage",
+    "revision": "fecb9a1e3cc23ef84de30b272059457a427f16f8",
+    "path": ".agents/skills/music-to-video/references/templates/logo-split-lockup-pulse/index.html",
+    "git_blob": "b4e71245c8a9d0514408d47edc38ea4a539a27be",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "openmontage",
+    "repository": "https://github.com/OpenMontageInc/OpenMontage",
+    "revision": "fecb9a1e3cc23ef84de30b272059457a427f16f8",
+    "path": ".agents/skills/music-to-video/references/templates/poster-tile-mosaic/index.html",
+    "git_blob": "10b19d4cae83dd367a5ccb67a26028bddf5173ae",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "openmontage",
+    "repository": "https://github.com/OpenMontageInc/OpenMontage",
+    "revision": "fecb9a1e3cc23ef84de30b272059457a427f16f8",
+    "path": ".agents/skills/music-to-video/references/templates/poster-tile-mosaic/program.json",
+    "git_blob": "6ae1f375bf69d3a0649b21746980fec80adcf7a3",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "openmontage",
+    "repository": "https://github.com/OpenMontageInc/OpenMontage",
+    "revision": "fecb9a1e3cc23ef84de30b272059457a427f16f8",
+    "path": ".agents/skills/music-to-video/references/templates/roll-flipbook-word-cycle/index.html",
+    "git_blob": "1881b28401f2f084194eae8354703e12044a9ba4",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "openmontage",
+    "repository": "https://github.com/OpenMontageInc/OpenMontage",
+    "revision": "fecb9a1e3cc23ef84de30b272059457a427f16f8",
+    "path": ".agents/skills/music-to-video/references/templates/split-anchor-word-slot/index.html",
+    "git_blob": "0ae7735007cad15f95e0de4962aa68eeaa4c4ddb",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "openmontage",
+    "repository": "https://github.com/OpenMontageInc/OpenMontage",
+    "revision": "fecb9a1e3cc23ef84de30b272059457a427f16f8",
+    "path": ".agents/skills/music-to-video/references/templates/split-anchor-word-slot/program.json",
+    "git_blob": "eb35719535afa309ff25d340a83bbd5c3df22e4a",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "openmontage",
+    "repository": "https://github.com/OpenMontageInc/OpenMontage",
+    "revision": "fecb9a1e3cc23ef84de30b272059457a427f16f8",
+    "path": ".agents/skills/music-to-video/references/templates/typewriter-phrase-keyword-shuffle/index.html",
+    "git_blob": "c845885266884ec3267b902807960eeba22e27f5",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "openmontage",
+    "repository": "https://github.com/OpenMontageInc/OpenMontage",
+    "revision": "fecb9a1e3cc23ef84de30b272059457a427f16f8",
+    "path": ".claude/skills/beautiful-mermaid/scripts/render.ts",
+    "git_blob": "959a17de86b569945448ef2b60e4af8587a8d027",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "openmontage",
+    "repository": "https://github.com/OpenMontageInc/OpenMontage",
+    "revision": "fecb9a1e3cc23ef84de30b272059457a427f16f8",
+    "path": ".claude/skills/bfl-api/references/code-examples/python-client.py",
+    "git_blob": "c0483b56c74979d96a0aa6d4dec121a010ba8a00",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "openmontage",
+    "repository": "https://github.com/OpenMontageInc/OpenMontage",
+    "revision": "fecb9a1e3cc23ef84de30b272059457a427f16f8",
+    "path": ".claude/skills/bfl-api/references/code-examples/typescript-client.ts",
+    "git_blob": "82483371fd1b418b3ae90d88d76cb8abca494acd",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "openmontage",
+    "repository": "https://github.com/OpenMontageInc/OpenMontage",
+    "revision": "fecb9a1e3cc23ef84de30b272059457a427f16f8",
+    "path": ".claude/skills/manimce-best-practices/examples/3d_visualization.py",
+    "git_blob": "22a65bbbe79bf8b66c2d2b9e6db8157b5aedf4c7",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "openmontage",
+    "repository": "https://github.com/OpenMontageInc/OpenMontage",
+    "revision": "fecb9a1e3cc23ef84de30b272059457a427f16f8",
+    "path": ".claude/skills/manimce-best-practices/examples/attention/__init__.py",
+    "git_blob": "14a667fe2f4c4ee1939cab0c57aa5dfad9e85c2d",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "openmontage",
+    "repository": "https://github.com/OpenMontageInc/OpenMontage",
+    "revision": "fecb9a1e3cc23ef84de30b272059457a427f16f8",
+    "path": ".claude/skills/manimce-best-practices/examples/attention/helpers.py",
+    "git_blob": "fd2bb6cfe8617c52351450dc30b5ad23b25c34e1",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "openmontage",
+    "repository": "https://github.com/OpenMontageInc/OpenMontage",
+    "revision": "fecb9a1e3cc23ef84de30b272059457a427f16f8",
+    "path": ".claude/skills/manimce-best-practices/examples/attention/scenes.py",
+    "git_blob": "7950dddfcdc256b6c88d415cf840a353a861d768",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "openmontage",
+    "repository": "https://github.com/OpenMontageInc/OpenMontage",
+    "revision": "fecb9a1e3cc23ef84de30b272059457a427f16f8",
+    "path": ".claude/skills/manimce-best-practices/examples/basic_animations.py",
+    "git_blob": "e4e1dc7fdecd2248d136996a77961ac7b210b828",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "openmontage",
+    "repository": "https://github.com/OpenMontageInc/OpenMontage",
+    "revision": "fecb9a1e3cc23ef84de30b272059457a427f16f8",
+    "path": ".claude/skills/manimce-best-practices/examples/graph_plotting.py",
+    "git_blob": "5d583e3877790314a99b8fdafac20e04861b9979",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "openmontage",
+    "repository": "https://github.com/OpenMontageInc/OpenMontage",
+    "revision": "fecb9a1e3cc23ef84de30b272059457a427f16f8",
+    "path": ".claude/skills/manimce-best-practices/examples/lorenz_attractor.py",
+    "git_blob": "800ec4c890d9b29af3f2bde5076335f242df9413",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "openmontage",
+    "repository": "https://github.com/OpenMontageInc/OpenMontage",
+    "revision": "fecb9a1e3cc23ef84de30b272059457a427f16f8",
+    "path": ".claude/skills/manimce-best-practices/examples/math_visualization.py",
+    "git_blob": "65cf83d0100afe9bdc048367b03a09841954f429",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "openmontage",
+    "repository": "https://github.com/OpenMontageInc/OpenMontage",
+    "revision": "fecb9a1e3cc23ef84de30b272059457a427f16f8",
+    "path": ".claude/skills/manimce-best-practices/examples/updater_patterns.py",
+    "git_blob": "9b2cf35a960433fa76b27d92e9cd1204b5516407",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "openmontage",
+    "repository": "https://github.com/OpenMontageInc/OpenMontage",
+    "revision": "fecb9a1e3cc23ef84de30b272059457a427f16f8",
+    "path": ".claude/skills/manimce-best-practices/templates/basic_scene.py",
+    "git_blob": "6959df2223750432497499bfca1c73c91bb88884",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "openmontage",
+    "repository": "https://github.com/OpenMontageInc/OpenMontage",
+    "revision": "fecb9a1e3cc23ef84de30b272059457a427f16f8",
+    "path": ".claude/skills/manimce-best-practices/templates/camera_scene.py",
+    "git_blob": "3f8ad7f18550c673622618ffdf1fd27afe9aa1be",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "openmontage",
+    "repository": "https://github.com/OpenMontageInc/OpenMontage",
+    "revision": "fecb9a1e3cc23ef84de30b272059457a427f16f8",
+    "path": ".claude/skills/manimce-best-practices/templates/threed_scene.py",
+    "git_blob": "72181f4ccc4b5bc7001dd077f275fa74ce074f10",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "openmontage",
+    "repository": "https://github.com/OpenMontageInc/OpenMontage",
+    "revision": "fecb9a1e3cc23ef84de30b272059457a427f16f8",
+    "path": ".claude/skills/manimgl-best-practices/examples/attention_arcs_animation.py",
+    "git_blob": "5c09fc40f9d4994172030b368d1a8b27c2e9e9dd",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "openmontage",
+    "repository": "https://github.com/OpenMontageInc/OpenMontage",
+    "revision": "fecb9a1e3cc23ef84de30b272059457a427f16f8",
+    "path": ".claude/skills/manimgl-best-practices/examples/attention_pattern_dots.py",
+    "git_blob": "312ffc0adb39a1daf794aea316f742d1c105c63e",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "openmontage",
+    "repository": "https://github.com/OpenMontageInc/OpenMontage",
+    "revision": "fecb9a1e3cc23ef84de30b272059457a427f16f8",
+    "path": ".claude/skills/manimgl-best-practices/examples/attention_scenes.py",
+    "git_blob": "4a832a26eeedf5a55579bbb88024dd9d87fc05e8",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "openmontage",
+    "repository": "https://github.com/OpenMontageInc/OpenMontage",
+    "revision": "fecb9a1e3cc23ef84de30b272059457a427f16f8",
+    "path": ".claude/skills/manimgl-best-practices/examples/attention_softmax_masking.py",
+    "git_blob": "e39b6f500e9780a66ea3b49f31d4ce0718a96c8b",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "openmontage",
+    "repository": "https://github.com/OpenMontageInc/OpenMontage",
+    "revision": "fecb9a1e3cc23ef84de30b272059457a427f16f8",
+    "path": ".claude/skills/manimgl-best-practices/examples/autoregressive_flow.py",
+    "git_blob": "a2a302fa419432d87d816dcd1c5155e670d549dc",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "openmontage",
+    "repository": "https://github.com/OpenMontageInc/OpenMontage",
+    "revision": "fecb9a1e3cc23ef84de30b272059457a427f16f8",
+    "path": ".claude/skills/manimgl-best-practices/examples/basic_multihead.py",
+    "git_blob": "b99cbc6830baf48190802fb4371a572032028f72",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "openmontage",
+    "repository": "https://github.com/OpenMontageInc/OpenMontage",
+    "revision": "fecb9a1e3cc23ef84de30b272059457a427f16f8",
+    "path": ".claude/skills/manimgl-best-practices/examples/bloch_sphere_3d.py",
+    "git_blob": "a0e2637234c6557ccc53c1e915e858f4ba5d93e9",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "openmontage",
+    "repository": "https://github.com/OpenMontageInc/OpenMontage",
+    "revision": "fecb9a1e3cc23ef84de30b272059457a427f16f8",
+    "path": ".claude/skills/manimgl-best-practices/examples/block_collision_basic.py",
+    "git_blob": "7b76bb772bc155f74c432423841f183a0dba5bf2",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "openmontage",
+    "repository": "https://github.com/OpenMontageInc/OpenMontage",
+    "revision": "fecb9a1e3cc23ef84de30b272059457a427f16f8",
+    "path": ".claude/skills/manimgl-best-practices/examples/blocks_3d.py",
+    "git_blob": "8d01dad4769eb98962a3901f266f534ab7c434e1",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "openmontage",
+    "repository": "https://github.com/OpenMontageInc/OpenMontage",
+    "revision": "fecb9a1e3cc23ef84de30b272059457a427f16f8",
+    "path": ".claude/skills/manimgl-best-practices/examples/collision_phase_space.py",
+    "git_blob": "c9ce4b82ed52b4967381697e9201031cee4978f5",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "openmontage",
+    "repository": "https://github.com/OpenMontageInc/OpenMontage",
+    "revision": "fecb9a1e3cc23ef84de30b272059457a427f16f8",
+    "path": ".claude/skills/manimgl-best-practices/examples/complex_s_plane.py",
+    "git_blob": "8a3b8465c2fb963871b2e6fe22683232b165fc4a",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "openmontage",
+    "repository": "https://github.com/OpenMontageInc/OpenMontage",
+    "revision": "fecb9a1e3cc23ef84de30b272059457a427f16f8",
+    "path": ".claude/skills/manimgl-best-practices/examples/cost_function.py",
+    "git_blob": "1fbcb1d86425aa1d6212a4fb6400aee8a04c4d66",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "openmontage",
+    "repository": "https://github.com/OpenMontageInc/OpenMontage",
+    "revision": "fecb9a1e3cc23ef84de30b272059457a427f16f8",
+    "path": ".claude/skills/manimgl-best-practices/examples/cube_projection_3d.py",
+    "git_blob": "ceb1fde083e0377fc8787567c053e4917685d908",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "openmontage",
+    "repository": "https://github.com/OpenMontageInc/OpenMontage",
+    "revision": "fecb9a1e3cc23ef84de30b272059457a427f16f8",
+    "path": ".claude/skills/manimgl-best-practices/examples/damped_solutions_splane.py",
+    "git_blob": "63400dc41dcb1cd5ddcb9931c3505a35d7003a01",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "openmontage",
+    "repository": "https://github.com/OpenMontageInc/OpenMontage",
+    "revision": "fecb9a1e3cc23ef84de30b272059457a427f16f8",
+    "path": ".claude/skills/manimgl-best-practices/examples/dot_product_visualization.py",
+    "git_blob": "018e829b067e45054edba3437fb7075e0c3d1b6e",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "openmontage",
+    "repository": "https://github.com/OpenMontageInc/OpenMontage",
+    "revision": "fecb9a1e3cc23ef84de30b272059457a427f16f8",
+    "path": ".claude/skills/manimgl-best-practices/examples/double_slit_interference.py",
+    "git_blob": "203f811021845522926b5e868153abb4c3101c49",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "openmontage",
+    "repository": "https://github.com/OpenMontageInc/OpenMontage",
+    "revision": "fecb9a1e3cc23ef84de30b272059457a427f16f8",
+    "path": ".claude/skills/manimgl-best-practices/examples/eigenvalue_equations.py",
+    "git_blob": "e72ca73162b4d939359cb5a2e1662bc7465ed7cb",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "openmontage",
+    "repository": "https://github.com/OpenMontageInc/OpenMontage",
+    "revision": "fecb9a1e3cc23ef84de30b272059457a427f16f8",
+    "path": ".claude/skills/manimgl-best-practices/examples/eigenvector_flow_field.py",
+    "git_blob": "1efbf4d15383c1db579f686bc20f41873bea9a43",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "openmontage",
+    "repository": "https://github.com/OpenMontageInc/OpenMontage",
+    "revision": "fecb9a1e3cc23ef84de30b272059457a427f16f8",
+    "path": ".claude/skills/manimgl-best-practices/examples/eigenvector_matrix_transformation.py",
+    "git_blob": "997d6672e53e062671ddc59516e7f15915bb283b",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "openmontage",
+    "repository": "https://github.com/OpenMontageInc/OpenMontage",
+    "revision": "fecb9a1e3cc23ef84de30b272059457a427f16f8",
+    "path": ".claude/skills/manimgl-best-practices/examples/elastic_collision_vectors.py",
+    "git_blob": "0f0127521d40276c4e2b1072e48130d774349efb",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "openmontage",
+    "repository": "https://github.com/OpenMontageInc/OpenMontage",
+    "revision": "fecb9a1e3cc23ef84de30b272059457a427f16f8",
+    "path": ".claude/skills/manimgl-best-practices/examples/embedding_matrix.py",
+    "git_blob": "56fb104ad0fa1900f7ab3d6a1ce779cbd6040faf",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "openmontage",
+    "repository": "https://github.com/OpenMontageInc/OpenMontage",
+    "revision": "fecb9a1e3cc23ef84de30b272059457a427f16f8",
+    "path": ".claude/skills/manimgl-best-practices/examples/equation_transforms.py",
+    "git_blob": "567fb7fd709f4aca9c0d731b712a9eb3e3973609",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "openmontage",
+    "repository": "https://github.com/OpenMontageInc/OpenMontage",
+    "revision": "fecb9a1e3cc23ef84de30b272059457a427f16f8",
+    "path": ".claude/skills/manimgl-best-practices/examples/exponential_derivative.py",
+    "git_blob": "e7c76a579f75623a5d2a56b53debf7d28837ad28",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "openmontage",
+    "repository": "https://github.com/OpenMontageInc/OpenMontage",
+    "revision": "fecb9a1e3cc23ef84de30b272059457a427f16f8",
+    "path": ".claude/skills/manimgl-best-practices/examples/fibonacci_eigenvalues.py",
+    "git_blob": "5e64f0b61f5ecd65d505ff506464eec213333428",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "openmontage",
+    "repository": "https://github.com/OpenMontageInc/OpenMontage",
+    "revision": "fecb9a1e3cc23ef84de30b272059457a427f16f8",
+    "path": ".claude/skills/manimgl-best-practices/examples/gradient_descent_basic.py",
+    "git_blob": "4eeccb5f19d3d9eed9ea08fded9d85970294ffcf",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "openmontage",
+    "repository": "https://github.com/OpenMontageInc/OpenMontage",
+    "revision": "fecb9a1e3cc23ef84de30b272059457a427f16f8",
+    "path": ".claude/skills/manimgl-best-practices/examples/hexagon_cube_correspondence.py",
+    "git_blob": "6e5356f34c6b8f979cc3e76ae66a76536de3f955",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "openmontage",
+    "repository": "https://github.com/OpenMontageInc/OpenMontage",
+    "revision": "fecb9a1e3cc23ef84de30b272059457a427f16f8",
+    "path": ".claude/skills/manimgl-best-practices/examples/integration_visualization.py",
+    "git_blob": "a2df0b483534f1dc0184e27d640e070bad0ed0c1",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "openmontage",
+    "repository": "https://github.com/OpenMontageInc/OpenMontage",
+    "revision": "fecb9a1e3cc23ef84de30b272059457a427f16f8",
+    "path": ".claude/skills/manimgl-best-practices/examples/laplace_integral.py",
+    "git_blob": "84935c88652e500c8842a44f21dc710af71caa00",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "openmontage",
+    "repository": "https://github.com/OpenMontageInc/OpenMontage",
+    "revision": "fecb9a1e3cc23ef84de30b272059457a427f16f8",
+    "path": ".claude/skills/manimgl-best-practices/examples/light_polarization.py",
+    "git_blob": "311e9f9ab5fae6ba21816ea79f138cbc9d1d78ea",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "openmontage",
+    "repository": "https://github.com/OpenMontageInc/OpenMontage",
+    "revision": "fecb9a1e3cc23ef84de30b272059457a427f16f8",
+    "path": ".claude/skills/manimgl-best-practices/examples/linear_regression.py",
+    "git_blob": "826bc75abeafe4feceff058e6c88f5557c3e50de",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "openmontage",
+    "repository": "https://github.com/OpenMontageInc/OpenMontage",
+    "revision": "fecb9a1e3cc23ef84de30b272059457a427f16f8",
+    "path": ".claude/skills/manimgl-best-practices/examples/llm_prediction_pipeline.py",
+    "git_blob": "40cb867baf64f694f8b5762297bf53bd7e86268c",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "openmontage",
+    "repository": "https://github.com/OpenMontageInc/OpenMontage",
+    "revision": "fecb9a1e3cc23ef84de30b272059457a427f16f8",
+    "path": ".claude/skills/manimgl-best-practices/examples/lorenz_attractor.py",
+    "git_blob": "96a042749189f66913ab69b60c314bbe2b03d6fd",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "openmontage",
+    "repository": "https://github.com/OpenMontageInc/OpenMontage",
+    "revision": "fecb9a1e3cc23ef84de30b272059457a427f16f8",
+    "path": ".claude/skills/manimgl-best-practices/examples/lozenge_tiling.py",
+    "git_blob": "ccaefd190d05611a5cf8b63e6d93e5adcf9598b1",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "openmontage",
+    "repository": "https://github.com/OpenMontageInc/OpenMontage",
+    "revision": "fecb9a1e3cc23ef84de30b272059457a427f16f8",
+    "path": ".claude/skills/manimgl-best-practices/examples/max_random_process.py",
+    "git_blob": "2a3aae92c87300aa2a8f5f169716ddc10cc26e8d",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "openmontage",
+    "repository": "https://github.com/OpenMontageInc/OpenMontage",
+    "revision": "fecb9a1e3cc23ef84de30b272059457a427f16f8",
+    "path": ".claude/skills/manimgl-best-practices/examples/mlp_forward_pass.py",
+    "git_blob": "6ed20c4cf0285d077624bc41779cefd09654dd33",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "openmontage",
+    "repository": "https://github.com/OpenMontageInc/OpenMontage",
+    "revision": "fecb9a1e3cc23ef84de30b272059457a427f16f8",
+    "path": ".claude/skills/manimgl-best-practices/examples/mlp_network_icon.py",
+    "git_blob": "fdbb2ea081adedbbc6864728d672cd87e5ceb48a",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "openmontage",
+    "repository": "https://github.com/OpenMontageInc/OpenMontage",
+    "revision": "fecb9a1e3cc23ef84de30b272059457a427f16f8",
+    "path": ".claude/skills/manimgl-best-practices/examples/mlp_neuron_activation.py",
+    "git_blob": "78663fe45023d54da8e726948f2e93fe0aaa2975",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "openmontage",
+    "repository": "https://github.com/OpenMontageInc/OpenMontage",
+    "revision": "fecb9a1e3cc23ef84de30b272059457a427f16f8",
+    "path": ".claude/skills/manimgl-best-practices/examples/mlp_neurons_flow.py",
+    "git_blob": "c50c04cfbb72d31d8c514a88bb4dcc949b3630d4",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "openmontage",
+    "repository": "https://github.com/OpenMontageInc/OpenMontage",
+    "revision": "fecb9a1e3cc23ef84de30b272059457a427f16f8",
+    "path": ".claude/skills/manimgl-best-practices/examples/mlp_relu_visualization.py",
+    "git_blob": "aa833f91e58ae6010e2b29b3f79f61aa39983ef3",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "openmontage",
+    "repository": "https://github.com/OpenMontageInc/OpenMontage",
+    "revision": "fecb9a1e3cc23ef84de30b272059457a427f16f8",
+    "path": ".claude/skills/manimgl-best-practices/examples/mlp_vector_space.py",
+    "git_blob": "5a35fd3891faab923eacb512212138225e0c7ed8",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "openmontage",
+    "repository": "https://github.com/OpenMontageInc/OpenMontage",
+    "revision": "fecb9a1e3cc23ef84de30b272059457a427f16f8",
+    "path": ".claude/skills/manimgl-best-practices/examples/mlp_weight_matrix.py",
+    "git_blob": "ddcad7f41489d1814aa5448ab670097830087982",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "openmontage",
+    "repository": "https://github.com/OpenMontageInc/OpenMontage",
+    "revision": "fecb9a1e3cc23ef84de30b272059457a427f16f8",
+    "path": ".claude/skills/manimgl-best-practices/examples/multi_head_attention.py",
+    "git_blob": "4e564f906591a9590a43d70d75f9cb59a136d7d0",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "openmontage",
+    "repository": "https://github.com/OpenMontageInc/OpenMontage",
+    "revision": "fecb9a1e3cc23ef84de30b272059457a427f16f8",
+    "path": ".claude/skills/manimgl-best-practices/examples/network_block_flow.py",
+    "git_blob": "44a041f8205087cd4084b921a263ebca7062e15b",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "openmontage",
+    "repository": "https://github.com/OpenMontageInc/OpenMontage",
+    "revision": "fecb9a1e3cc23ef84de30b272059457a427f16f8",
+    "path": ".claude/skills/manimgl-best-practices/examples/neural_network_basic.py",
+    "git_blob": "28bf41fe7d62175143c93382290b7ae774c22426",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "openmontage",
+    "repository": "https://github.com/OpenMontageInc/OpenMontage",
+    "revision": "fecb9a1e3cc23ef84de30b272059457a427f16f8",
+    "path": ".claude/skills/manimgl-best-practices/examples/parallax_starfield.py",
+    "git_blob": "581dbce972a8568d603a5d48712ac447f150890f",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "openmontage",
+    "repository": "https://github.com/OpenMontageInc/OpenMontage",
+    "revision": "fecb9a1e3cc23ef84de30b272059457a427f16f8",
+    "path": ".claude/skills/manimgl-best-practices/examples/probability_distribution.py",
+    "git_blob": "5d37ad3948874acdbf18fc231f18e1906f4c01ac",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "openmontage",
+    "repository": "https://github.com/OpenMontageInc/OpenMontage",
+    "revision": "fecb9a1e3cc23ef84de30b272059457a427f16f8",
+    "path": ".claude/skills/manimgl-best-practices/examples/probability_output.py",
+    "git_blob": "4c3cb1534d837ac9e7762cb1f089752a81123cd9",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "openmontage",
+    "repository": "https://github.com/OpenMontageInc/OpenMontage",
+    "revision": "fecb9a1e3cc23ef84de30b272059457a427f16f8",
+    "path": ".claude/skills/manimgl-best-practices/examples/quantum_gates.py",
+    "git_blob": "64a5cd204b8283b9b469629f7f7c8392ad7abe05",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "openmontage",
+    "repository": "https://github.com/OpenMontageInc/OpenMontage",
+    "revision": "fecb9a1e3cc23ef84de30b272059457a427f16f8",
+    "path": ".claude/skills/manimgl-best-practices/examples/qubit_state_vector.py",
+    "git_blob": "fd48eb8d6a75847949deccb42c66e2e2a2566614",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "openmontage",
+    "repository": "https://github.com/OpenMontageInc/OpenMontage",
+    "revision": "fecb9a1e3cc23ef84de30b272059457a427f16f8",
+    "path": ".claude/skills/manimgl-best-practices/examples/query_key_dot_products.py",
+    "git_blob": "c60d2112a7e4a228ea5d837e355e33bfc3b1442b",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "openmontage",
+    "repository": "https://github.com/OpenMontageInc/OpenMontage",
+    "revision": "fecb9a1e3cc23ef84de30b272059457a427f16f8",
+    "path": ".claude/skills/manimgl-best-practices/examples/query_key_space_mapping.py",
+    "git_blob": "52dc777626954057859fe34cc5ed31b5af679749",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "openmontage",
+    "repository": "https://github.com/OpenMontageInc/OpenMontage",
+    "revision": "fecb9a1e3cc23ef84de30b272059457a427f16f8",
+    "path": ".claude/skills/manimgl-best-practices/examples/radial_wave_visualization.py",
+    "git_blob": "fc2153a959d39daff6d60300d123269afb99c109",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "openmontage",
+    "repository": "https://github.com/OpenMontageInc/OpenMontage",
+    "revision": "fecb9a1e3cc23ef84de30b272059457a427f16f8",
+    "path": ".claude/skills/manimgl-best-practices/examples/rotating_exponentials.py",
+    "git_blob": "b81b4f12b6db60129fd5cf30625079f2320505a0",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "openmontage",
+    "repository": "https://github.com/OpenMontageInc/OpenMontage",
+    "revision": "fecb9a1e3cc23ef84de30b272059457a427f16f8",
+    "path": ".claude/skills/manimgl-best-practices/examples/semantic_similarity.py",
+    "git_blob": "16e1c5b6049c32de3023e7f595e0a68c57cd6dc5",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "openmontage",
+    "repository": "https://github.com/OpenMontageInc/OpenMontage",
+    "revision": "fecb9a1e3cc23ef84de30b272059457a427f16f8",
+    "path": ".claude/skills/manimgl-best-practices/examples/simple_test.py",
+    "git_blob": "ecd796dab2cf24d4a22f9a9297a0314bf1473381",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "openmontage",
+    "repository": "https://github.com/OpenMontageInc/OpenMontage",
+    "revision": "fecb9a1e3cc23ef84de30b272059457a427f16f8",
+    "path": ".claude/skills/manimgl-best-practices/examples/softmax_visualization.py",
+    "git_blob": "28790f9a5463257164ce89d3f493192d78819d95",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "openmontage",
+    "repository": "https://github.com/OpenMontageInc/OpenMontage",
+    "revision": "fecb9a1e3cc23ef84de30b272059457a427f16f8",
+    "path": ".claude/skills/manimgl-best-practices/examples/solve_damped_ode.py",
+    "git_blob": "f6dfa3292893457a31bae68e4a5ae367421bc34f",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "openmontage",
+    "repository": "https://github.com/OpenMontageInc/OpenMontage",
+    "revision": "fecb9a1e3cc23ef84de30b272059457a427f16f8",
+    "path": ".claude/skills/manimgl-best-practices/examples/spring_mass_system.py",
+    "git_blob": "c06bdf9fd799e16846da38a981d5f4f796e6da76",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "openmontage",
+    "repository": "https://github.com/OpenMontageInc/OpenMontage",
+    "revision": "fecb9a1e3cc23ef84de30b272059457a427f16f8",
+    "path": ".claude/skills/manimgl-best-practices/examples/sqrt_random_process.py",
+    "git_blob": "2225d0e2d171edfd568582955d85f8a221997d9a",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "openmontage",
+    "repository": "https://github.com/OpenMontageInc/OpenMontage",
+    "revision": "fecb9a1e3cc23ef84de30b272059457a427f16f8",
+    "path": ".claude/skills/manimgl-best-practices/examples/superposition_effect.py",
+    "git_blob": "0477bff24efe82e6d884fecf9b59be4cfdc1c6ad",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "openmontage",
+    "repository": "https://github.com/OpenMontageInc/OpenMontage",
+    "revision": "fecb9a1e3cc23ef84de30b272059457a427f16f8",
+    "path": ".claude/skills/manimgl-best-practices/examples/three_d_surfaces.py",
+    "git_blob": "80211373232542a10fb94b25e2678ccd288e8546",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "openmontage",
+    "repository": "https://github.com/OpenMontageInc/OpenMontage",
+    "revision": "fecb9a1e3cc23ef84de30b272059457a427f16f8",
+    "path": ".claude/skills/manimgl-best-practices/examples/three_d_vector_space.py",
+    "git_blob": "834648d64611d34529c8cc689c442b0c52e851dc",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "openmontage",
+    "repository": "https://github.com/OpenMontageInc/OpenMontage",
+    "revision": "fecb9a1e3cc23ef84de30b272059457a427f16f8",
+    "path": ".claude/skills/manimgl-best-practices/examples/token_embeddings_flow.py",
+    "git_blob": "fa4fa1e988db4b09cc2fce7ca6b7082e8f633cd7",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "openmontage",
+    "repository": "https://github.com/OpenMontageInc/OpenMontage",
+    "revision": "fecb9a1e3cc23ef84de30b272059457a427f16f8",
+    "path": ".claude/skills/manimgl-best-practices/examples/token_probability_distribution.py",
+    "git_blob": "2f187b9bbbae59e69fca5cf85ce86e31bf8bb849",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "openmontage",
+    "repository": "https://github.com/OpenMontageInc/OpenMontage",
+    "revision": "fecb9a1e3cc23ef84de30b272059457a427f16f8",
+    "path": ".claude/skills/manimgl-best-practices/examples/token_sampling.py",
+    "git_blob": "4182a147cf8a216f4de666684a69408b81c72505",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "openmontage",
+    "repository": "https://github.com/OpenMontageInc/OpenMontage",
+    "revision": "fecb9a1e3cc23ef84de30b272059457a427f16f8",
+    "path": ".claude/skills/manimgl-best-practices/examples/token_to_embedding.py",
+    "git_blob": "848700b2df742a56895c74f586f0a00721e9cc7b",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "openmontage",
+    "repository": "https://github.com/OpenMontageInc/OpenMontage",
+    "revision": "fecb9a1e3cc23ef84de30b272059457a427f16f8",
+    "path": ".claude/skills/manimgl-best-practices/examples/tokenization_demo.py",
+    "git_blob": "27aaa66ad8148e851518ab35f53004c23f6cfe1b",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "openmontage",
+    "repository": "https://github.com/OpenMontageInc/OpenMontage",
+    "revision": "fecb9a1e3cc23ef84de30b272059457a427f16f8",
+    "path": ".claude/skills/manimgl-best-practices/examples/transit_animation.py",
+    "git_blob": "2a92ecbbe255d6e84a6df5c0e52e7707e98b32e1",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "openmontage",
+    "repository": "https://github.com/OpenMontageInc/OpenMontage",
+    "revision": "fecb9a1e3cc23ef84de30b272059457a427f16f8",
+    "path": ".claude/skills/manimgl-best-practices/examples/value_matrix_transform.py",
+    "git_blob": "39aa55c0e06087401dbc0a1389947afe3001cea2",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "openmontage",
+    "repository": "https://github.com/OpenMontageInc/OpenMontage",
+    "revision": "fecb9a1e3cc23ef84de30b272059457a427f16f8",
+    "path": ".claude/skills/manimgl-best-practices/examples/vector_fields.py",
+    "git_blob": "64a0360e4ccb7c2a78337004792bc831be2c023d",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "openmontage",
+    "repository": "https://github.com/OpenMontageInc/OpenMontage",
+    "revision": "fecb9a1e3cc23ef84de30b272059457a427f16f8",
+    "path": ".claude/skills/manimgl-best-practices/examples/wave_amplitude_visualization.py",
+    "git_blob": "a8acd99114ff0b8f8dcc673a5e0dc28ed62dc363",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "openmontage",
+    "repository": "https://github.com/OpenMontageInc/OpenMontage",
+    "revision": "fecb9a1e3cc23ef84de30b272059457a427f16f8",
+    "path": ".claude/skills/manimgl-best-practices/examples/weight_matrix_product.py",
+    "git_blob": "94f0723633c9d1d90293de545102c8e7f0292520",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "openmontage",
+    "repository": "https://github.com/OpenMontageInc/OpenMontage",
+    "revision": "fecb9a1e3cc23ef84de30b272059457a427f16f8",
+    "path": ".claude/skills/manimgl-best-practices/examples/weights_vs_data.py",
+    "git_blob": "4ba0f617d37d55f6b0e3c6eeb94693a8c393f6a5",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "openmontage",
+    "repository": "https://github.com/OpenMontageInc/OpenMontage",
+    "revision": "fecb9a1e3cc23ef84de30b272059457a427f16f8",
+    "path": ".claude/skills/manimgl-best-practices/examples/word_vector_analogy.py",
+    "git_blob": "e977d7fd905cb43ecb3591ad24b111a9b401b23f",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "openmontage",
+    "repository": "https://github.com/OpenMontageInc/OpenMontage",
+    "revision": "fecb9a1e3cc23ef84de30b272059457a427f16f8",
+    "path": ".claude/skills/manimgl-best-practices/examples/zone_plate_hologram.py",
+    "git_blob": "88af6ac9a1599741fc50c89761abfd4b74299eee",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "openmontage",
+    "repository": "https://github.com/OpenMontageInc/OpenMontage",
+    "revision": "fecb9a1e3cc23ef84de30b272059457a427f16f8",
+    "path": ".claude/skills/manimgl-best-practices/templates/3d_scene.py",
+    "git_blob": "a9c13dca130a4fd0994512f3c49c7bfc7757dd1b",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "openmontage",
+    "repository": "https://github.com/OpenMontageInc/OpenMontage",
+    "revision": "fecb9a1e3cc23ef84de30b272059457a427f16f8",
+    "path": ".claude/skills/manimgl-best-practices/templates/basic_scene.py",
+    "git_blob": "1df13734c48c2da232503010c63b070ae4068676",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "openmontage",
+    "repository": "https://github.com/OpenMontageInc/OpenMontage",
+    "revision": "fecb9a1e3cc23ef84de30b272059457a427f16f8",
+    "path": ".claude/skills/manimgl-best-practices/templates/interactive_scene.py",
+    "git_blob": "b9352f7b7dfe871cb01da79886138912ea860d42",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "openmontage",
+    "repository": "https://github.com/OpenMontageInc/OpenMontage",
+    "revision": "fecb9a1e3cc23ef84de30b272059457a427f16f8",
+    "path": ".claude/skills/manimgl-best-practices/templates/math_scene.py",
+    "git_blob": "bdab3585346b91024280bde810ee8541ce2be198",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "openmontage",
+    "repository": "https://github.com/OpenMontageInc/OpenMontage",
+    "revision": "fecb9a1e3cc23ef84de30b272059457a427f16f8",
+    "path": "ink-theater/examples/mocap-figure/index.html",
+    "git_blob": "c94c91dc1c2edb450e45cc78031f7b24962d0c69",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "openmontage",
+    "repository": "https://github.com/OpenMontageInc/OpenMontage",
+    "revision": "fecb9a1e3cc23ef84de30b272059457a427f16f8",
+    "path": "render_demo.py",
+    "git_blob": "0d62ce8ff738ea10c9ee3e17eb792d92d7572b0d",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "openmontage",
+    "repository": "https://github.com/OpenMontageInc/OpenMontage",
+    "revision": "fecb9a1e3cc23ef84de30b272059457a427f16f8",
+    "path": "schemas/artifacts/action_timeline.schema.json",
+    "git_blob": "dd5ba7f0bfc65c2defa7358549a2db1b56d38630",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "openmontage",
+    "repository": "https://github.com/OpenMontageInc/OpenMontage",
+    "revision": "fecb9a1e3cc23ef84de30b272059457a427f16f8",
+    "path": "schemas/artifacts/render_report.schema.json",
+    "git_blob": "e3602ccc278a9114bb43e92dced6df3c8980e256",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "openmontage",
+    "repository": "https://github.com/OpenMontageInc/OpenMontage",
+    "revision": "fecb9a1e3cc23ef84de30b272059457a427f16f8",
+    "path": "tests/contracts/test_env_example.py",
+    "git_blob": "a2dd245d97f7c9ffa1045db44862c0513bc08680",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "openmontage",
+    "repository": "https://github.com/OpenMontageInc/OpenMontage",
+    "revision": "fecb9a1e3cc23ef84de30b272059457a427f16f8",
+    "path": "tests/contracts/test_skill_execute_examples.py",
+    "git_blob": "d6a517a7cba0feb3abd9c27c6dc4d8c2b26375db",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "openmontage",
+    "repository": "https://github.com/OpenMontageInc/OpenMontage",
+    "revision": "fecb9a1e3cc23ef84de30b272059457a427f16f8",
+    "path": "tests/tools/test_silence_speed_timeline.py",
+    "git_blob": "664527764733364c7c9a5aeef002cfcd08a7cd76",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "openmontage",
+    "repository": "https://github.com/OpenMontageInc/OpenMontage",
+    "revision": "fecb9a1e3cc23ef84de30b272059457a427f16f8",
+    "path": "tools/analysis/composition_validator.py",
+    "git_blob": "994a90556d4721684b7e5e88ebc96624036f4c98",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "openmontage",
+    "repository": "https://github.com/OpenMontageInc/OpenMontage",
+    "revision": "fecb9a1e3cc23ef84de30b272059457a427f16f8",
+    "path": "tools/graphics/templates/blender-world-runtime.py",
+    "git_blob": "429908fa7b566eb096ea76203d8068e2dc688c64",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "openmontage",
+    "repository": "https://github.com/OpenMontageInc/OpenMontage",
+    "revision": "fecb9a1e3cc23ef84de30b272059457a427f16f8",
+    "path": "tools/graphics/templates/threejs_world/index.html",
+    "git_blob": "838332fb112e640016a7193df6f0a406dc8b908a",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "pixelle",
+    "repository": "https://github.com/ATH-MaaS/Pixelle-Video",
+    "revision": "848b054e4fae40dabc62ec58e960b573e83793ac",
+    "path": "pixelle_video/models/storyboard.py",
+    "git_blob": "08f0aac92d3c5b3d5c6a56f95e9bf714397edc1c",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "pixelle",
+    "repository": "https://github.com/ATH-MaaS/Pixelle-Video",
+    "revision": "848b054e4fae40dabc62ec58e960b573e83793ac",
+    "path": "pixelle_video/utils/template_util.py",
+    "git_blob": "6fa08274b64443c8cd934819807d9b7b74637649",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "pixelle",
+    "repository": "https://github.com/ATH-MaaS/Pixelle-Video",
+    "revision": "848b054e4fae40dabc62ec58e960b573e83793ac",
+    "path": "templates/1080x1080/image_minimal_framed.html",
+    "git_blob": "99a72125d5dec7d3ba9895c5824baacf4b44a02e",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "pixelle",
+    "repository": "https://github.com/ATH-MaaS/Pixelle-Video",
+    "revision": "848b054e4fae40dabc62ec58e960b573e83793ac",
+    "path": "templates/1080x1920/asset_default.html",
+    "git_blob": "f38c226b38a92789b8da32ebad3c1d43fe349672",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "pixelle",
+    "repository": "https://github.com/ATH-MaaS/Pixelle-Video",
+    "revision": "848b054e4fae40dabc62ec58e960b573e83793ac",
+    "path": "templates/1080x1920/image_blur_card.html",
+    "git_blob": "5848f53a342e388ab41991ae43c0124d7487f7b4",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "pixelle",
+    "repository": "https://github.com/ATH-MaaS/Pixelle-Video",
+    "revision": "848b054e4fae40dabc62ec58e960b573e83793ac",
+    "path": "templates/1080x1920/image_book.html",
+    "git_blob": "20e51805b261b079c2a484cde245cfcf8635e00c",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "pixelle",
+    "repository": "https://github.com/ATH-MaaS/Pixelle-Video",
+    "revision": "848b054e4fae40dabc62ec58e960b573e83793ac",
+    "path": "templates/1080x1920/image_cartoon.html",
+    "git_blob": "2d6e742c6eee8e90904430062d9ba8a5a242efcd",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "pixelle",
+    "repository": "https://github.com/ATH-MaaS/Pixelle-Video",
+    "revision": "848b054e4fae40dabc62ec58e960b573e83793ac",
+    "path": "templates/1080x1920/image_default.html",
+    "git_blob": "2e0b26de3c623d358aad43ca39554c6b4dfa9a96",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "pixelle",
+    "repository": "https://github.com/ATH-MaaS/Pixelle-Video",
+    "revision": "848b054e4fae40dabc62ec58e960b573e83793ac",
+    "path": "templates/1080x1920/image_elegant.html",
+    "git_blob": "985899fd359a126c05d37dc3c0f7876353a1a2e0",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "pixelle",
+    "repository": "https://github.com/ATH-MaaS/Pixelle-Video",
+    "revision": "848b054e4fae40dabc62ec58e960b573e83793ac",
+    "path": "templates/1080x1920/image_excerpt.html",
+    "git_blob": "786e8037d4a57e73ecd3e0dc5491082287235bec",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "pixelle",
+    "repository": "https://github.com/ATH-MaaS/Pixelle-Video",
+    "revision": "848b054e4fae40dabc62ec58e960b573e83793ac",
+    "path": "templates/1080x1920/image_fashion_vintage.html",
+    "git_blob": "c63f0f766d75df650fb9663fe7c26790ecd7c3ef",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "pixelle",
+    "repository": "https://github.com/ATH-MaaS/Pixelle-Video",
+    "revision": "848b054e4fae40dabc62ec58e960b573e83793ac",
+    "path": "templates/1080x1920/image_full.html",
+    "git_blob": "2ff14720091540a6f0fec150936a1367724880cc",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "pixelle",
+    "repository": "https://github.com/ATH-MaaS/Pixelle-Video",
+    "revision": "848b054e4fae40dabc62ec58e960b573e83793ac",
+    "path": "templates/1080x1920/image_healing.html",
+    "git_blob": "ba834537e2e2b2b04bebbcd68830b77b3e337427",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "pixelle",
+    "repository": "https://github.com/ATH-MaaS/Pixelle-Video",
+    "revision": "848b054e4fae40dabc62ec58e960b573e83793ac",
+    "path": "templates/1080x1920/image_health_preservation.html",
+    "git_blob": "999bb1ee797de67628e0a62267f7779856853c3a",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "pixelle",
+    "repository": "https://github.com/ATH-MaaS/Pixelle-Video",
+    "revision": "848b054e4fae40dabc62ec58e960b573e83793ac",
+    "path": "templates/1080x1920/image_life_insights.html",
+    "git_blob": "0604970122a62f6bc9e7fbb07f06c936dce0770c",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "pixelle",
+    "repository": "https://github.com/ATH-MaaS/Pixelle-Video",
+    "revision": "848b054e4fae40dabc62ec58e960b573e83793ac",
+    "path": "templates/1080x1920/image_life_insights_light.html",
+    "git_blob": "8aad2bf64062fa33e0eae916235cc6d06d1e902e",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "pixelle",
+    "repository": "https://github.com/ATH-MaaS/Pixelle-Video",
+    "revision": "848b054e4fae40dabc62ec58e960b573e83793ac",
+    "path": "templates/1080x1920/image_long_text.html",
+    "git_blob": "48443516883243b6db64e5ccf46c8ebd1c6df439",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "pixelle",
+    "repository": "https://github.com/ATH-MaaS/Pixelle-Video",
+    "revision": "848b054e4fae40dabc62ec58e960b573e83793ac",
+    "path": "templates/1080x1920/image_modern.html",
+    "git_blob": "de4217a266af4c35d0f730c7915e92d8ce2c2952",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "pixelle",
+    "repository": "https://github.com/ATH-MaaS/Pixelle-Video",
+    "revision": "848b054e4fae40dabc62ec58e960b573e83793ac",
+    "path": "templates/1080x1920/image_neon.html",
+    "git_blob": "b1154b551a39bab0955e40251f169f9f72347a76",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "pixelle",
+    "repository": "https://github.com/ATH-MaaS/Pixelle-Video",
+    "revision": "848b054e4fae40dabc62ec58e960b573e83793ac",
+    "path": "templates/1080x1920/image_psychology_card.html",
+    "git_blob": "a85f4e6b4dab2a75758f346cd287059252acb960",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "pixelle",
+    "repository": "https://github.com/ATH-MaaS/Pixelle-Video",
+    "revision": "848b054e4fae40dabc62ec58e960b573e83793ac",
+    "path": "templates/1080x1920/image_purple.html",
+    "git_blob": "6d73ebf1654af20e7cf893efb92fc99c2d643592",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "pixelle",
+    "repository": "https://github.com/ATH-MaaS/Pixelle-Video",
+    "revision": "848b054e4fae40dabc62ec58e960b573e83793ac",
+    "path": "templates/1080x1920/image_satirical_cartoon.html",
+    "git_blob": "4cd37e1e3391fc16cc5708d0aa004bdeafb77435",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "pixelle",
+    "repository": "https://github.com/ATH-MaaS/Pixelle-Video",
+    "revision": "848b054e4fae40dabc62ec58e960b573e83793ac",
+    "path": "templates/1080x1920/image_simple_black.html",
+    "git_blob": "b08097a1106ad8c68e24d52bd25771a7494027dc",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "pixelle",
+    "repository": "https://github.com/ATH-MaaS/Pixelle-Video",
+    "revision": "848b054e4fae40dabc62ec58e960b573e83793ac",
+    "path": "templates/1080x1920/image_simple_line_drawing.html",
+    "git_blob": "5f54dbcb32e95c0816f665d25a614bfae450538f",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "pixelle",
+    "repository": "https://github.com/ATH-MaaS/Pixelle-Video",
+    "revision": "848b054e4fae40dabc62ec58e960b573e83793ac",
+    "path": "templates/1080x1920/static_default.html",
+    "git_blob": "3f6101103b062976a1c11d8f9ef2af1e30acd207",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "pixelle",
+    "repository": "https://github.com/ATH-MaaS/Pixelle-Video",
+    "revision": "848b054e4fae40dabc62ec58e960b573e83793ac",
+    "path": "templates/1080x1920/static_excerpt.html",
+    "git_blob": "db7b51713253f68b45a7235136584f67567bab85",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "pixelle",
+    "repository": "https://github.com/ATH-MaaS/Pixelle-Video",
+    "revision": "848b054e4fae40dabc62ec58e960b573e83793ac",
+    "path": "templates/1080x1920/video_default.html",
+    "git_blob": "8c0ed331d2d10be16b5acfacc46b390cadb9e2c7",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "pixelle",
+    "repository": "https://github.com/ATH-MaaS/Pixelle-Video",
+    "revision": "848b054e4fae40dabc62ec58e960b573e83793ac",
+    "path": "templates/1080x1920/video_healing.html",
+    "git_blob": "e7378470dce596c83196b156bc75cd629e449fd5",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "pixelle",
+    "repository": "https://github.com/ATH-MaaS/Pixelle-Video",
+    "revision": "848b054e4fae40dabc62ec58e960b573e83793ac",
+    "path": "templates/1920x1080/image_book.html",
+    "git_blob": "d0ddda2726460dd1365115b03ff6b639ccd0dbe0",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "pixelle",
+    "repository": "https://github.com/ATH-MaaS/Pixelle-Video",
+    "revision": "848b054e4fae40dabc62ec58e960b573e83793ac",
+    "path": "templates/1920x1080/image_film.html",
+    "git_blob": "2bae1b4b5460e817b935d5ab21b1b1cdd8fc43c4",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "pixelle",
+    "repository": "https://github.com/ATH-MaaS/Pixelle-Video",
+    "revision": "848b054e4fae40dabc62ec58e960b573e83793ac",
+    "path": "templates/1920x1080/image_full.html",
+    "git_blob": "5d7e8622f23e3571904aef8041993f7628c5d974",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "pixelle",
+    "repository": "https://github.com/ATH-MaaS/Pixelle-Video",
+    "revision": "848b054e4fae40dabc62ec58e960b573e83793ac",
+    "path": "templates/1920x1080/image_ultrawide_minimal.html",
+    "git_blob": "7dea2aed14a93271fba9959e2d52e513dd279f6a",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "pixelle",
+    "repository": "https://github.com/ATH-MaaS/Pixelle-Video",
+    "revision": "848b054e4fae40dabc62ec58e960b573e83793ac",
+    "path": "templates/1920x1080/image_wide_darktech.html",
+    "git_blob": "4098a4e0bd7a1f27930b42e0acefbc0f45ffbebf",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "toonflow",
+    "repository": "https://github.com/HBAI-Ltd/Toonflow-app",
+    "revision": "6086cdffceb704a632eca143dd16cd461a78cdac",
+    "path": "apps/server/src/routes/tools/renderers.ts",
+    "git_blob": "14c81e05e0de408a53ad37a7e54786a0d7b16706",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "toonflow",
+    "repository": "https://github.com/HBAI-Ltd/Toonflow-app",
+    "revision": "6086cdffceb704a632eca143dd16cd461a78cdac",
+    "path": "packages/nodes/director3dNode/src/renderMedia.ts",
+    "git_blob": "b5876f57729c7cf2c05eabb6ba3ecd8f32dcf1b6",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "toonflow",
+    "repository": "https://github.com/HBAI-Ltd/Toonflow-app",
+    "revision": "6086cdffceb704a632eca143dd16cd461a78cdac",
+    "path": "packages/teams/storyboardTeam/build.ts",
+    "git_blob": "56022092aa8e9c8dcf0fdd801e6471d1f4c9f0ff",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "toonflow",
+    "repository": "https://github.com/HBAI-Ltd/Toonflow-app",
+    "revision": "6086cdffceb704a632eca143dd16cd461a78cdac",
+    "path": "packages/teams/storyboardTeam/package.json",
+    "git_blob": "da329bb79b721e553da10b77e42f18da4f7c480f",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "toonflow",
+    "repository": "https://github.com/HBAI-Ltd/Toonflow-app",
+    "revision": "6086cdffceb704a632eca143dd16cd461a78cdac",
+    "path": "packages/teams/storyboardTeam/team.json",
+    "git_blob": "37b9d689ac7ccd03861b1a2b265942f06ecb7919",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  },
+  {
+    "provider": "toonflow",
+    "repository": "https://github.com/HBAI-Ltd/Toonflow-app",
+    "revision": "6086cdffceb704a632eca143dd16cd461a78cdac",
+    "path": "packages/teams/storyboardTeam/tsconfig.json",
+    "git_blob": "26c9d696967a5c0e0ce6db652c19b3c9f025fe9b",
+    "status": "SOURCE_INDEXED_NOT_RENDER_VERIFIED",
+    "reuse": "Inspect/adapt the referenced source; never assume runtime availability"
+  }
+]
