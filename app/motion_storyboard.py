@@ -1,7 +1,7 @@
 """Translate current-project passages/proof to model inputs; no reference timings copied."""
 import copy,math
 import motion_specs,speech,source_context
-CONTEXT_VERSION=4
+CONTEXT_VERSION=5
 
 
 def context(plan,host,assets,transcript=None):
@@ -61,6 +61,9 @@ def context(plan,host,assets,transcript=None):
                     frame=round((matches[0]['start']-at)*30)
                     if 0<frame<frames-30:ctx['texts'].append(text);ctx['anchors'].append(dict(id='state-'+str(i),frame=frame,kind='speech',text=text))
             ctx['anchors'].sort(key=lambda a:a['frame'])
+    required=list(plan.get('required_visible_texts',[]))
+    if plan.get('headline_origin')=='declared_visual_promise' and not proof:required.append(plan['title'])
+    if required:ctx['required_texts']=list(dict.fromkeys(required))
     import motion_learning
     return motion_learning.declared_layout_context(ctx),at
 

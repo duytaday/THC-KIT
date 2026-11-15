@@ -10,6 +10,11 @@ def verify_run(folder):
     if receipt.get('task')!='script_animation_spec_lora_v1' or receipt.get('status')!='COMPLETE' or not receipt.get('training_completed') or receipt.get('actual_optimizer_steps',0)<=0 or receipt.get('weight_update_l2',0)<=0:raise ValueError('Import a completed animation-spec LoRA run, not selector/video-generation weights')
     if receipt.get('base_model')!=motion_specs.BASE_MODEL or receipt.get('base_revision')!=motion_specs.BASE_REVISION:raise ValueError('Incompatible or unpinned animation base')
     if receipt.get('prompt_version',1) not in motion_learning.SYSTEMS:raise ValueError('Unsupported checkpoint prompt contract; preserve it and import a matching candidate')
+    expected_contract=motion_learning.output_contract(receipt.get('prompt_version',1))
+    if receipt.get('output_contract',expected_contract)!=expected_contract or expected_contract!='native_scene_v1' and receipt.get('output_contract')!=expected_contract:raise ValueError('Checkpoint output contract is missing or incompatible')
+    if expected_contract!='native_scene_v1':
+        sha=receipt.get('decision_contract_sha256')
+        if not motion_learning.re_full_sha(sha):raise ValueError('Source-bound checkpoint requires training contract provenance')
     for name,h in receipt.get('adapter_files',{}).items():
         if Path(name).name!=name or name.endswith('.bin') or media.sha(folder/'adapter'/name)!=h:raise ValueError('Changed/unsafe adapter file')
     weight=folder/'adapter/adapter_model.safetensors'
@@ -77,15 +82,20 @@ def infer(root,contexts,mode,source_sha256=None):
     if 'config.json' not in hashes or not any(n.endswith('.safetensors') for n in hashes):raise ValueError('Local base snapshot is incomplete')
     receipt=verify_run(folder)
     rows=[dict(id=str(i),context=c,examples=motion_learning.retrieve(c,pool,version=receipt.get('retrieval_version',1))) for i,c in enumerate(contexts)]
+    contract=motion_learning.output_contract(receipt['prompt_version'])
+    if contract!='native_scene_v1':
+        import motion_decisions
+        for row in rows:row['source_context_sha256']=motion_decisions.digest(row['context'])
     decoder=os.environ.get('CUTROOM_ANIMATION_DECODER','unconstrained')
     if decoder not in ('unconstrained','source_json_v1'):raise ValueError('Unknown animation decoder; use unconstrained or source_json_v1')
-    request=dict(mode=mode,base_path=str(base),base_files=hashes,adapter_path=str(folder/'adapter'),adapter_files=receipt['adapter_files'],prompt_version=receipt['prompt_version'],retrieval_version=receipt.get('retrieval_version',1),rows=rows,version=record['version'],checkpoint_sha256=record['checkpoint_sha256'],decode_mode=decoder)
+    if contract!='native_scene_v1' and decoder!='unconstrained':raise ValueError('Source-bound checkpoint needs its own decoder contract; choose unconstrained')
+    request=dict(mode=mode,output_contract=contract,base_path=str(base),base_files=hashes,adapter_path=str(folder/'adapter'),adapter_files=receipt['adapter_files'],prompt_version=receipt['prompt_version'],retrieval_version=receipt.get('retrieval_version',1),rows=rows,version=record['version'],checkpoint_sha256=record['checkpoint_sha256'],decode_mode=decoder)
     if decoder=='source_json_v1' and os.environ.get('CUTROOM_ANIMATION_DECODER_SITE'):
         request['decoder_site']=str(Path(os.environ['CUTROOM_ANIMATION_DECODER_SITE']).resolve(strict=True))
     run_id=uuid.uuid4().hex;run=Path(root)/'model-runs'/run_id;run.mkdir(parents=True,exist_ok=False)
     import request_observability as observation
     options=dict(decode_mode=decoder,max_new_tokens=request.get('max_new_tokens',1400),do_sample=False)
-    identity=dict(base_files=hashes,adapter_files=receipt['adapter_files'],checkpoint_sha256=record['checkpoint_sha256'],adapter_active=mode=='fine_tuned',model_version=record['version'],retrieval_version=receipt.get('retrieval_version',1),worker_sha256=media.sha(Path(__file__).parent/'motion_worker.py'),schema_sha256=media.sha(Path(motion_specs.__file__)),observer_sha256=media.sha(Path(observation.__file__)))
+    identity=dict(output_contract=contract,training_contract_sha256=receipt.get('decision_contract_sha256'),base_files=hashes,adapter_files=receipt['adapter_files'],checkpoint_sha256=record['checkpoint_sha256'],adapter_active=mode=='fine_tuned',model_version=record['version'],retrieval_version=receipt.get('retrieval_version',1),worker_sha256=media.sha(Path(__file__).parent/'motion_worker.py'),schema_sha256=media.sha(Path(motion_specs.__file__)),observer_sha256=media.sha(Path(observation.__file__)))
     request['observability_identity']=identity
     media.write_json(run/'request.json',dict(**request,source_sha256=source_sha256,worker_sha256=identity['worker_sha256']))
     wire=json.dumps(request,ensure_ascii=False)
@@ -102,11 +112,13 @@ def infer(root,contexts,mode,source_sha256=None):
     result=json.loads(proc.stdout)
     trace['worker_observability']=result.get('observability');trace['predictions']=[dict(id=p['id'],error=p.get('error'),observability=p.get('observability')) for p in result.get('predictions',[])];media.write_json(run/'request-observability.json',trace)
     if not result.get('weights_loaded') or result.get('base_files')!=hashes or result.get('checkpoint_sha256')!=record['checkpoint_sha256']:raise ValueError('Worker did not load the expected checkpoint/base')
+    if contract!='native_scene_v1' and result.get('output_contract')!=contract:raise ValueError('Worker output contract mismatch')
     if len(result['predictions'])!=len(contexts):raise ValueError('Worker returned an incomplete scene batch')
     answer=[]
     for row,prediction in zip(rows,result['predictions']):
         if prediction['id']!=row['id']:raise ValueError('Worker scene identity mismatch')
         if prediction.get('decoding',{}).get('mode')!=decoder:raise ValueError('Worker did not use the requested animation decoder')
         if prediction.get('error'):raise ValueError('Model spec rejected for scene '+row['id']+': '+prediction['error']+'. No rules fallback was substituted.')
-        answer.append(dict(spec=motion_specs.validate(prediction['spec'],row['context']),model=dict(mode=mode,weights_loaded=True,version=record['version'],checkpoint_sha256=record['checkpoint_sha256'],adapter_active=mode=='fine_tuned',device=result['device'],base_files=hashes,retrieved_ids=[e['id'] for e in row['examples']],raw_output=prediction['raw'],runtime_seconds=prediction['runtime_seconds'],request_observability=prediction.get('observability'),inference_run_id=run_id,compiler=prediction.get('compiler',{}),decoding=prediction.get('decoding',{'mode':'unconstrained'}))))
+        if contract!='native_scene_v1' and prediction.get('compiler',{}).get('source_binding',{}).get('source_context_sha256')!=row['source_context_sha256']:raise ValueError('Worker source binding mismatch')
+        answer.append(dict(spec=motion_specs.validate(prediction['spec'],row['context']),model=dict(mode=mode,output_contract=contract,source_binding=prediction.get('compiler',{}).get('source_binding'),weights_loaded=True,version=record['version'],checkpoint_sha256=record['checkpoint_sha256'],adapter_active=mode=='fine_tuned',device=result['device'],base_files=hashes,retrieved_ids=[e['id'] for e in row['examples']],raw_output=prediction['raw'],runtime_seconds=prediction['runtime_seconds'],request_observability=prediction.get('observability'),inference_run_id=run_id,compiler=prediction.get('compiler',{}),decoding=prediction.get('decoding',{'mode':'unconstrained'}))))
     return answer

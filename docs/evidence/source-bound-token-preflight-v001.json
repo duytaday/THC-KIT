@@ -1,0 +1,806 @@
+{
+  "scope": "Serialization/token preflight on existing known development partitions; no optimization or independent held-out episode evaluation",
+  "dataset_fingerprint": "a0891e8b891b7ea359ce0136869e6b4c49e90370e2865b1ec5f616a5ac750cdb",
+  "prompt_version": 10,
+  "output_contract": "source_bound_decisions_v1",
+  "compiler_sha256": "662fb221597a0fac2061395baa180dfa572ad08b5a4f8bfe987dddb58ecbea8a",
+  "rows": 99,
+  "errors": [],
+  "maximum": 2939,
+  "limit": 3072,
+  "truncated": false,
+  "examples": [
+    {
+      "id": "ref-01-000",
+      "split": "train",
+      "tokens": 1552,
+      "retrieved_ids": [
+        "ref-09-004"
+      ]
+    },
+    {
+      "id": "ref-03-001",
+      "split": "train",
+      "tokens": 1539,
+      "retrieved_ids": [
+        "ref-16-007"
+      ]
+    },
+    {
+      "id": "state-ref-04-intro-v001",
+      "split": "train",
+      "tokens": 1780,
+      "retrieved_ids": [
+        "state-ref-06-intro-v001"
+      ]
+    },
+    {
+      "id": "state-ref-06-intro-v001",
+      "split": "train",
+      "tokens": 1805,
+      "retrieved_ids": [
+        "state-ref-22-intro-v001"
+      ]
+    },
+    {
+      "id": "ref-09-004",
+      "split": "train",
+      "tokens": 1552,
+      "retrieved_ids": [
+        "ref-01-000"
+      ]
+    },
+    {
+      "id": "state-ref-12-intro-v001",
+      "split": "train",
+      "tokens": 1816,
+      "retrieved_ids": [
+        "state-ref-06-intro-v001"
+      ]
+    },
+    {
+      "id": "state-ref-14-intro-v001",
+      "split": "train",
+      "tokens": 1807,
+      "retrieved_ids": [
+        "state-ref-21-intro-v001"
+      ]
+    },
+    {
+      "id": "ref-16-007",
+      "split": "train",
+      "tokens": 1539,
+      "retrieved_ids": [
+        "ref-03-001"
+      ]
+    },
+    {
+      "id": "ref-17-008",
+      "split": "train",
+      "tokens": 1545,
+      "retrieved_ids": [
+        "ref-01-000"
+      ]
+    },
+    {
+      "id": "ref-18-009",
+      "split": "train",
+      "tokens": 1533,
+      "retrieved_ids": [
+        "ref-03-001"
+      ]
+    },
+    {
+      "id": "state-ref-20-intro-v001",
+      "split": "train",
+      "tokens": 1786,
+      "retrieved_ids": [
+        "state-ref-22-intro-v001"
+      ]
+    },
+    {
+      "id": "state-ref-21-intro-v001",
+      "split": "train",
+      "tokens": 1805,
+      "retrieved_ids": [
+        "state-ref-22-intro-v001"
+      ]
+    },
+    {
+      "id": "state-ref-22-intro-v001",
+      "split": "train",
+      "tokens": 1805,
+      "retrieved_ids": [
+        "state-ref-06-intro-v001"
+      ]
+    },
+    {
+      "id": "ref-23-013",
+      "split": "train",
+      "tokens": 1546,
+      "retrieved_ids": [
+        "ref-16-007"
+      ]
+    },
+    {
+      "id": "ref-04-014",
+      "split": "train",
+      "tokens": 1551,
+      "retrieved_ids": [
+        "ref-06-015"
+      ]
+    },
+    {
+      "id": "ref-06-015",
+      "split": "train",
+      "tokens": 1542,
+      "retrieved_ids": [
+        "ref-14-017"
+      ]
+    },
+    {
+      "id": "ref-12-016",
+      "split": "train",
+      "tokens": 1550,
+      "retrieved_ids": [
+        "ref-04-014"
+      ]
+    },
+    {
+      "id": "ref-14-017",
+      "split": "train",
+      "tokens": 1542,
+      "retrieved_ids": [
+        "ref-06-015"
+      ]
+    },
+    {
+      "id": "ref-20-018",
+      "split": "train",
+      "tokens": 1533,
+      "retrieved_ids": [
+        "ref-04-014"
+      ]
+    },
+    {
+      "id": "ref-21-019",
+      "split": "train",
+      "tokens": 1535,
+      "retrieved_ids": [
+        "ref-04-014"
+      ]
+    },
+    {
+      "id": "ref-22-020",
+      "split": "train",
+      "tokens": 1522,
+      "retrieved_ids": [
+        "ref-06-015"
+      ]
+    },
+    {
+      "id": "house-physical-cue-fixture",
+      "split": "train",
+      "tokens": 1639,
+      "retrieved_ids": [
+        "house-inventory-v009-04"
+      ]
+    },
+    {
+      "id": "motion-ref11-0",
+      "split": "train",
+      "tokens": 1925,
+      "retrieved_ids": [
+        "house-intro-maverick_fast-3-slide"
+      ]
+    },
+    {
+      "id": "motion-ref11-1",
+      "split": "train",
+      "tokens": 1902,
+      "retrieved_ids": [
+        "motion-ref11-2"
+      ]
+    },
+    {
+      "id": "motion-ref11-2",
+      "split": "train",
+      "tokens": 1902,
+      "retrieved_ids": [
+        "motion-ref11-1"
+      ]
+    },
+    {
+      "id": "motion-ref11-3",
+      "split": "train",
+      "tokens": 1914,
+      "retrieved_ids": [
+        "motion-ref11-1"
+      ]
+    },
+    {
+      "id": "motion-ref7-0",
+      "split": "train",
+      "tokens": 1360,
+      "retrieved_ids": [
+        "motion-ref7-2"
+      ]
+    },
+    {
+      "id": "motion-ref7-2",
+      "split": "train",
+      "tokens": 1360,
+      "retrieved_ids": [
+        "motion-ref7-0"
+      ]
+    },
+    {
+      "id": "motion-ref7-3",
+      "split": "train",
+      "tokens": 1348,
+      "retrieved_ids": [
+        "motion-ref7-0"
+      ]
+    },
+    {
+      "id": "house-six-0",
+      "split": "train",
+      "tokens": 2594,
+      "retrieved_ids": [
+        "house-six-1"
+      ]
+    },
+    {
+      "id": "house-six-1",
+      "split": "train",
+      "tokens": 2594,
+      "retrieved_ids": [
+        "house-six-0"
+      ]
+    },
+    {
+      "id": "house-title-states-v001",
+      "split": "train",
+      "tokens": 1691,
+      "retrieved_ids": [
+        "house-intro-maverick_fast-3-slide"
+      ]
+    },
+    {
+      "id": "house-intro-balanced-2-static",
+      "split": "train",
+      "tokens": 1591,
+      "retrieved_ids": [
+        "house-intro-balanced-2-slide"
+      ]
+    },
+    {
+      "id": "house-intro-balanced-3-static",
+      "split": "train",
+      "tokens": 1842,
+      "retrieved_ids": [
+        "house-intro-balanced-3-slide"
+      ]
+    },
+    {
+      "id": "house-intro-balanced-4-static",
+      "split": "train",
+      "tokens": 2171,
+      "retrieved_ids": [
+        "house-intro-balanced-4-slide"
+      ]
+    },
+    {
+      "id": "house-intro-balanced-6-static",
+      "split": "train",
+      "tokens": 2763,
+      "retrieved_ids": [
+        "house-intro-balanced-6-slide"
+      ]
+    },
+    {
+      "id": "house-intro-balanced-2-slide",
+      "split": "train",
+      "tokens": 1591,
+      "retrieved_ids": [
+        "house-intro-balanced-2-static"
+      ]
+    },
+    {
+      "id": "house-intro-balanced-3-slide",
+      "split": "train",
+      "tokens": 1842,
+      "retrieved_ids": [
+        "house-intro-balanced-3-static"
+      ]
+    },
+    {
+      "id": "house-intro-balanced-4-slide",
+      "split": "train",
+      "tokens": 2171,
+      "retrieved_ids": [
+        "house-intro-balanced-4-static"
+      ]
+    },
+    {
+      "id": "house-intro-balanced-6-slide",
+      "split": "train",
+      "tokens": 2763,
+      "retrieved_ids": [
+        "house-intro-balanced-6-static"
+      ]
+    },
+    {
+      "id": "house-intro-maverick_fast-2-static",
+      "split": "train",
+      "tokens": 1595,
+      "retrieved_ids": [
+        "house-intro-maverick_fast-2-slide"
+      ]
+    },
+    {
+      "id": "house-intro-maverick_fast-3-static",
+      "split": "train",
+      "tokens": 1845,
+      "retrieved_ids": [
+        "house-intro-maverick_fast-3-slide"
+      ]
+    },
+    {
+      "id": "house-intro-maverick_fast-4-static",
+      "split": "train",
+      "tokens": 2173,
+      "retrieved_ids": [
+        "house-intro-maverick_fast-4-slide"
+      ]
+    },
+    {
+      "id": "house-intro-maverick_fast-6-static",
+      "split": "train",
+      "tokens": 2763,
+      "retrieved_ids": [
+        "house-intro-maverick_fast-6-slide"
+      ]
+    },
+    {
+      "id": "house-intro-maverick_fast-2-slide",
+      "split": "train",
+      "tokens": 1595,
+      "retrieved_ids": [
+        "house-intro-maverick_fast-2-static"
+      ]
+    },
+    {
+      "id": "house-intro-maverick_fast-3-slide",
+      "split": "train",
+      "tokens": 1845,
+      "retrieved_ids": [
+        "house-intro-maverick_fast-3-static"
+      ]
+    },
+    {
+      "id": "house-intro-maverick_fast-4-slide",
+      "split": "train",
+      "tokens": 2173,
+      "retrieved_ids": [
+        "house-intro-maverick_fast-4-static"
+      ]
+    },
+    {
+      "id": "house-intro-maverick_fast-6-slide",
+      "split": "train",
+      "tokens": 2763,
+      "retrieved_ids": [
+        "house-intro-maverick_fast-6-static"
+      ]
+    },
+    {
+      "id": "house-inventory-v009-00",
+      "split": "train",
+      "tokens": 1554,
+      "retrieved_ids": [
+        "house-inventory-v009-01"
+      ]
+    },
+    {
+      "id": "house-inventory-v009-01",
+      "split": "train",
+      "tokens": 1554,
+      "retrieved_ids": [
+        "house-inventory-v009-00"
+      ]
+    },
+    {
+      "id": "house-inventory-v009-02",
+      "split": "train",
+      "tokens": 1608,
+      "retrieved_ids": [
+        "house-inventory-v009-03"
+      ]
+    },
+    {
+      "id": "house-inventory-v009-03",
+      "split": "train",
+      "tokens": 1608,
+      "retrieved_ids": [
+        "house-inventory-v009-02"
+      ]
+    },
+    {
+      "id": "house-inventory-v009-04",
+      "split": "train",
+      "tokens": 1594,
+      "retrieved_ids": [
+        "house-inventory-v009-06"
+      ]
+    },
+    {
+      "id": "house-inventory-v009-05",
+      "split": "train",
+      "tokens": 1610,
+      "retrieved_ids": [
+        "house-inventory-v009-07"
+      ]
+    },
+    {
+      "id": "house-inventory-v009-06",
+      "split": "train",
+      "tokens": 1594,
+      "retrieved_ids": [
+        "house-inventory-v009-04"
+      ]
+    },
+    {
+      "id": "house-inventory-v009-07",
+      "split": "train",
+      "tokens": 1610,
+      "retrieved_ids": [
+        "house-inventory-v009-05"
+      ]
+    },
+    {
+      "id": "fullref-25-00",
+      "split": "validation",
+      "tokens": 1858,
+      "retrieved_ids": [
+        "house-intro-balanced-3-slide"
+      ]
+    },
+    {
+      "id": "fullref-25-01",
+      "split": "validation",
+      "tokens": 1987,
+      "retrieved_ids": [
+        "motion-ref11-1"
+      ]
+    },
+    {
+      "id": "fullref-25-02",
+      "split": "validation",
+      "tokens": 1960,
+      "retrieved_ids": [
+        "motion-ref11-1"
+      ]
+    },
+    {
+      "id": "fullref-25-03",
+      "split": "validation",
+      "tokens": 2939,
+      "retrieved_ids": [
+        "house-intro-balanced-6-slide"
+      ]
+    },
+    {
+      "id": "fullref-25-04",
+      "split": "validation",
+      "tokens": 1833,
+      "retrieved_ids": [
+        "motion-ref11-1"
+      ]
+    },
+    {
+      "id": "fullref-25-05",
+      "split": "validation",
+      "tokens": 1569,
+      "retrieved_ids": [
+        "house-intro-balanced-2-slide"
+      ]
+    },
+    {
+      "id": "fullref-25-06",
+      "split": "validation",
+      "tokens": 1589,
+      "retrieved_ids": [
+        "house-intro-balanced-2-slide"
+      ]
+    },
+    {
+      "id": "fullref-26-07",
+      "split": "validation",
+      "tokens": 1462,
+      "retrieved_ids": [
+        "house-intro-balanced-2-slide"
+      ]
+    },
+    {
+      "id": "fullref-26-08",
+      "split": "validation",
+      "tokens": 1583,
+      "retrieved_ids": [
+        "house-inventory-v009-04"
+      ]
+    },
+    {
+      "id": "fullref-26-09",
+      "split": "validation",
+      "tokens": 1420,
+      "retrieved_ids": [
+        "house-inventory-v009-04"
+      ]
+    },
+    {
+      "id": "fullref-26-10",
+      "split": "validation",
+      "tokens": 1828,
+      "retrieved_ids": [
+        "motion-ref11-1"
+      ]
+    },
+    {
+      "id": "fullref-26-11",
+      "split": "validation",
+      "tokens": 1449,
+      "retrieved_ids": [
+        "house-intro-balanced-2-slide"
+      ]
+    },
+    {
+      "id": "fullref-26-12",
+      "split": "validation",
+      "tokens": 1876,
+      "retrieved_ids": [
+        "house-intro-balanced-3-slide"
+      ]
+    },
+    {
+      "id": "fullref-26-13",
+      "split": "validation",
+      "tokens": 1982,
+      "retrieved_ids": [
+        "motion-ref11-1"
+      ]
+    },
+    {
+      "id": "fullref-26-14",
+      "split": "validation",
+      "tokens": 1582,
+      "retrieved_ids": [
+        "house-intro-balanced-2-slide"
+      ]
+    },
+    {
+      "id": "fullref-26-15",
+      "split": "validation",
+      "tokens": 1445,
+      "retrieved_ids": [
+        "house-inventory-v009-04"
+      ]
+    },
+    {
+      "id": "fullref-27-16",
+      "split": "validation",
+      "tokens": 1600,
+      "retrieved_ids": [
+        "house-intro-balanced-2-slide"
+      ]
+    },
+    {
+      "id": "fullref-27-17",
+      "split": "validation",
+      "tokens": 1577,
+      "retrieved_ids": [
+        "house-inventory-v009-04"
+      ]
+    },
+    {
+      "id": "fullref-27-18",
+      "split": "validation",
+      "tokens": 1568,
+      "retrieved_ids": [
+        "house-intro-balanced-2-slide"
+      ]
+    },
+    {
+      "id": "fullref-27-19",
+      "split": "validation",
+      "tokens": 1555,
+      "retrieved_ids": [
+        "house-inventory-v009-04"
+      ]
+    },
+    {
+      "id": "fullref-27-20",
+      "split": "validation",
+      "tokens": 1451,
+      "retrieved_ids": [
+        "house-intro-balanced-2-slide"
+      ]
+    },
+    {
+      "id": "fullref-27-21",
+      "split": "validation",
+      "tokens": 1581,
+      "retrieved_ids": [
+        "house-inventory-v009-05"
+      ]
+    },
+    {
+      "id": "fullref-27-22",
+      "split": "validation",
+      "tokens": 1570,
+      "retrieved_ids": [
+        "house-intro-balanced-2-slide"
+      ]
+    },
+    {
+      "id": "fullref-28-23",
+      "split": "validation",
+      "tokens": 1491,
+      "retrieved_ids": [
+        "house-intro-balanced-2-slide"
+      ]
+    },
+    {
+      "id": "fullref-28-24",
+      "split": "validation",
+      "tokens": 1875,
+      "retrieved_ids": [
+        "motion-ref11-1"
+      ]
+    },
+    {
+      "id": "fullref-28-25",
+      "split": "validation",
+      "tokens": 1835,
+      "retrieved_ids": [
+        "motion-ref11-1"
+      ]
+    },
+    {
+      "id": "fullref-28-26",
+      "split": "validation",
+      "tokens": 2215,
+      "retrieved_ids": [
+        "house-intro-balanced-4-slide"
+      ]
+    },
+    {
+      "id": "fullref-28-27",
+      "split": "validation",
+      "tokens": 1563,
+      "retrieved_ids": [
+        "house-inventory-v009-05"
+      ]
+    },
+    {
+      "id": "fullref-28-28",
+      "split": "validation",
+      "tokens": 1560,
+      "retrieved_ids": [
+        "house-inventory-v009-05"
+      ]
+    },
+    {
+      "id": "hostref-25",
+      "split": "validation",
+      "tokens": 1265,
+      "retrieved_ids": [
+        "house-inventory-v009-02"
+      ]
+    },
+    {
+      "id": "hostref-26",
+      "split": "validation",
+      "tokens": 1274,
+      "retrieved_ids": [
+        "house-inventory-v009-02"
+      ]
+    },
+    {
+      "id": "hostbadge-27",
+      "split": "validation",
+      "tokens": 1451,
+      "retrieved_ids": [
+        "house-inventory-v009-02"
+      ]
+    },
+    {
+      "id": "hostbadge-28",
+      "split": "validation",
+      "tokens": 1452,
+      "retrieved_ids": [
+        "house-inventory-v009-03"
+      ]
+    },
+    {
+      "id": "ref-29-028",
+      "split": "test",
+      "tokens": 1590,
+      "retrieved_ids": [
+        "motion-ref11-0"
+      ]
+    },
+    {
+      "id": "ref-29-029",
+      "split": "test",
+      "tokens": 1584,
+      "retrieved_ids": [
+        "motion-ref11-0"
+      ]
+    },
+    {
+      "id": "ref-29-030",
+      "split": "test",
+      "tokens": 1373,
+      "retrieved_ids": [
+        "house-inventory-v009-04"
+      ]
+    },
+    {
+      "id": "ref-29-031",
+      "split": "test",
+      "tokens": 1583,
+      "retrieved_ids": [
+        "motion-ref11-0"
+      ]
+    },
+    {
+      "id": "ref-29-032",
+      "split": "test",
+      "tokens": 1939,
+      "retrieved_ids": [
+        "house-physical-cue-fixture"
+      ]
+    },
+    {
+      "id": "ref-29-033",
+      "split": "test",
+      "tokens": 1604,
+      "retrieved_ids": [
+        "motion-ref11-0"
+      ]
+    },
+    {
+      "id": "ref-29-034",
+      "split": "test",
+      "tokens": 1377,
+      "retrieved_ids": [
+        "house-inventory-v009-07"
+      ]
+    },
+    {
+      "id": "ref-29-035",
+      "split": "test",
+      "tokens": 1372,
+      "retrieved_ids": [
+        "house-inventory-v009-04"
+      ]
+    },
+    {
+      "id": "ref-29-036",
+      "split": "test",
+      "tokens": 1375,
+      "retrieved_ids": [
+        "house-inventory-v009-04"
+      ]
+    },
+    {
+      "id": "ref-29-037",
+      "split": "test",
+      "tokens": 1584,
+      "retrieved_ids": [
+        "motion-ref11-0"
+      ]
+    }
+  ]
+}

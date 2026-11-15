@@ -121,6 +121,7 @@ def create(ws,body):
         if media.sha(host['path'])!=view['source_sha256']:raise Conflict('Recording bytes changed. Import the replacement before reusing source clocks.')
         if reference:plan['planner_reference_facts']=copy.deepcopy(reference)
         ctx,at=motion_storyboard.context(plan,host,ws.data['assets'],job.get('transcript'))
+        ctx['required_texts']=[title]  # The buyer explicitly requested this visible title.
         if library_id:
             import animation_library
             prediction=animation_library.adapt(ws.root,library_id,ctx)

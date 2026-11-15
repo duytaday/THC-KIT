@@ -96,6 +96,10 @@ def validate(spec,context,*,check_hold=True):
         for value in p['rect']:finite(value,0,1,'Protected region')
         if min(p['rect'][2:])<=0 or p['rect'][0]+p['rect'][2]>1 or p['rect'][1]+p['rect'][3]>1:raise ValueError('Protected region outside canvas')
     available={unicodedata.normalize('NFC',t) for t in context.get('texts',[])}
+    required_display=context.get('required_texts',[])
+    if not isinstance(required_display,list):raise ValueError('Required display texts must be an explicit list')
+    required_display=[clean_text(t) for t in required_display]
+    if len(required_display)!=len(set(required_display)) or any(t not in available for t in required_display):raise ValueError('Required display texts must be unique current-source inventory entries')
     result=copy.deepcopy(spec);objects=result.get('objects',[])
     if not isinstance(objects,list) or len(objects)>12:raise ValueError('Use up to12 component objects')
     if result['scene_type']=='hold' and objects:raise ValueError('A presenter hold must not invent an effect')
@@ -175,6 +179,9 @@ def validate(spec,context,*,check_hold=True):
             for other in settled:
                 if any(overlap(active[t],other[t]) for t in active.keys()&other.keys()):raise ValueError('Final text cards overlap; choose separate slots')
             settled.append(active)
+    emitted={o['text'] for o in objects if o['component'] not in ('11','12','13') and 'text' in o}|{c['text'] for o in objects if o['component'] not in ('11','12','13') for c in o.get('changes',[])}
+    missing_required=[t for t in required_display if t not in emitted]
+    if missing_required:raise ValueError('Required display text missing: '+', '.join(missing_required))
     sounds=result.get('sfx',[])
     if not isinstance(sounds,list) or len(sounds)>12:raise ValueError('Use up to12 independent SFX cues')
     for sound in sounds:

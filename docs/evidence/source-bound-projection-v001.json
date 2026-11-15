@@ -1,0 +1,515 @@
+{
+  "contract": "source_bound_decisions_v1",
+  "compiler_sha256": "662fb221597a0fac2061395baa180dfa572ad08b5a4f8bfe987dddb58ecbea8a",
+  "scope": "Train-only native → decisions → native ASS-frame event equivalence; no MP4/style quality claim, no validation/test read",
+  "train_sha256": "80efa10cc51c0d5056e9959bd4a5d5868cbb9d826d9bb311dba9866e08b92b20",
+  "rows": 56,
+  "passed": 56,
+  "failures": [],
+  "results": [
+    {
+      "id": "ref-01-000",
+      "split": "train",
+      "status": "PASS",
+      "frame_events_identical": true,
+      "render_metadata_identical": true,
+      "repairs": [],
+      "decision_sha256": "2fedcfd8659cc52c351f91478e7a25de6c6df51a125bc2ee01494c196f453e60"
+    },
+    {
+      "id": "ref-03-001",
+      "split": "train",
+      "status": "PASS",
+      "frame_events_identical": true,
+      "render_metadata_identical": true,
+      "repairs": [],
+      "decision_sha256": "67f04b8a3810439710d0995cb8d03668ed04d20995a755437d3168ec4cb712c0"
+    },
+    {
+      "id": "state-ref-04-intro-v001",
+      "split": "train",
+      "status": "PASS",
+      "frame_events_identical": true,
+      "render_metadata_identical": true,
+      "repairs": [],
+      "decision_sha256": "ae3e4986f7dc2fadbfb201a3551e72de647b1c22bd29eb81af77bbf93ae6a443"
+    },
+    {
+      "id": "state-ref-06-intro-v001",
+      "split": "train",
+      "status": "PASS",
+      "frame_events_identical": true,
+      "render_metadata_identical": true,
+      "repairs": [],
+      "decision_sha256": "d88559c42829aacd0316262d5d9324197f768eddbf22956a6ea142564247c137"
+    },
+    {
+      "id": "ref-09-004",
+      "split": "train",
+      "status": "PASS",
+      "frame_events_identical": true,
+      "render_metadata_identical": true,
+      "repairs": [],
+      "decision_sha256": "abfe0ea6459315f4b548981776c8b41ff9f46854c789196a50547a00e65786b9"
+    },
+    {
+      "id": "state-ref-12-intro-v001",
+      "split": "train",
+      "status": "PASS",
+      "frame_events_identical": true,
+      "render_metadata_identical": true,
+      "repairs": [],
+      "decision_sha256": "6465d7909aa81ab8ae265d6d4013117ae52939cf41a32fe0605f3f1685fce8b5"
+    },
+    {
+      "id": "state-ref-14-intro-v001",
+      "split": "train",
+      "status": "PASS",
+      "frame_events_identical": true,
+      "render_metadata_identical": true,
+      "repairs": [],
+      "decision_sha256": "a844aae3cfb41fba91995b63eea90ad4989b2f5760cc5258942a9ebd476e6945"
+    },
+    {
+      "id": "ref-16-007",
+      "split": "train",
+      "status": "PASS",
+      "frame_events_identical": true,
+      "render_metadata_identical": true,
+      "repairs": [],
+      "decision_sha256": "14d80c90656f85eed5a2bcb81b11d94a55357679fa17f068b1323750e9eb47fd"
+    },
+    {
+      "id": "ref-17-008",
+      "split": "train",
+      "status": "PASS",
+      "frame_events_identical": true,
+      "render_metadata_identical": true,
+      "repairs": [],
+      "decision_sha256": "1ca49e91b6e644e6f9a8b9ed26cea6e3dea944a1df1dc5f228556d352a986e6b"
+    },
+    {
+      "id": "ref-18-009",
+      "split": "train",
+      "status": "PASS",
+      "frame_events_identical": true,
+      "render_metadata_identical": true,
+      "repairs": [],
+      "decision_sha256": "14d80c90656f85eed5a2bcb81b11d94a55357679fa17f068b1323750e9eb47fd"
+    },
+    {
+      "id": "state-ref-20-intro-v001",
+      "split": "train",
+      "status": "PASS",
+      "frame_events_identical": true,
+      "render_metadata_identical": true,
+      "repairs": [],
+      "decision_sha256": "7a86f241e6cb7149fbe27c9bf86dbe0449aaaf14d0a333568aa31979705b6f44"
+    },
+    {
+      "id": "state-ref-21-intro-v001",
+      "split": "train",
+      "status": "PASS",
+      "frame_events_identical": true,
+      "render_metadata_identical": true,
+      "repairs": [],
+      "decision_sha256": "ea42f59ebe44cee8295bad43c009f79c93f514a4515ab125487e00b53b95f470"
+    },
+    {
+      "id": "state-ref-22-intro-v001",
+      "split": "train",
+      "status": "PASS",
+      "frame_events_identical": true,
+      "render_metadata_identical": true,
+      "repairs": [],
+      "decision_sha256": "35309e2aa9f6319aff5e42d4bde933f311cf19e572aa8b64d92888f4cbc5d629"
+    },
+    {
+      "id": "ref-23-013",
+      "split": "train",
+      "status": "PASS",
+      "frame_events_identical": true,
+      "render_metadata_identical": true,
+      "repairs": [],
+      "decision_sha256": "abfe0ea6459315f4b548981776c8b41ff9f46854c789196a50547a00e65786b9"
+    },
+    {
+      "id": "ref-04-014",
+      "split": "train",
+      "status": "PASS",
+      "frame_events_identical": true,
+      "render_metadata_identical": true,
+      "repairs": [],
+      "decision_sha256": "c5daae790673b685eff906fadd9ef68887419d077c9aafcb89b78529c832014d"
+    },
+    {
+      "id": "ref-06-015",
+      "split": "train",
+      "status": "PASS",
+      "frame_events_identical": true,
+      "render_metadata_identical": true,
+      "repairs": [],
+      "decision_sha256": "9c86b8b6d8e545db4bc20ac0c6c8a1022b2ec62be8b0cfb5d400728df79b3a0b"
+    },
+    {
+      "id": "ref-12-016",
+      "split": "train",
+      "status": "PASS",
+      "frame_events_identical": true,
+      "render_metadata_identical": true,
+      "repairs": [],
+      "decision_sha256": "defa8193c9d776da23e4a155d4e172c33a05796d965dc68cbd29a113ac87f4b0"
+    },
+    {
+      "id": "ref-14-017",
+      "split": "train",
+      "status": "PASS",
+      "frame_events_identical": true,
+      "render_metadata_identical": true,
+      "repairs": [],
+      "decision_sha256": "f395438be5b54de68e6c2c73f9194de90940821fcfde0b5c5742187224be29a1"
+    },
+    {
+      "id": "ref-20-018",
+      "split": "train",
+      "status": "PASS",
+      "frame_events_identical": true,
+      "render_metadata_identical": true,
+      "repairs": [],
+      "decision_sha256": "bda2242c305e47a3724298f79ee19e7d7035d9ad1f5e4845f8f79398c8857eab"
+    },
+    {
+      "id": "ref-21-019",
+      "split": "train",
+      "status": "PASS",
+      "frame_events_identical": true,
+      "render_metadata_identical": true,
+      "repairs": [],
+      "decision_sha256": "15c1132bfb362e689d4b603088a77fa36aff828ec8b0a7faa3deb62a6b09feb4"
+    },
+    {
+      "id": "ref-22-020",
+      "split": "train",
+      "status": "PASS",
+      "frame_events_identical": true,
+      "render_metadata_identical": true,
+      "repairs": [],
+      "decision_sha256": "7f1283fdd1a8b95346e6f3ed9efc27a4e21f45e81d703ee6005ef7f1d988b0d0"
+    },
+    {
+      "id": "house-physical-cue-fixture",
+      "split": "train",
+      "status": "PASS",
+      "frame_events_identical": true,
+      "render_metadata_identical": true,
+      "repairs": [],
+      "decision_sha256": "f563dc5ad5e5f12d05854c84809d545479916f3f27024b0c79ba4acc8eeaafa0"
+    },
+    {
+      "id": "motion-ref11-0",
+      "split": "train",
+      "status": "PASS",
+      "frame_events_identical": true,
+      "render_metadata_identical": true,
+      "repairs": [],
+      "decision_sha256": "1df9deabcd0f4ed61f9ae02a692c72ac4c692e5daeb4a9211e1b8b6eae28929d"
+    },
+    {
+      "id": "motion-ref11-1",
+      "split": "train",
+      "status": "PASS",
+      "frame_events_identical": true,
+      "render_metadata_identical": true,
+      "repairs": [],
+      "decision_sha256": "b25aefc6d04b1b576fc300867f6f13d40dd9d9cf5cb28019aebcb0e23cae2dcc"
+    },
+    {
+      "id": "motion-ref11-2",
+      "split": "train",
+      "status": "PASS",
+      "frame_events_identical": true,
+      "render_metadata_identical": true,
+      "repairs": [],
+      "decision_sha256": "6e1b7dba25003cefa6bd2828133a35181a564824212f0e94784586537203cbc1"
+    },
+    {
+      "id": "motion-ref11-3",
+      "split": "train",
+      "status": "PASS",
+      "frame_events_identical": true,
+      "render_metadata_identical": true,
+      "repairs": [],
+      "decision_sha256": "052abb2295da4c45871723b549d2a5e6fc43f140590a41035816a1b422f50668"
+    },
+    {
+      "id": "motion-ref7-0",
+      "split": "train",
+      "status": "PASS",
+      "frame_events_identical": true,
+      "render_metadata_identical": true,
+      "repairs": [],
+      "decision_sha256": "87e9b017d2a397d1ee787f4dbaf84a1f7e6980c7b8d7e49e3ee485bce052c38c"
+    },
+    {
+      "id": "motion-ref7-2",
+      "split": "train",
+      "status": "PASS",
+      "frame_events_identical": true,
+      "render_metadata_identical": true,
+      "repairs": [],
+      "decision_sha256": "0192ac494e9417e9fedc64cfa2f042df1913dddc80b9b48ed703e3f4e687489c"
+    },
+    {
+      "id": "motion-ref7-3",
+      "split": "train",
+      "status": "PASS",
+      "frame_events_identical": true,
+      "render_metadata_identical": true,
+      "repairs": [],
+      "decision_sha256": "8fbf88bea1b22a2702627270bc780f8a9aee33fd9adb42a114554092c153d218"
+    },
+    {
+      "id": "house-six-0",
+      "split": "train",
+      "status": "PASS",
+      "frame_events_identical": true,
+      "render_metadata_identical": true,
+      "repairs": [],
+      "decision_sha256": "b6b6dd25c870f27ba1e2d105ffd394b27fdea0148d38f50c88ff49bb48d20198"
+    },
+    {
+      "id": "house-six-1",
+      "split": "train",
+      "status": "PASS",
+      "frame_events_identical": true,
+      "render_metadata_identical": true,
+      "repairs": [],
+      "decision_sha256": "b6b6dd25c870f27ba1e2d105ffd394b27fdea0148d38f50c88ff49bb48d20198"
+    },
+    {
+      "id": "house-title-states-v001",
+      "split": "train",
+      "status": "PASS",
+      "frame_events_identical": true,
+      "render_metadata_identical": true,
+      "repairs": [],
+      "decision_sha256": "34cf7aebeb02b942a69f66926fc8abb4436c0d45adbafec206d7d324831f503b"
+    },
+    {
+      "id": "house-intro-balanced-2-static",
+      "split": "train",
+      "status": "PASS",
+      "frame_events_identical": true,
+      "render_metadata_identical": true,
+      "repairs": [],
+      "decision_sha256": "e24e69f53e417f1c41e2e81d788d9bc9462d2c7d0a3b3021e6d09b18fe85f373"
+    },
+    {
+      "id": "house-intro-balanced-3-static",
+      "split": "train",
+      "status": "PASS",
+      "frame_events_identical": true,
+      "render_metadata_identical": true,
+      "repairs": [],
+      "decision_sha256": "461c3ffeeb4b1a05b9eab4639f6ff93a51adc4e1f9311af206bc8d4753c9775e"
+    },
+    {
+      "id": "house-intro-balanced-4-static",
+      "split": "train",
+      "status": "PASS",
+      "frame_events_identical": true,
+      "render_metadata_identical": true,
+      "repairs": [],
+      "decision_sha256": "7179883b776cfba5c90dcc5649150d672b6155980dbd307eafd7fc1654d9d2f2"
+    },
+    {
+      "id": "house-intro-balanced-6-static",
+      "split": "train",
+      "status": "PASS",
+      "frame_events_identical": true,
+      "render_metadata_identical": true,
+      "repairs": [],
+      "decision_sha256": "c631fc4a0eb85ea25b5e5895b34c13c4e80a714ece704f222219dd5cd5b254b4"
+    },
+    {
+      "id": "house-intro-balanced-2-slide",
+      "split": "train",
+      "status": "PASS",
+      "frame_events_identical": true,
+      "render_metadata_identical": true,
+      "repairs": [],
+      "decision_sha256": "1d5660a389aec0051f47b264d445346a71fb41b18f80fde1faf400d5f4c95477"
+    },
+    {
+      "id": "house-intro-balanced-3-slide",
+      "split": "train",
+      "status": "PASS",
+      "frame_events_identical": true,
+      "render_metadata_identical": true,
+      "repairs": [],
+      "decision_sha256": "97947ec8b5bcca7a346e132dc377386ffb517b8e0f1fa10005ad2857957f025d"
+    },
+    {
+      "id": "house-intro-balanced-4-slide",
+      "split": "train",
+      "status": "PASS",
+      "frame_events_identical": true,
+      "render_metadata_identical": true,
+      "repairs": [],
+      "decision_sha256": "f7959dbc5a044d5e011b0ec2405a11a1ce823fc24afbed0193468a64adb5b57e"
+    },
+    {
+      "id": "house-intro-balanced-6-slide",
+      "split": "train",
+      "status": "PASS",
+      "frame_events_identical": true,
+      "render_metadata_identical": true,
+      "repairs": [],
+      "decision_sha256": "bf4f6813a68c31a1f43d0bef470feb98a802f98db5572efbad92aedbd73a9e9f"
+    },
+    {
+      "id": "house-intro-maverick_fast-2-static",
+      "split": "train",
+      "status": "PASS",
+      "frame_events_identical": true,
+      "render_metadata_identical": true,
+      "repairs": [],
+      "decision_sha256": "c501780f508a0f277ee06f98d84402ed99af8f32b9da875bc7f53c87e81bf673"
+    },
+    {
+      "id": "house-intro-maverick_fast-3-static",
+      "split": "train",
+      "status": "PASS",
+      "frame_events_identical": true,
+      "render_metadata_identical": true,
+      "repairs": [],
+      "decision_sha256": "36b7e664db904d2564963d99a8858f71ba0cc4443f88799a36a16780383e5fb6"
+    },
+    {
+      "id": "house-intro-maverick_fast-4-static",
+      "split": "train",
+      "status": "PASS",
+      "frame_events_identical": true,
+      "render_metadata_identical": true,
+      "repairs": [],
+      "decision_sha256": "2bd2f4a45a248760409bc063ccab4e5f74ced5f87b9f7c6aa79a9fdfbff94702"
+    },
+    {
+      "id": "house-intro-maverick_fast-6-static",
+      "split": "train",
+      "status": "PASS",
+      "frame_events_identical": true,
+      "render_metadata_identical": true,
+      "repairs": [],
+      "decision_sha256": "653f080a88af9159dc807323ce6d0e9676a3325aa7c33cce6ddf863e7c9f8fb2"
+    },
+    {
+      "id": "house-intro-maverick_fast-2-slide",
+      "split": "train",
+      "status": "PASS",
+      "frame_events_identical": true,
+      "render_metadata_identical": true,
+      "repairs": [],
+      "decision_sha256": "57428b85df6abe8dcd6a975107d9b0c56d6927a321589b3b48746a308dc1abd3"
+    },
+    {
+      "id": "house-intro-maverick_fast-3-slide",
+      "split": "train",
+      "status": "PASS",
+      "frame_events_identical": true,
+      "render_metadata_identical": true,
+      "repairs": [],
+      "decision_sha256": "7bc90d1c2285b134fc7419ef3f966a63a16d0fc47c43e482dbcb14d7b53db3a6"
+    },
+    {
+      "id": "house-intro-maverick_fast-4-slide",
+      "split": "train",
+      "status": "PASS",
+      "frame_events_identical": true,
+      "render_metadata_identical": true,
+      "repairs": [],
+      "decision_sha256": "6965c029cf532d4ac082a44a90724093edf8db0ed6986c1e5f65867b7d1fd740"
+    },
+    {
+      "id": "house-intro-maverick_fast-6-slide",
+      "split": "train",
+      "status": "PASS",
+      "frame_events_identical": true,
+      "render_metadata_identical": true,
+      "repairs": [],
+      "decision_sha256": "cdc23a8ad9d194e79442c856e3b2b94842cac3ae36fc770ffef82acf158ef2cb"
+    },
+    {
+      "id": "house-inventory-v009-00",
+      "split": "train",
+      "status": "PASS",
+      "frame_events_identical": true,
+      "render_metadata_identical": true,
+      "repairs": [],
+      "decision_sha256": "ea957af2715736e68cbef96669b7c287dc6e6bf13b9f4fc16e56edb81783afdb"
+    },
+    {
+      "id": "house-inventory-v009-01",
+      "split": "train",
+      "status": "PASS",
+      "frame_events_identical": true,
+      "render_metadata_identical": true,
+      "repairs": [],
+      "decision_sha256": "4b3f3f22eeac0ee31c85d50c7813e664f4a7eab71cea0e795fe3ba3bf2c6f6b8"
+    },
+    {
+      "id": "house-inventory-v009-02",
+      "split": "train",
+      "status": "PASS",
+      "frame_events_identical": true,
+      "render_metadata_identical": true,
+      "repairs": [],
+      "decision_sha256": "997c72dad26c994c199566a4203348bd52d0eba24b1344ab7bc6b217025d4d54"
+    },
+    {
+      "id": "house-inventory-v009-03",
+      "split": "train",
+      "status": "PASS",
+      "frame_events_identical": true,
+      "render_metadata_identical": true,
+      "repairs": [],
+      "decision_sha256": "39698766938cf62919f3ae73014107d963bce57969436491ce21c9e592a1fe6b"
+    },
+    {
+      "id": "house-inventory-v009-04",
+      "split": "train",
+      "status": "PASS",
+      "frame_events_identical": true,
+      "render_metadata_identical": true,
+      "repairs": [],
+      "decision_sha256": "9656c9bb37b98bb959b56ba6802ebd9a801f80476678754c321f9ccf4633c5ca"
+    },
+    {
+      "id": "house-inventory-v009-05",
+      "split": "train",
+      "status": "PASS",
+      "frame_events_identical": true,
+      "render_metadata_identical": true,
+      "repairs": [],
+      "decision_sha256": "70372876edae8d3e531a37a31745576ebc5307890d1f713707f34b75aa937136"
+    },
+    {
+      "id": "house-inventory-v009-06",
+      "split": "train",
+      "status": "PASS",
+      "frame_events_identical": true,
+      "render_metadata_identical": true,
+      "repairs": [],
+      "decision_sha256": "9656c9bb37b98bb959b56ba6802ebd9a801f80476678754c321f9ccf4633c5ca"
+    },
+    {
+      "id": "house-inventory-v009-07",
+      "split": "train",
+      "status": "PASS",
+      "frame_events_identical": true,
+      "render_metadata_identical": true,
+      "repairs": [],
+      "decision_sha256": "70372876edae8d3e531a37a31745576ebc5307890d1f713707f34b75aa937136"
+    }
+  ]
+}

@@ -5,8 +5,20 @@ from engine import media
 import motion_specs,motion_learning
 
 
+def request_contract(request):
+    contract=motion_learning.output_contract(request.get('prompt_version',2))
+    if request.get('output_contract',contract)!=contract:raise ValueError('Checkpoint/request output contract mismatch')
+    if contract!='native_scene_v1':
+        import motion_decisions
+        if not request.get('rows'):raise ValueError('Source-bound request needs at least one current scene')
+        for row in request['rows']:
+            if row.get('source_context_sha256')!=motion_decisions.digest(row['context']):raise ValueError('Request source context fingerprint mismatch')
+    return contract
+
+
 def run(request):
     began=time.monotonic()
+    contract=request_contract(request)
     import importlib.metadata
     import request_observability as observation
     import torch
@@ -27,6 +39,7 @@ def run(request):
     model_at=time.monotonic()
     decoding=request.get('decode_mode','unconstrained')
     if decoding not in ('unconstrained','source_json_v1'):raise ValueError('Unknown animation decoder')
+    if contract!='native_scene_v1' and decoding!='unconstrained':raise ValueError('Native source_json_v1 decoder is incompatible with source-bound decisions; select unconstrained')
     tokenizer_data=None
     if decoding=='source_json_v1':
         if request.get('decoder_site'):sys.path.insert(0,request['decoder_site'])
@@ -60,10 +73,16 @@ def run(request):
         traced['gpu_peak_allocated_bytes']=torch.cuda.max_memory_allocated() if device.startswith('cuda') else None
         traced['output_tokens']=int(out.shape[1]-ids.shape[1])
         raw=tok.decode(out[0][ids.shape[1]:],skip_special_tokens=True);error=None;spec=None;compiled={}
-        try:spec,compiled=motion_specs.compile_spec(json.loads(raw),row['context'])
+        try:
+            if contract=='native_scene_v1':spec,compiled=motion_specs.compile_spec(json.loads(raw),row['context'])
+            else:
+                import motion_decisions
+                if row.get('source_context_sha256')!=motion_decisions.digest(row['context']):raise ValueError('Request source context fingerprint mismatch')
+                spec,binding=motion_decisions.compile_plan(json.loads(raw),row['context'],row['source_context_sha256'])
+                compiled=dict(kind='source_binding',output_contract=contract,source_binding=binding,repairs=[])
         except (ValueError,KeyError,TypeError,IndexError) as e:error=str(e)
         rows.append(dict(id=row['id'],spec=spec,raw=raw,error=error,compiler=compiled,decoding=decode_receipt,observability=traced,output_tokens=out.shape[1]-ids.shape[1],runtime_seconds=time.monotonic()-started))
-    return dict(weights_loaded=True,base_files=request['base_files'],checkpoint_sha256=request['checkpoint_sha256'],device=device,predictions=rows,observability=dict(worker_pid=os.getpid(),worker_lifetime='fresh_process',versions={name:importlib.metadata.version(name) for name in ('torch','transformers','peft')},verified_and_import_seconds=verified_at-began,tokenizer_load_seconds=tokenizer_at-verified_at,model_load_seconds=model_at-tokenizer_at,total_seconds=time.monotonic()-began,cache_read_tokens=None,cache_write_tokens=None,prefill_seconds=None,time_to_first_token_seconds=None))
+    return dict(weights_loaded=True,output_contract=contract,base_files=request['base_files'],checkpoint_sha256=request['checkpoint_sha256'],device=device,predictions=rows,observability=dict(worker_pid=os.getpid(),worker_lifetime='fresh_process',versions={name:importlib.metadata.version(name) for name in ('torch','transformers','peft')},verified_and_import_seconds=verified_at-began,tokenizer_load_seconds=tokenizer_at-verified_at,model_load_seconds=model_at-tokenizer_at,total_seconds=time.monotonic()-began,cache_read_tokens=None,cache_write_tokens=None,prefill_seconds=None,time_to_first_token_seconds=None))
 
 
 if __name__=='__main__':

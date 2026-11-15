@@ -209,3 +209,15 @@ preserving the old rejection. New authored train-only examples are experimental;
 no mastery, hearing approval or model quality improvement inferred from them.
 - [ ] Explain why a corrected probe and lower training loss do not establish
   improved full-video editing on an independent episode.
+
+
+15/11 source binding/capture follow-through: user explicitly resumed Computer
+Use for the real FFmpeg demo. Answer “chưa cần có human check” is ambiguous;
+do not infer final viewing/listening approval or mark the pending source-guard
+checkpoint mastered. Original final human review requirement remains in force.
+Observed a concrete phone-size defect: nested preview captions conflict with
+current narration. Retained that export, recorded a clean-caption preview from
+the same real footage and kept one outer caption/voice route. Technical pass,
+compiler equivalence and unchanged stems are separate from actual hearing.
+- [ ] Explain why source-bound compiler correctness does not establish a
+  trained planner's layout/motion quality or full-video style fidelity.
