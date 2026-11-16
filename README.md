@@ -9,6 +9,8 @@ landmark rebinding. Exports still need their own master and listening review.
 
 ## Start
 
+For developing the kit, use the [full THC-KIT master prompt](docs/THC-KIT-MASTER-PROMPT.vi.md). It preserves all twelve requirement sections and separates the verified source checkpoint from remaining implementation and real-media acceptance.
+
 For a whole folder with the UI closed, use the [headless batch CLI](docs/HEADLESS-AUTO-EDIT.vi.md) and [terminal editing prompt](docs/TERMINAL-EDITING-PROMPT.vi.md). Files, Library and Outputs share the same workspace, including A/B/C, pickups and version history.
 
 Cutroom now includes a local batch UI, script-driven intro/demo artifacts and a

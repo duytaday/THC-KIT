@@ -1,5 +1,7 @@
 # Motion and animation library implementation prompt
 
+This scoped integration prompt is part of the [full THC-KIT master prompt](THC-KIT-MASTER-PROMPT.vi.md). Keep its runtime/readiness contracts when continuing the broader CLI, template and evaluation work.
+
 Consumers: the Cutroom development agent implements adapters and tests; the editing agent reads the bounded catalog/recommendation API; the pinned application model continues its existing source-bound contract. This prompt is not a replacement for that model's request or an instruction to train/promote a checkpoint.
 
 Implement the six owner-selected sources in the current local checkout:

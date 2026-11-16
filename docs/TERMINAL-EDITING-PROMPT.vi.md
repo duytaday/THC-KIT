@@ -1,5 +1,7 @@
 # Prompt cho Codex/Claude trong terminal
 
+Đây là prompt vận hành dựng video. Khi phát triển hoặc mở rộng kit, dùng [master prompt đầy đủ](THC-KIT-MASTER-PROMPT.vi.md); checkpoint và yêu cầu chưa hoàn tất được ghi riêng ở đó.
+
 Chạy trong checkout THC-KIT. Đọc `docs/HEADLESS-AUTO-EDIT.vi.md`, xác nhận interpreter/FFmpeg và workspace hiện tại. Dựng toàn bộ recording trong thư mục tuần này theo preset Tutorial Calm bằng `app/cli.py auto-edit`, kể cả khi UI đóng. Dùng engine, workspace, assignment và QC hiện có; không viết pipeline render khác.
 
 Lấy đường dẫn recording, scripts, components, preset/template và output từ yêu cầu/cấu trúc project. Giải thích đúng CWD-relative và manifest-relative; không sao chép đường dẫn episode cũ. Nếu đủ dữ liệu, chạy `--plan-only` rồi batch ngay trong phạm vi đã được yêu cầu. Mapping mơ hồ phải hiện theo tập; các tập đủ nguồn tiếp tục. Giữ source và take chưa quyết định.
