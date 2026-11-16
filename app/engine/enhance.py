@@ -115,7 +115,12 @@ def mix(source,target,plan,events,out,total,scene_preview=False):
         arranged=arrange(track,out,total);gain=music.get('gain_db',-20)
         # Music is compressor input; original narration is the detector.
         samples=round(total*48000);pad=samples+48000
-        vf=f'[0:a]atrim=end_sample={samples},apad=whole_len={pad},asetnsamples=n=1024:p=1,volume={gain}dB,afade=t=in:d=0.35,afade=t=out:st={max(0,total-.65)}:d=0.65[bed];[1:a]atrim=end_sample={samples},apad=whole_len={pad},asetnsamples=n=1024:p=1[detector];[bed][detector]sidechaincompress=threshold=0.02:ratio=6:attack=25:release=500:makeup=1,atrim=end_sample={samples}[ducked]'
+        automation=music.get('automation',[])
+        envelope=''
+        if automation:
+            expression='+'.join(f"if(between(t,{c['start']},{c['end']}),{c['gain_db']},0)" for c in automation)
+            envelope=f",volume='pow(10,({expression})/20)':eval=frame"
+        vf=f'[0:a]atrim=end_sample={samples},apad=whole_len={pad},asetnsamples=n=1024:p=1,volume={gain}dB{envelope},afade=t=in:d=0.35,afade=t=out:st={max(0,total-.65)}:d=0.65[bed];[1:a]atrim=end_sample={samples},apad=whole_len={pad},asetnsamples=n=1024:p=1[detector];[bed][detector]sidechaincompress=threshold=0.02:ratio=6:attack=25:release=500:makeup=1,atrim=end_sample={samples}[ducked]'
         media.ff('-i',arranged,'-i',out/'voice.wav','-filter_complex',vf,'-map','[ducked]','-ar','48000','-c:a','pcm_s24le',out/'music.wav')
     else:silence(out/'music.wav',total)
     finish=media.preview_audio if scene_preview else media.finish_audio

@@ -1,0 +1,10 @@
+<!doctype html>
+<html lang="vi">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>THC · Series studio</title><link rel="stylesheet" href="/style.css"><link rel="stylesheet" href="/series.css"></head>
+<body><header><div class="brand"><img src="/icon.svg" alt=""><span>Talking Head Cutroom</span></div><a href="/">← Workspace</a></header>
+<main id="seriesStudio"><div class="sectionhead"><div><div class="crumb">THC / Series studio</div><h1>Style của series, nội dung của từng tập</h1><p>Reference → Compare A/B/C → Save style → Episodes → Review master</p></div></div>
+<div id="studioStatus" role="status" aria-live="polite"></div>
+<section class="studio-toolbar"><label>Creator<input id="studioCreator" value="local-creator" maxlength="140"></label><label>Series<input id="studioSeries" value="My series" maxlength="140"></label><label>Style<select id="studioStyle"></select></label><button id="newStyle" type="button">Tạo style</button><button id="reloadStudio" type="button">Tải lại</button></section>
+<nav id="studioTabs" aria-label="Series workflow"><button type="button" data-stage="sources">1 · Sources</button><button type="button" data-stage="compare">2 · Compare A/B/C</button><button type="button" data-stage="save">3 · Save style</button><button type="button" data-stage="episodes">4 · Episodes</button><button type="button" data-stage="review">5 · Review master</button></nav>
+<div id="studioPanel"></div>
+</main><script src="/series-proof.js"></script><script src="/series.js"></script></body></html>

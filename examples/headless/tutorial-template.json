@@ -1,0 +1,6 @@
+{
+  "format": "thc-template/1", "name": "Tutorial Calm template", "version": 1,
+  "defaults": {"theme": "paper", "caption_style": "clean", "music_mode": "built_in", "music_track": "calm", "music_gain_db": -26},
+  "locked_fields": ["theme", "caption_style", "music_mode", "music_track", "music_gain_db"],
+  "slots": ["hook", "explain", "demo", "cta"]
+}

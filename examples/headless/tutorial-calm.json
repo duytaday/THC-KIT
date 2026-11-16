@@ -1,0 +1,15 @@
+{
+  "format": "thc-series-preset/1",
+  "name": "Tutorial Calm",
+  "version": 1,
+  "creator": "local-creator",
+  "series": "tutorials",
+  "params": {
+    "theme": "paper", "treatment": "static", "entrance_frames": 8,
+    "allowed_treatments": ["static", "fade", "slide"],
+    "sfx_gain_db": -26, "transition": "hard_cut",
+    "music_mode": "built_in", "music_track": "calm", "music_gain_db": -26,
+    "caption_style": "clean", "font_family": "DejaVu Sans", "font_size": 54
+  },
+  "locked_fields": ["theme", "palette", "font_family", "font_size", "caption_style", "transition", "music_mode", "music_track", "music_gain_db"]
+}

@@ -1,0 +1,19 @@
+# Audit prompt và contract của headless auto-edit
+
+Phạm vi: thay đổi trên checkout THC-KIT từ baseline `d1435e6`, tập trung mục 12. Không đọc credential, transcript riêng, sealed final hoặc gold export để tuning. Dùng source code và fixture tổng hợp có nhãn. Không có specialist/subagent độc lập; đây là kiểm tra phát triển, không phải blind editorial benchmark.
+
+Consumer có ba lớp: Codex/Claude đọc skill và prompt terminal; `headless_cli`/`headless` nhận dữ liệu có cấu trúc; native rules/FFmpeg tạo spec và media. QC checker và pixel/PCM evaluator kiểm tra các thuộc tính khác nhau. Không có model inference/provider mới trong route này. Target model cụ thể của agent chưa pin; các thay đổi dưới đây dựa trên contract/runtime, không tuyên bố ưu thế cho một model.
+
+| Phát hiện và bằng chứng | Sửa quyết định | Counterexample và nghiệm thu |
+|---|---|---|
+| Instruction conflict: `talking-head-edit/SKILL.md` yêu cầu Make first cut trong UI ngay cả khi user yêu cầu terminal. | Route terminal batch sang `HEADLESS-AUTO-EDIT.vi.md` và CLI hiện có; giữ route interactive. | UI đóng, auto-edit vẫn xuất 3 master; không yêu cầu mở UI trước. Interactive route vẫn tồn tại. |
+| Implementation gap ở baseline: CLI chỉ inventory/analyze/render/qc, không có run batch durable hay episode-only revise. | Service dùng cùng Workspace/render/QC, OS lease và JSON command contract; lưu run, fingerprint, output hash và revision. | Hai process: stop sau tập 1 rồi resume; tập 1 giữ nguyên export ID/hash. Sửa nhạc chỉ tập 2 không đổi tập 1/3/preset. |
+| Unsafe inference nếu dùng filename/style reference làm bằng chứng software result. | Ghép script theo manifest/hash/matcher; component lọc action, source hash, quyền, runtime và target/contact/result; thiếu nguồn tạo precise pickup + draft. | Hai file cùng basename, một export và một subtitles; pixel output phải khớp đúng source và loại source kia. Tập Save thiếu demo vẫn xuất draft và báo đúng câu. |
+| Runtime defect quan sát khi mở UI: demo B/C bị loại vì hold của marker chưa trừ entrance mới. | Dùng compiler frame-budget hiện có; giữ source anchors, geometry và ngưỡng readable hold, ghi compiler repairs. | Yêu cầu thật ba variant khác nhau ở hook/demo/CTA; không giả bản trùng. Kiểm lại source/result ở frame 150 và PCM đồng nhất trong mỗi visual comparison. |
+| Multi-turn risk: retry directive sau export có thể cộng music delta hai lần; cập nhật renderer cần invalidate completed reuse. | Idempotency theo run/episode/request ID hoặc payload, từ chối ID đổi payload; fingerprint bao gồm orchestration/renderer/font/audio runtime hashes. | Retry trước/sau export chỉ một music cue. Music stem đúng -3 dB trong câu, 0 dB ngoài; master mới chờ review. |
+
+Hợp đồng review giữ nguyên: auto/agent/test khác human, thiếu demo chặn release, exact-master 1× viewing/listening vẫn bắt buộc. Fixture không thể được duyệt thành customer master. Dữ liệu training chỉ lấy lựa chọn positive thật có consent và quyền nguồn; derivative/reference families không tách qua các split. Không train/promote adapter trong thay đổi này.
+
+Cache: fixed rule/style ở prefix, episode/feedback ở suffix. Unit test xác nhận prefix ổn định khi thay episode/feedback; request receipt ghi `PREFIX_HASH_ONLY_NO_INFERENCE_CALL`, provider cache counters là null. Render cache là content/runtime keyed file cache thực tế, không phải prompt-cache hit. Không thêm provider cache breakpoint vì route không gọi provider.
+
+Unified diff được lưu cùng bàn giao development và commit source; các test trong `app/test_headless.py`, `app/test_series_studio.py` là hồi quy công khai. Các recording, fixture media và workspace acceptance giữ local. Chưa kiểm chứng: ba tập khách hàng độc lập, chất lượng sáng tạo/retention, full-master listening, LoRA mới, power-loss tại frame đang encode và installer mới.

@@ -1,5 +1,7 @@
 # Talking Head Cutroom local development handoff
 
+Headless `auto-edit`, `status`, `resume`, `revise` and `library` share this app’s workspace/renderer/QC. See [batch CLI and compact UI](../docs/HEADLESS-AUTO-EDIT.vi.md). The UI top level is Files / Library / Outputs; advanced style tools are reachable from Library.
+
 Creator path: add a recording → **Make first cut**. Optional TXT/SRT, usable
 B-roll, style reference and free-text niche stay separate. Local ASR is a first-use
 download or supplied-script fallback; uncertain takes remain intact for review.

@@ -118,6 +118,20 @@ class Handler(BaseHTTPRequestHandler):
             u = urllib.parse.urlsplit(self.path)
             p = u.path
             ws = self.server.ws
+            if p == '/api/library':
+                import library_service
+                return self.result(library_service.snapshot(ws))
+            if p == '/api/series':
+                import series_library
+                return self.result(series_library.snapshot(ws))
+            if p.startswith('/series-media/'):
+                import series_studio
+                _,_,rid,label,kind=p.split('/')
+                return self.file(series_studio.media_path(ws,rid,label,kind))
+            if p.startswith('/series-reference/'):
+                import series_studio
+                _,_,asset,mode=p.split('/')
+                return self.file(series_studio.reference_path(ws,asset,mode))
             if p == '/api/scene-plan':
                 import scene_plan
                 return self.result(scene_plan.read(ws,urllib.parse.parse_qs(u.query)['id'][0]))
@@ -217,7 +231,7 @@ class Handler(BaseHTTPRequestHandler):
                 return self.file(f, label)
             if p == "/":
                 p = "/index.html"
-            if p not in ("/index.html", "/app.js", "/style.css", "/icon.svg", "/dm-sans.woff2"):
+            if p not in ("/index.html", "/app.js", "/style.css", "/icon.svg", "/dm-sans.woff2", "/series.html", "/series.js", "/series.css", "/series-proof.js", "/library.html", "/library.js", "/outputs-batch.js"):
                 return self.result({"error": "Not found"}, 404)
             f = UI / p[1:]
             self.send_bytes(200, f.read_bytes(), MIME[f.suffix])
@@ -295,6 +309,21 @@ class Handler(BaseHTTPRequestHandler):
                 raise ValueError("Request is too large.")
             b = json.loads(self.rfile.read(n) or "{}")
             self._turn_request=b
+            if p in ('/api/library/import','/api/library/choose'):
+                import library_service
+                return self.result(library_service.save(ws,b) if p.endswith('/import') else library_service.choose(ws,b))
+            if p == '/api/headless':
+                import headless
+                action=b['action'];request=b.get('request',{})
+                if action=='auto-edit':return self.result(headless.auto_edit(ws,request))
+                if action=='resume':return self.result(headless.resume(ws,request['run'],request.get('stop_after')))
+                if action=='revise':return self.result(headless.revise(ws,request))
+                if action=='library':return self.result(__import__('library_service').snapshot(ws))
+                raise ValueError('Unsupported headless API action')
+            if p.startswith('/api/series/'):
+                import series_studio,series_library
+                try:return self.result(series_studio.dispatch(ws,p.rsplit('/',1)[-1],b))
+                except series_library.StudioConflict as error:return self.result(dict(error=str(error),conflict=error.payload),409)
             if p == "/api/update":
                 if 'revisions' not in b:raise ValueError('Supply revisions for every selected recording.')
                 committed=ws.update(b["ids"], b["changes"], b['revisions'])

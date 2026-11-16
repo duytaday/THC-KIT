@@ -210,10 +210,15 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
             if min(w, h) < 2 or min(x, y) < 0 or x + w > video["width"] or y + h > video["height"]:
                 raise ValueError("Proof crop extends beyond the screen recording")
             crop = f"crop={w}:{h}:{x}:{y},"
+        fit=f"{crop}scale=1080:1920:force_original_aspect_ratio=decrease,pad=1080:1920:(ow-iw)/2:(oh-ih)/2"
+        if clip.get('framing'):
+            if crop:raise ValueError('Keep one proof crop controller')
+            import demo_framing
+            video=stream(file,'video')
+            fit=demo_framing.filter(clip['framing'],video['width'],video['height'])+f",setpts=PTS-STARTPTS+{start}/TB"
         graph.append(
             f"[{i}:v]trim=start={offset}:duration={end - start},setpts=PTS-STARTPTS+{start}/TB,"
-            f"fps=30,{crop}scale=1080:1920:force_original_aspect_ratio=decrease,"
-            f"pad=1080:1920:(ow-iw)/2:(oh-ih)/2,setsar=1[proof{i}]"
+            f"fps=30,{fit},setsar=1[proof{i}]"
         )
         graph.append(
             f"[{picture}][proof{i}]overlay=eof_action=pass:enable='gte(t,{start})*lt(t,{end})'[mix{i}]"
@@ -283,7 +288,17 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
         intermediate,
         cwd=out,
     )
-    levels = enhance.mix(intermediate,target,plan,[e for e in resolved_events if e['master_frame']<round(render_seconds*FPS)],out,render_seconds,scene_preview=scene_preview)
+    mix_plan=plan
+    if plan.get('music',{}).get('automation'):
+        import copy
+        mix_plan=copy.deepcopy(plan);mapped=[]
+        for cue in plan['music']['automation']:
+            a,b=cue['source_range']
+            for left,right,offset in clock:
+                lo,hi=max(a,left),min(b,right)
+                if hi>lo:mapped.append(dict(start=offset+lo-left,end=offset+hi-left,gain_db=cue['gain_db'],reason=cue.get('reason','')))
+        mix_plan['music']['automation']=mapped
+    levels = enhance.mix(intermediate,target,mix_plan,[e for e in resolved_events if e['master_frame']<round(render_seconds*FPS)],out,render_seconds,scene_preview=scene_preview)
     intermediate.unlink()
     write_json(
         out / "edit-review.json",

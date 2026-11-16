@@ -107,7 +107,7 @@ def validate(spec,context,*,check_hold=True):
     if result['evidence']=='real_screen' and (not context.get('proof') or context['proof'].get('data_class')!='real_screen'):raise ValueError('Real screen evidence is missing or is only a synthetic reconstruction')
     ids=set();settled=[]
     for obj in objects:
-        allowed={'id','component','text','rect','font_size','anchor','keyframes','changes','hold_frames','emphasis_line','lead_frames','exit_frames','theme','box_style'}
+        allowed={'id','component','text','rect','font_size','anchor','keyframes','changes','hold_frames','emphasis_line','lead_frames','exit_frames','theme','box_style','fill_color','text_color'}
         if not isinstance(obj,dict) or set(obj)-allowed:raise ValueError('Unknown component fields')
         if not isinstance(obj.get('id'),str) or not re.fullmatch(r'[a-z][a-z0-9_-]{0,30}',obj['id']) or obj['id'] in ids:raise ValueError('Component IDs must be unique')
         ids.add(obj['id'])
@@ -116,6 +116,8 @@ def validate(spec,context,*,check_hold=True):
         lead=obj.get('lead_frames',0);exit_frames=obj.get('exit_frames',6)
         if type(lead) is not int or not 0<=lead<=30 or anchor['frame']<lead:raise ValueError('Anticipation must be0–30 frames within the source scene')
         if type(exit_frames) is not int or not 0<=exit_frames<=30:raise ValueError('Exit fade must be0–30 frames')
+        for color_field in ('fill_color','text_color'):
+            if color_field in obj and (not isinstance(obj[color_field],str) or not re.fullmatch(r'#[0-9a-fA-F]{6}',obj[color_field])):raise ValueError('Use #RRGGBB brand colors')
         if obj.get('theme','brand') not in ('brand','paper','charcoal'):raise ValueError('Choose an approved neutral or brand theme')
         if obj.get('box_style','panel') not in ('panel','lines'):raise ValueError('Choose panel or lines for the text background')
         if obj['component'] in ('11','12','13') and 'box_style' in obj:raise ValueError('A proof marker cannot use a text background')

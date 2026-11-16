@@ -6,6 +6,9 @@ from engine.references import analyze,inventory,inventory_delta
 import qc_bridge
 
 def main():
+    if len(sys.argv)>1 and sys.argv[1] in ('auto-edit','status','resume','revise','library'):
+        import headless_cli
+        return headless_cli.run(sys.argv[1:])
     p=argparse.ArgumentParser(description=__doc__);sub=p.add_subparsers(dest='action',required=True)
     q=sub.add_parser('inventory');q.add_argument('directory',type=Path);q.add_argument('--out',type=Path,required=True);q.add_argument('--requested',type=int,default=50);q.add_argument('--previous',type=Path,help='Previous inventory JSON; compare hashes without training or changing presets')
     q=sub.add_parser('analyze');q.add_argument('video',type=Path);q.add_argument('--full',action='store_true');q.add_argument('--out',type=Path,required=True)

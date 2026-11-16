@@ -24,6 +24,10 @@ def dialogue(layer,start,end,body,style='Motion'):
     return f'Dialogue: {layer},{stamp(start)},{stamp(end)},{style},,0,0,0,,{body}'
 
 
+def ass_brand_color(value):
+    return value[5:7]+value[3:5]+value[1:3]
+
+
 def append_ass(path,entry,master_start_frame,*,show_status=False):
     ctx=entry['context'];spec=schema.validate(entry['spec'],ctx);n=ctx['frames'];anchors={a['id']:a for a in ctx['anchors']};rows=[]
     if any(o.get('box_style')=='lines' for o in spec['objects']):
@@ -51,19 +55,20 @@ def append_ass(path,entry,master_start_frame,*,show_status=False):
             turn=(r'\org('+f'{round(px+pw/2)},{round(py+ph/2)}'+r')\frz'+f'{state["rotation"]:.4f}') if state['rotation'] else ''
             prefix=r'{\an7\pos('+f'{px:.2f},{py:.2f}'+r')\p1\shad0\1a&H'+f'{alpha:02X}'+r'&'
             marker=obj['component'] in ('11','12','13')
+            fill=ass_brand_color(obj['fill_color']) if obj.get('fill_color') else {'brand':'BA0021','paper':'FFFFFF','charcoal':'1B1510'}[obj.get('theme','brand')]
             if marker:
                 prefix+=r'\1a&HFF&\3a&H'+f'{alpha:02X}'+r'&\bord5\3c&H28F1E8&}'
-            else:prefix+=turn+r'\bord0\1c&H'+{'brand':'BA0021','paper':'FFFFFF','charcoal':'1B1510'}[obj.get('theme','brand')]+r'&}'
+            else:prefix+=turn+r'\bord0\1c&H'+fill+r'&}'
             begin=master_start_frame+frame
             line_background=not marker and obj.get('box_style')=='lines'
             if not line_background:rows.append(dialogue(1,begin,begin+1,prefix+rectangle(pw,ph)+r'{\p0}'))
             if not marker:
                 fs=obj['font_size']*state['scale'];lines=schema.wrap(label,w,obj['font_size']);text='\n'.join(lines)
                 ty=py+(ph-len(lines)*fs*1.18)/2
-                text_color='1B1510' if obj.get('theme')=='paper' else 'FFFFFF'
+                text_color=ass_brand_color(obj['text_color']) if obj.get('text_color') else '1B1510' if obj.get('theme')=='paper' else 'FFFFFF'
                 tag=r'{\an8\pos('+f'{px+pw/2:.2f},{ty:.2f}'+r')'+turn+r'\fs'+f'{fs:.2f}'+r'\bord0\shad0\1c&H'+text_color+r'&\1a&H'+f'{alpha:02X}'+r'&}'
                 if line_background:
-                    background={'brand':'BA0021','paper':'FFFFFF','charcoal':'1B1510'}[obj.get('theme','brand')]
+                    background=fill
                     padding=min(4,obj['font_size']*.06)*state['scale']
                     for i,line in enumerate(lines):
                         tag=r'{\an8\q2\pos('+f'{px+pw/2:.2f},{ty+i*fs*1.18:.2f}'+r')'+turn+r'\fs'+f'{fs:.2f}'+r'\bord'+f'{padding:.2f}'+r'\shad0\1c&H'+text_color+r'&\3c&H'+background+r'&\1a&H'+f'{alpha:02X}'+r'&\3a&H'+f'{alpha:02X}'+r'&}'

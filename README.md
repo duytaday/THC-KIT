@@ -9,6 +9,8 @@ landmark rebinding. Exports still need their own master and listening review.
 
 ## Start
 
+For a whole folder with the UI closed, use the [headless batch CLI](docs/HEADLESS-AUTO-EDIT.vi.md) and [terminal editing prompt](docs/TERMINAL-EDITING-PROMPT.vi.md). Files, Library and Outputs share the same workspace, including A/B/C, pickups and version history.
+
 Cutroom now includes a local batch UI, script-driven intro/demo artifacts and a
 separate reference-training intake. See [the app guide](app/README.md) and
 [actual implementation results](docs/CUTROOM-RESULTS.vi.md). Start it with

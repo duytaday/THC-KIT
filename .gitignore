@@ -35,3 +35,5 @@ runtime/
 
 # Local visual briefs; source/brand/font licenses remain versioned.
 /docs/creator-ui-reference/*.png
+
+.thc-workspace.json

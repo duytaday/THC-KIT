@@ -24,7 +24,7 @@ DEFAULT = dict(
     insert_sound="none",
     inserts=[],
     motion_profile='baseline',motion_intensity=.5,events=[],
-    music_mode='off',music_track='calm',music_gain_db=-20,music_asset='',
+    music_mode='off',music_track='calm',music_gain_db=-20,music_asset='',music_automation=[],
     planner_mode='built_in',
     niche='',story_format='auto',
     brand_logo='',brand_from=0.,brand_to=0.,
@@ -78,6 +78,8 @@ class Workspace:
             if self.doc.exists()
             else {"assets": {}, "jobs": {}, "exports": []}
         )
+        import series_library
+        series_library.migrate(self)
         self.pool = ThreadPoolExecutor(max_workers=2, thread_name_prefix="cutroom")
         for asset in self.data['assets'].values():self.evaluation_access.asset(asset)
         self.setup = ""
@@ -243,6 +245,11 @@ class Workspace:
             raise ValueError("Unknown project setting.")
         if opts['motion_profile'] not in ('baseline','reference','calm','focus','reference_badges'):raise ValueError('Choose an available built-in motion profile.')
         if not isinstance(opts['motion_intensity'],(float,int)) or not math.isfinite(opts['motion_intensity']) or not 0<=opts['motion_intensity']<=1:raise ValueError('Motion intensity must be0–1.')
+        if not isinstance(opts.get('music_automation',[]),list):raise ValueError('Use bounded source-bound music cues')
+        for cue in opts.get('music_automation',[]):
+            span=cue.get('source_range',[])
+            if len(span)!=2 or any(type(v) not in (int,float) or not math.isfinite(v) for v in span) or not 0<=span[0]<span[1]<=self.data['assets'][j['id']]['duration']+.001:raise ValueError('Music cue leaves recording')
+            if type(cue.get('gain_db')) not in (int,float) or not math.isfinite(cue['gain_db']) or not -24<=cue['gain_db']<=6:raise ValueError('Music cue gain is out of bounds')
         if opts['music_mode'] not in ('off','auto','my_track'):raise ValueError('Choose Music Off, Choose automatically, or My track.')
         if opts['music_track'] not in ('calm','tutorial'):raise ValueError('Choose an available instrumental bed.')
         if not isinstance(opts['music_gain_db'],(int,float)) or not math.isfinite(opts['music_gain_db']) or not -60<=opts['music_gain_db']<=0:raise ValueError('Music gain must be−60–0dB.')
@@ -490,6 +497,9 @@ class Workspace:
                 creator_context=copy.deepcopy(plan['creator']);notes['creator']=creator_context
                 with self.lock:j['creator']=copy.deepcopy(creator_context);self.save()
             with self.lock:self.artifacts.apply(key,plan)
+            import series_studio,series_library
+            series_library.validate_output(self,key,settings)
+            series_studio.assemble(self,key,plan)
             if creator_context:
                 import openings
                 openings.apply(plan,settings,assets)
@@ -680,6 +690,8 @@ class Workspace:
             if verdict == "READY" and not all(checks.get(k) is True for k in required):
                 raise ValueError("Complete all four viewing and listening checks before approving.")
             if verdict=='READY':
+                import series_studio
+                series_studio.validate_release(self,entry['job'])
                 if entry.get('verdict')=='REVISE' or any(r.get('verdict')=='REVISE' for r in report.get('reviews',[])):
                     raise ValueError('A confirmed defect remains on this master; render and review a new version')
                 current=self.data['jobs'][entry['job']]

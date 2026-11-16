@@ -5,7 +5,11 @@ description: Build and revise real-footage English or Vietnamese talking-head vi
 
 Work from the project root. Preserve the existing `$talking-head-edit` invocation.
 For recording-only intake and the optional local ASR/script-assisted creator path,
-read `docs/CREATOR-QUICKSTART.vi.md`. Start with Make first cut in the existing UI;
+read `docs/CREATOR-QUICKSTART.vi.md`. For terminal batch/auto-edit requests, first
+read `docs/HEADLESS-AUTO-EDIT.vi.md` and use `app/cli.py auto-edit` with the same
+workspace as the UI. Follow `docs/TERMINAL-EDITING-PROMPT.vi.md` for mapping,
+resume, episode-only revisions and honest review status. Do not require opening
+the UI for this route. For interactive first cuts, use Make first cut in the UI;
 uncertain retakes remain until auditioned. Supplied style references are not usable
 B-roll unless explicitly assigned. Use short opening auditions for editorial
 choices; neither the template render nor an ASR transcript proves the master ready.
