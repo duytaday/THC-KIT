@@ -221,3 +221,11 @@ the same real footage and kept one outer caption/voice route. Technical pass,
 compiler equivalence and unchanged stems are separate from actual hearing.
 - [ ] Explain why source-bound compiler correctness does not establish a
   trained planner's layout/motion quality or full-video style fidelity.
+
+
+18/11 THC-KIT stock/planner acceptance:
+- [x] User correctly restated that 1,000 decoded files establish acquisition only; a usable library additionally needs deduplication, provenance, categories, measured windows and retrieval/insertion.
+- [x] User distinguished SFT context→approved final EditPlan from real A/B preference labels; two unbound MP4s and agent autopicks do not establish human preference.
+- [x] User identified script/timestamps/style/candidate pool, asset source/timeline clocks, crop/layout/cues, feedback and episode/family/revision traceability as supervision.
+- [x] User specified independent episode evaluation and keeping derivatives/source families together, with sealed final excluded from training/RAG/optimization.
+- [x] User explicitly retained B1 after anchor regression, distinguished technical train/load from customer acceptance, and required expected/actual trace through source/output clocks, rerunning failed cases, independent development episodes, decoded render/caption/SFX review, measurable benefit and versioned promotion/rollback. Final stays sealed. Demonstrated in the 18/11 follow-up answer.

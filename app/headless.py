@@ -164,6 +164,7 @@ def shortlist(components,role,quote,creator,action=None,episode_id=None):
         elif c.get('source_sha256') and media.sha(c['file'])!=c['source_sha256']:reasons.append('Changed source bytes; inspect and rebind its observations')
         if role=='screen_recording' and (not action or c.get('demonstrates')!=action):reasons.append('No matching action/result declaration; filenames are not proof')
         if role=='screen_recording' and not c.get('anchors'):reasons.append('Missing observed control/contact/result anchors')
+        if role=='screen_recording' and (c.get('media_is_reusable_proof') is False or c.get('data_class') not in (None,'real_screen')):reasons.append('Illustration cannot supply real software proof')
         if c.get('runtime','native')!='native':reasons.append('External runtime is not configured for this source')
         if reasons:excluded.append(dict(id=c['id'],reasons=reasons));continue
         tags=set(re.findall(r'\w+',' '.join(c.get('tags',[]))+' '+c.get('description','').casefold()));score=len(words&tags)
@@ -178,6 +179,8 @@ def illustration(ws,c,duration,job):
         if not path.exists():media.ff('-loop','1','-framerate','30','-i',c['file'],'-t',duration,'-vf','scale=1080:1920:force_original_aspect_ratio=decrease,pad=1080:1920:(ow-iw)/2:(oh-ih)/2','-an','-c:v','libx264','-preset','veryfast','-pix_fmt','yuv420p',path)
         asset=import_file(ws,path,'reference','broll',job);a=ws.data['assets'][asset];a.update(media_is_reusable_proof=False,data_class='reference_excerpt',original_image_sha256=media.sha(c['file']),original_image=c['file'])
     else:asset=import_file(ws,c['file'],'reference','broll',job);a=ws.data['assets'][asset]
+    if c.get('data_class')=='stock_illustration':
+        a.update(data_class='stock_illustration',media_is_reusable_proof=False,source_kind='third_party',stock_provenance={k:c.get(k) for k in ('source_family_id','license','source_sha256')},default_audio='mute')
     lib.set_rights(ws,dict(asset=asset,source_sha256=a['source_sha256'],revision=a.get('series_rights',{}).get('revision',0),rights={**c['rights'],'train':False},evidence=c.get('permission_evidence','Creator-declared illustration permission; not software proof'),reviewer='Creator manifest declaration'))
     return asset
 
@@ -202,6 +205,7 @@ def prepare_episode(ws,row,config,components):
         beat=copy.deepcopy(beat);beat.setdefault('quote',next((b['quote'] for b in episode['beats'] if b['start']<=beat['start']<b['end']),''));beat.setdefault('id','beat-'+digest([row['source_sha256'],beat['start'],beat['quote']])[:16])
         beat.setdefault('title',beat['quote'] if len(beat['quote'])<=70 else '')
         beat.setdefault('requires_proof',beat['role']=='demo');beat.setdefault('proof',None)
+        if beat['requires_proof'] and beat['role']=='explain':beat['role']='demo'
         if (beat['role'] in chosen_roles and beat['role'] in ('hook','cta','showcase')) or beat['start']<end-.001:continue
         if beat['role'] not in ('hook','demo','cta','showcase','explain'):continue
         if beat['end']-beat['start']<1:continue
@@ -239,9 +243,13 @@ def prepare_episode(ws,row,config,components):
         if beat['role']=='explain':
             videos,v_ex=shortlist(components,'broll',beat['quote'],config['creator'],episode_id=row['id']);images,i_ex=shortlist(components,'image',beat['quote'],config['creator'],episode_id=row['id'])
             candidates=videos+images;decision['excluded']=v_ex+i_ex
+            if not candidates:
+                import asset_decisions
+                stock,receipt=asset_decisions.select(ws,beat,config,job);decision['stock_planner']=receipt
+                if stock:candidates=[stock]
             if candidates:
-                c=candidates[0];duration=min(4,beat['end']-beat['start']);asset=illustration(ws,c,duration,key);a=ws.data['assets'][asset];duration=min(duration,a['duration'])
-                settings['inserts'].append(dict(id='auto-'+row['id']+'-'+beat['id'],asset=asset,at=beat['start'],offset=c.get('offset',0),duration=duration,origin='auto_edit',auto_episode=row['id']))
+                c=candidates[0];duration=min(4,beat['end']-beat['start'],c.get('max_source_duration',4));asset=illustration(ws,c,duration,key);a=ws.data['assets'][asset];duration=min(duration,a['duration'])
+                settings['inserts'].append(dict(id='auto-'+row['id']+'-'+beat['id'],asset=asset,at=c.get('timeline_at',beat['start']),offset=c.get('offset',0),duration=duration,origin='auto_edit',auto_episode=row['id'],**({'crop':c['crop']} if c.get('crop') else {})))
                 decision.update(component=c['id'],asset=asset,component_sha256=media.sha(c['file']),source_range=[beat['start'],beat['start']+duration],illustration=True)
                 decision['why'].append('Cleared declared tags match this spoken explanation; illustration only, not action/result proof.')
                 decisions.append(decision);chosen_roles.add('explain');end=beat['end'];continue

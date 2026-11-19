@@ -6,6 +6,9 @@ from engine.references import analyze,inventory,inventory_delta
 import qc_bridge
 
 def main():
+    if len(sys.argv)>1 and sys.argv[1]=='assets':
+        import asset_cli
+        return asset_cli.run(sys.argv[2:])
     if len(sys.argv)>1 and sys.argv[1] in ('auto-edit','status','resume','revise','library'):
         import headless_cli
         return headless_cli.run(sys.argv[1:])

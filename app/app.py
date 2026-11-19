@@ -118,6 +118,13 @@ class Handler(BaseHTTPRequestHandler):
             u = urllib.parse.urlsplit(self.path)
             p = u.path
             ws = self.server.ws
+            if p == '/api/stock/library':
+                import asset_library
+                return self.result(asset_library.snapshot(ws,urllib.parse.parse_qs(u.query).get('q',[None])[0]))
+            if p.startswith('/stock-media/'):
+                import asset_library
+                _,_,asset_id,kind=p.split('/')
+                return self.file(asset_library.media_path(ws,asset_id,kind))
             if p == '/api/library':
                 import library_service
                 return self.result(library_service.snapshot(ws))
@@ -231,7 +238,7 @@ class Handler(BaseHTTPRequestHandler):
                 return self.file(f, label)
             if p == "/":
                 p = "/index.html"
-            if p not in ("/index.html", "/app.js", "/style.css", "/icon.svg", "/dm-sans.woff2", "/series.html", "/series.js", "/series.css", "/series-proof.js", "/library.html", "/library.js", "/outputs-batch.js"):
+            if p not in ("/index.html", "/app.js", "/style.css", "/icon.svg", "/dm-sans.woff2", "/series.html", "/series.js", "/series.css", "/series-proof.js", "/library.html", "/library.js", "/stock-library.js", "/outputs-batch.js"):
                 return self.result({"error": "Not found"}, 404)
             f = UI / p[1:]
             self.send_bytes(200, f.read_bytes(), MIME[f.suffix])
@@ -309,6 +316,9 @@ class Handler(BaseHTTPRequestHandler):
                 raise ValueError("Request is too large.")
             b = json.loads(self.rfile.read(n) or "{}")
             self._turn_request=b
+            if p == '/api/stock/use':
+                import asset_library
+                return self.result(asset_library.use(ws,b))
             if p in ('/api/library/import','/api/library/choose'):
                 import library_service
                 return self.result(library_service.save(ws,b) if p.endswith('/import') else library_service.choose(ws,b))

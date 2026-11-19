@@ -248,7 +248,7 @@ def build(host, settings, assets):
                 "cue": cue,
                 "source_name": asset['name'],
                 **proof_assignment,
-                **({'artifact_kind':'reference_excerpt','artifact_type':'illustration'} if asset.get('data_class')=='reference_excerpt' else {}),
+                **({'artifact_kind':'reference_excerpt','artifact_type':'illustration','media_is_reusable_proof':False,'data_class':asset['data_class']} if asset.get('data_class') in ('reference_excerpt','stock_illustration') else {}),
                 "anchors": copy.deepcopy(insert.get('anchors',{})),
                 **{k:insert[k] for k in ('layout','pip_corner','pip_width','pip_shape','pip_crop') if k in insert},
                 **({'crop':insert['crop']} if insert.get('crop') else {}),
