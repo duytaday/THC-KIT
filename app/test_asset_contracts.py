@@ -11,6 +11,35 @@ from engine import media
 def context():return dict(episode_id='episode-1',source_revision=1,beat_id='beat1',script_span=dict(text='Tôi dùng bàn phím',timeline_in=5,timeline_out=10),locked_style={'voice':'preserve'},cue_refs=['click1'],requires_real_demo=False,candidates=[dict(asset_id='a',duration=20,usable_windows=[dict(source_in=2,source_out=12)],proof_kind='illustration')])
 
 class AssetContracts(unittest.TestCase):
+ def test_archive_selects_one_original_and_keeps_restrictions_explicit(self):
+  files=[dict(name='sd.mp4',source='original',width='640',height='480',size='100',length='5'),dict(name='hd.mp4',source='original',width='1920',height='1080',size='1000',length='5'),dict(name='alternate.webm',source='original',width='1920',height='1080',size='2000',length='5'),dict(name='proxy.mp4',source='derivative',width='1920',height='1080',size='10',length='5')]
+  def api(url):
+   if 'advancedsearch' in url:return dict(response=dict(numFound=100,docs=[dict(identifier=k,title='Office typing footage') for k in ('good','restricted','nc')]))
+   key=url.rsplit('/',1)[1];return dict(metadata=dict(title='Office typing footage',creator='Fixture author',description='AI-generated fixture scene',licenseurl='https://creativecommons.org/licenses/by-nc/4.0/' if key=='nc' else 'https://creativecommons.org/licenses/by/4.0/',**({'access-restricted-item':'true'} if key=='restricted' else {})),files=files)
+  rows,next_offset,rejected=asset_sources.archive(SimpleNamespace(json=api),'office','office')
+  self.assertEqual(len(rows),1);self.assertEqual(rows[0]['provider_original_filename'],'hd.mp4');self.assertEqual(rows[0]['source_family_id'],'internet_archive:good');self.assertEqual(next_offset,20);self.assertEqual(rows[0]['ai_generated'],'declared')
+  self.assertEqual(rows[0]['license']['training_rights'],'not_determined');self.assertEqual(rows[0]['proof_kind'],'illustration');self.assertEqual(rejected['restricted_item_not_public'],1);self.assertEqual(rejected['declared_noncommercial_or_no_derivatives'],1)
+ def test_provider_cursors_are_independent_for_the_same_scene_query(self):
+  from asset_ingest import Ingestor
+  with tempfile.TemporaryDirectory() as t:
+   ing=Ingestor(t)
+   with patch('asset_ingest.commons',return_value=([],None,{})) as commons,patch('asset_ingest.archive',return_value=([],None,{})) as archive,patch.object(ing,'emit'):
+    for provider in ('commons','archive','commons','archive'):ing.discover(20,1,{'office':['office']},provider)
+    self.assertEqual(commons.call_count,1);self.assertEqual(archive.call_count,1)
+   ing.store.close()
+ def test_provider_collection_reconsiders_metadata_but_keeps_visual_rejections(self):
+  from asset_ingest import Ingestor
+  with tempfile.TemporaryDirectory() as t:
+   ing=Ingestor(t);records=[]
+   for i,provider in ((1,'wikimedia_commons'),(2,'internet_archive'),(3,'internet_archive')):
+    row=source(i);row.update(provider=provider,source_title='Typewriter close up',category='office');r,_=ing.store.discover(row)
+    if i>1:r['stage']='topic_rejected'
+    if i==3:r['visual_review']=dict(accepted=False,notes='Actual bad frames remain rejected')
+    ing.store.put(r);records.append(r)
+   visited=[]
+   def ingest(r):visited.append(r['asset_id']);r['stage']='quarantined';ing.store.put(r)
+   with patch.object(ing,'ingest',side_effect=ingest),patch.object(ing,'emit'),patch('asset_retrieval.build',return_value={}):ing.run(1000,1,'archive')
+   self.assertEqual(visited,[records[1]['asset_id']]);self.assertEqual(ing.store.get(records[2]['asset_id'])['stage'],'topic_rejected');self.assertEqual(ing.store.get(records[0]['asset_id'])['stage'],'discovered');ing.store.close()
  def test_explicit_ai_source_category_is_retained_without_calling_all_cgi_ai(self):
   def page(i,categories):return dict(pageid=i,title='File:Robot animation.webm',videoinfo=[dict(duration=6,width=1920,height=1080,size=1024,mime='video/webm',url=f'https://upload.wikimedia.org/robot{i}.webm',descriptionurl=f'https://commons.wikimedia.org/wiki/File:Robot{i}.webm',extmetadata={'Categories':{'value':categories}})])
   client=SimpleNamespace(json=lambda _:dict(query={'pages':[page(1,'AI-generated images including prompts'),page(2,'Computer-generated animation')]}))
@@ -28,7 +57,7 @@ class AssetContracts(unittest.TestCase):
    ing.store.close()
  def test_keyword_robot_or_student_does_not_admit_off_topic_event(self):
   import asset_quality
-  for title,category in [('MISS DOLL SEX ROBOT','ai_coding'),('High school student movement and blockades','learning'),('Armed robot tank','ai_coding'),('Warehouse after Russian attack','ecommerce')]:
+  for title,category in [('MISS DOLL SEX ROBOT','ai_coding'),('High school student movement and blockades','learning'),('Armed robot tank','ai_coding'),('Warehouse after Russian attack','ecommerce'),('Shopping mall after Russian shelling','ecommerce')]:
    self.assertFalse(asset_quality.assess(dict(source_title=title,category=category))['accepted'])
   self.assertTrue(asset_quality.assess(dict(source_title='Hands typing on computer keyboard',category='ai_coding'))['accepted'])
  def test_verified_but_unusable_sources_do_not_stop_library_acquisition(self):

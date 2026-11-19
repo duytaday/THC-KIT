@@ -8,7 +8,7 @@ Không có renderer, dịch vụ cloud hay giao diện dựng thứ hai.
 
 `assets discover → collect → review-batch → index/embed → headless auto-edit → native render → six-gate QC`.
 
-- Commons API cung cấp file nguồn và provenance; HTTP client kiểm URL/redirect, rate limit, Retry-After, partial Range/ETag và ngân sách đĩa.
+- Commons API và Internet Archive public API cung cấp file nguồn/provenance. HTTP client kiểm URL/redirect, rate limit, Retry-After theo host qua cả lần khởi động lại, partial Range/ETag và ngân sách đĩa.
 - File qua MIME magic, ffprobe, decode video đầy đủ, SHA-256, temporal fingerprint có mirror/crop, source-family dedup rồi mới vào originals theo hash. Audio stock không được đưa vào mix.
 - Proxy, thumbnail, contact sheet và embedding là derivatives; không tăng quota nguồn. Original không được sửa bởi pipeline.
 - `verified` là đã decode; `edit_ready` là đã qua kiểm nội dung mẫu; `retrievable` còn loại sealed/test. `human_approved` và `training_example_ready` là các fact riêng.
@@ -33,6 +33,8 @@ $modelPy = $env:THC_MODEL_PYTHON
 & $py app/cli.py assets status
 & $py app/cli.py assets discover --pages 1 --per-query 50
 & $py app/cli.py assets discover --queries D:\path\scene-queries.json --pages 1 --per-query 50
+& $py app/cli.py assets --agent-model ACTUAL_CALLING_MODEL discover --provider archive --queries D:\path\archive-scenes.json --pages 1 --per-query 10
+& $py app/cli.py assets --agent-model ACTUAL_CALLING_MODEL collect --provider archive --target 1000 --max-attempts 20
 & $py app/cli.py assets collect --target 1000 --max-attempts 100 --budget-gb 40 --reserve-gb 30
 ```
 
@@ -52,6 +54,10 @@ Decoder v3 kiểm toàn bộ video một lần bằng FFmpeg `-xerror`, đồng 
 Review document nhận hash nguồn và evidence, lý do, category và quyết định agent. Không chấp nhận biến đường này thành nhãn human. Audit nâng fingerprint được checkpoint từng asset, giữ nguyên originals. Catalog dùng được với `auto-edit --components`; nguồn/offset/window vẫn được kiểm lại.
 
 File `scene-queries.json` tùy chọn có dạng `{"office":["office interior"],"ecommerce":["shopping cart conveyor"]}`. Tối đa200 query, category phải thuộc thư viện, mỗi query1–200 ký tự. CLI dùng lại cùng cursor/idempotency như bộ query mặc định; dùng cảnh cụ thể thay vì mở rộng query chung để chạy theo quota.
+
+Archive giữ một original phù hợp trên mỗi item; bản MP4/WebM hoặc resolution khác trong cùng item không tăng quota. Bỏ item bị hạn chế truy cập, file derivative và khai báo NC/ND không phù hợp luồng dựng thương mại. Ưu tiên original1080p trong giới hạn thời lượng/dung lượng; giữ native dimensions đo lại. Cursor Archive tách khỏi Commons. Tham số agent-model chỉ nhận dạng caller trong User-Agent, không chọn hay gọi một model cloud. AI caller điền model thực tế theo [hướng dẫn bot của Archive](https://archive.org/developers/bots.html).
+
+Khi rule metadata thay đổi, collector chỉ xét lại các nguồn chưa tải bị loại theo metadata; giữ nguyên những quyết định loại theo hình đã xem. Agent visual review tiếp tục là bước riêng sau decode, không tự thành human approval.
 
 Chạy UI hiện có:
 
@@ -104,7 +110,7 @@ State human-approved là khai báo của operator local kèm evidence, không ph
 
 ## Phạm vi nguồn
 
-Hiện provider tải thật là Commons public TimedMediaHandler API, giữ license/source/creator và không tự suy training rights từ URL công khai. Quyền reuse phụ thuộc từng nguồn: [Commons reuse](https://commons.wikimedia.org/wiki/Commons:Reusing_content_outside_Wikimedia), [API](https://www.mediawiki.org/wiki/Extension:TimedMediaHandler/API).
+Hai provider có đường tải thật là Commons public TimedMediaHandler API và Internet Archive. Pilot Archive đã tải/decode ba original1080p qua cùng ingestion; receipt riêng ghi rõ nội dung được agent kiểm hình, chưa có human approval. Giữ license/source/creator và không tự suy training rights từ URL công khai. Nguồn tham khảo: [Commons reuse](https://commons.wikimedia.org/wiki/Commons:Reusing_content_outside_Wikimedia), [Commons API](https://www.mediawiki.org/wiki/Extension:TimedMediaHandler/API), [Archive Metadata API](https://archive.org/developers/md-read.html).
 
 Không có key Pexels/Pixabay được cấu hình trong môi trường hoặc MoneyPrinterTurbo của máy này. Không scrape Mixkit để mass-download vì [User Terms](https://mixkit.co/terms/) cấm cách đó. Không thêm luồng xin phép/email. Nguồn không dùng được được ghi nhận và bỏ qua; tiếp tục nguồn công khai phù hợp.
 

@@ -1,5 +1,5 @@
 """Bounded public HTTP with origin-scoped credentials and resumable local files."""
-import datetime,email.utils,hashlib,ipaddress,json,socket,time,urllib.error,urllib.parse,urllib.request
+import datetime,email.utils,hashlib,ipaddress,json,os,socket,time,urllib.error,urllib.parse,urllib.request,uuid
 from pathlib import Path
 
 AGENT='THC-KIT/1.0 (local editing library; https://github.com/duytaday/THC-KIT)'
@@ -40,16 +40,30 @@ class Client:
     def __init__(self,cache,interval=1.1,retries=2,timeout=35):
         self.cache=Path(cache);self.cache.mkdir(parents=True,exist_ok=True)
         self.interval=interval;self.retries=retries;self.timeout=timeout;self.last={};self.opener=urllib.request.build_opener(Redirect())
+        model=os.environ.get('THC_HTTP_AGENT_MODEL','').strip()
+        if len(model)>100 or any(ord(c)<32 for c in model):raise ValueError('Use a short model identifier without control characters')
+        self.agent=AGENT+(' (AI agent model: '+model+')' if model else '')
+
+    def backoff(self,host,until=None):
+        path=self.cache/('backoff-'+hashlib.sha256(host.encode()).hexdigest()+'.json')
+        old=json.loads(path.read_text())['until'] if path.exists() else 0
+        if until is not None:
+            until=max(old,until);temp=path.with_suffix('.'+uuid.uuid4().hex+'.tmp');temp.write_text(json.dumps(dict(host=host,until=until)),encoding='utf-8');temp.replace(path)
+        return old if until is None else until
 
     def open(self,url,headers=None):
         public_url(url);host=urllib.parse.urlsplit(url).hostname
+        until=self.backoff(host)
+        if until>time.time():raise RetryLater('Host Retry-After backoff still active: '+host,until)
         for attempt in range(self.retries+1):
             time.sleep(max(0,self.interval-(time.monotonic()-self.last.get(host,0))));self.last[host]=time.monotonic()
-            try:return self.opener.open(urllib.request.Request(url,headers={'User-Agent':AGENT,**(headers or {})}),timeout=self.timeout)
+            try:return self.opener.open(urllib.request.Request(url,headers={'User-Agent':self.agent,**(headers or {})}),timeout=self.timeout)
             except urllib.error.HTTPError as error:
                 if error.code not in (429,500,502,503,504):raise RuntimeError(f'HTTP {error.code} from {host}') from None
                 delay=retry_delay(error.headers.get('Retry-After'))
-                if attempt==self.retries or delay is not None and delay>30:raise RetryLater(f'HTTP {error.code}; defer {max(delay or 0,2**attempt):.0f}s at {host}',time.time()+max(delay or 0,2**attempt)) from None
+                if attempt==self.retries or delay is not None and delay>30:
+                    until=self.backoff(host,time.time()+max(delay or 0,2**attempt))
+                    raise RetryLater(f'HTTP {error.code}; defer {max(delay or 0,2**attempt):.0f}s at {host}',until) from None
                 time.sleep(delay if delay is not None else 2**attempt)
             except (TimeoutError,urllib.error.URLError,OSError):
                 if attempt==self.retries:raise RetryLater('Public source temporarily unavailable: '+host) from None

@@ -2,16 +2,16 @@
 import re,time
 
 BAD_TITLE=re.compile(r'how[ -]to|tutorial|keyboard shortcuts|\blesson\b|phrase of the week|ken.?burns|restor.{0,15}\bai\b|\bai.{0,15}restor|recap|\bswns\b|\bcctv\b|\btrailer\b|\bspeech\b|\bkeynote\b|\binterview\b|conference|\bwebinar\b|\blecture\b|warehouse camera',re.I)
-MILITARY=re.compile(r'\b(army|navy|military|battalion|brigade|soldiers?|marines|weapon|missile|combat|crucible|def-tech|armed|tank|attack)\b',re.I)
+MILITARY=re.compile(r'\b(army|navy|military|battalion|brigade|soldiers?|marines|weapon|missile|combat|crucible|def-tech|armed|tank|attack|shelling|bombing)\b',re.I)
 PATTERNS={
  'ai_coding':r'keyboard|typing|programming|\bcoding\b|source code|robot|neural network|data cent[er]',
- 'office':r'\boffice\b|\bdesk\b|paperwork|photocop|printer|spreadsheet|stationery|workspace|typing',
+ 'office':r'\boffice\b|\bdesk\b|paperwork|photocop|printer|spreadsheet|stationery|workspace|typing|typewriter',
  'teamwork':r'teamwork|collaborat|brainstorm|co.?workers|colleagues|business meeting|team meeting|group discussion|workshop',
  'ecommerce':r'warehouse|barcode|checkout|shopping|cashier|fulfil|parcel|packag|shipping|supermarket|retail|e.?commerce|delivery',
  'learning':r'student|classroom|studying|reading|writing|notebook|\bbooks?\b|\blibrary\b',
  'studio_devices':r'microphone|\bcamera\b|tripod|filming|sound mixer|headphones|recording studio',
  'city_life':r'street|\bcity\b|pedestrian|\btram\b|\btrain\b|cycling|cafe|traffic|urban|crosswalk|\bbus\b|skyscraper',
- 'nature':r'forest|ocean|waves|river|mountain|falls|waterfall|beach|lake|sunset|cloud|rain|snow|tree|landscape',
+ 'nature':r'forest|ocean|waves|river|mountain|falls|waterfall|beach|lake|sunset|cloud|rain|snow|tree|landscape|icicle',
  'abstract_data':r'animation|data|visualization|visualisation|fractal|geometric|simulation|abstract|particles|timelapse',
  'gestures_reactions':r'hand.?wave|hand.?gesture|smil|clapp|laugh|applau|thumbs.up|waving.hand'}
 

@@ -100,4 +100,23 @@ class PipelineTests(unittest.TestCase):
             with self.assertRaises(asset_http.RetryLater) as result:client.open('https://example.org/')
         self.assertGreater(result.exception.not_before,time.time()+3500);self.assertEqual(opened.call_count,1)
 
+    def test_retry_after_applies_to_other_urls_and_survives_client_restart(self):
+        client=asset_http.Client(self.root/'http',interval=0)
+        error=urllib.error.HTTPError('https://example.org/a',429,'limit',{'Retry-After':'3600'},None)
+        with patch.object(asset_http,'public_url'),patch.object(client.opener,'open',side_effect=error):
+            with self.assertRaises(asset_http.RetryLater):client.open('https://example.org/a')
+        restarted=asset_http.Client(self.root/'http',interval=0)
+        with patch.object(asset_http,'public_url'),patch.object(restarted.opener,'open',return_value=Response(b'ok')) as opened:
+            with self.assertRaises(asset_http.RetryLater):restarted.open('https://example.org/different-file')
+            opened.assert_not_called()
+            self.assertEqual(restarted.open('https://other.example.org/a').read(),b'ok');self.assertEqual(opened.call_count,1)
+
+    def test_calling_model_is_identified_without_accepting_header_injection(self):
+        with patch.dict('os.environ',{'THC_HTTP_AGENT_MODEL':'GPT-6'}):
+            client=asset_http.Client(self.root/'agent',interval=0)
+            with patch.object(asset_http,'public_url'),patch.object(client.opener,'open',return_value=Response(b'ok')) as opened:client.open('https://example.org/a')
+            self.assertIn('AI agent model: GPT-6',opened.call_args.args[0].get_header('User-agent'))
+        with patch.dict('os.environ',{'THC_HTTP_AGENT_MODEL':'bad\r\nX: injected'}):
+            with self.assertRaises(ValueError):asset_http.Client(self.root/'invalid-agent')
+
 if __name__=='__main__':unittest.main()

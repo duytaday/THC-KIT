@@ -14,10 +14,10 @@ def collector(root):
     finally:db.rollback();db.close()
 
 def run(argv=None):
-    parser=argparse.ArgumentParser(description=__doc__);parser.add_argument('--library',type=Path,default=default_root())
+    parser=argparse.ArgumentParser(description=__doc__);parser.add_argument('--library',type=Path,default=default_root());parser.add_argument('--agent-model',default=os.environ.get('THC_HTTP_AGENT_MODEL'),help='Actual calling AI model for public API User-Agent identification')
     sub=parser.add_subparsers(dest='action',required=True)
-    p=sub.add_parser('discover');p.add_argument('--pages',type=int,default=1);p.add_argument('--per-query',type=int,default=50);p.add_argument('--queries',type=Path,help='Optional JSON mapping of known categories to concrete scene queries')
-    p=sub.add_parser('collect');p.add_argument('--target',type=int,default=20);p.add_argument('--max-attempts',type=int);p.add_argument('--budget-gb',type=float,default=40);p.add_argument('--reserve-gb',type=float,default=30)
+    p=sub.add_parser('discover');p.add_argument('--pages',type=int,default=1);p.add_argument('--per-query',type=int,default=50);p.add_argument('--queries',type=Path,help='Optional JSON mapping of known categories to concrete scene queries');p.add_argument('--provider',choices=['commons','archive'],default='commons')
+    p=sub.add_parser('collect');p.add_argument('--target',type=int,default=20);p.add_argument('--max-attempts',type=int);p.add_argument('--budget-gb',type=float,default=40);p.add_argument('--reserve-gb',type=float,default=30);p.add_argument('--provider',choices=['all','commons','archive'],default='all')
     sub.add_parser('status')
     p=sub.add_parser('search');p.add_argument('query');p.add_argument('--limit',type=int,default=10)
     p=sub.add_parser('index');p.add_argument('--force',action='store_true')
@@ -34,6 +34,7 @@ def run(argv=None):
     sub.add_parser('models')
     args=parser.parse_args(argv)
     try:
+        if args.agent_model:os.environ['THC_HTTP_AGENT_MODEL']=args.agent_model
         if args.action in ('discover','collect'):
             from asset_ingest import Ingestor
             importer=Ingestor(args.library,**({k:getattr(args,k) for k in ('budget_gb','reserve_gb')} if args.action=='collect' else {}))
@@ -42,10 +43,10 @@ def run(argv=None):
                     if args.action=='discover':
                         if not 1<=args.pages<=10 or not 1<=args.per_query<=50:raise ValueError('Use1–10 pages and1–50 results per query')
                         queries=json.loads(args.queries.read_text(encoding='utf-8-sig')) if args.queries else None
-                        importer.discover(args.per_query,args.pages,queries);result=importer.store.export()
+                        importer.discover(args.per_query,args.pages,queries,args.provider);result=importer.store.export()
                     else:
                         if not 1<=args.target<=10000:raise ValueError('Use a bounded source target')
-                        result=importer.run(args.target,args.max_attempts)
+                        result=importer.run(args.target,args.max_attempts,args.provider)
             finally:importer.store.close()
         elif args.action.startswith('model-') or args.action=='models':
             import asset_models

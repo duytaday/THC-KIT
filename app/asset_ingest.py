@@ -4,7 +4,7 @@ from pathlib import Path
 from engine import media
 from asset_http import Client,RetryLater
 from asset_store import Store
-from asset_sources import CATEGORIES,commons,validate_queries
+from asset_sources import CATEGORIES,commons,archive,validate_queries
 import asset_features,asset_quality
 
 GIB=1024**3
@@ -52,22 +52,24 @@ class Ingestor:
         event=dict(event=kind,time=datetime.datetime.now(datetime.timezone.utc).isoformat(),**details)
         print(json.dumps(event,ensure_ascii=False),flush=True)
 
-    def discover(self,per_query=50,pages=1,queries=None):
+    def discover(self,per_query=50,pages=1,queries=None,provider='commons'):
+        if provider not in ('commons','archive'):raise ValueError('Choose a supported public provider')
+        search=commons if provider=='commons' else archive
         queries=CATEGORIES if queries is None else validate_queries(queries)
         for page_index in range(pages):
             for term_index in range(max(map(len,queries.values()))):
                 for category,terms in queries.items():
                     if term_index>=len(terms):continue
-                    query=terms[term_index];offset,finished=self.store.cursor(query,category)
+                    query=terms[term_index];cursor=query if provider=='commons' else 'archive:'+query;offset,finished=self.store.cursor(cursor,category)
                     if finished:continue
                     try:
-                        rows,next_offset,rejected=commons(self.client,query,category,offset,per_query)
+                        rows,next_offset,rejected=search(self.client,query,category,offset,per_query)
                         added=sum(self.store.discover(r)[1] for r in rows)
-                        self.store.checkpoint(query,category,next_offset or offset,next_offset is None)
-                        self.store.event('discovery',dict(category=category,query=query,offset=offset,new=added,rejected=rejected))
-                        self.emit('discovery',category=category,query=query,new=added,accepted=len(rows),rejected=rejected)
+                        self.store.checkpoint(cursor,category,next_offset or offset,next_offset is None)
+                        self.store.event('discovery',dict(provider=provider,category=category,query=query,offset=offset,new=added,rejected=rejected))
+                        self.emit('discovery',provider=provider,category=category,query=query,new=added,accepted=len(rows),rejected=rejected)
                     except Exception as error:
-                        self.store.event('provider_unavailable',dict(provider='wikimedia_commons',category=category,query=query,error=str(error)[:200]))
+                        self.store.event('provider_unavailable',dict(provider=provider,category=category,query=query,error=str(error)[:200]))
                         self.emit('provider_unavailable',category=category,error=str(error)[:200])
                     self.store.export()
 
@@ -138,12 +140,18 @@ class Ingestor:
             self.store.put(record);self.emit('quarantined',asset=key,reason=record['last_error'])
         return record
 
-    def run(self,target=20,max_attempts=None):
+    def run(self,target=20,max_attempts=None,provider='all'):
+        if provider not in ('all','commons','archive'):raise ValueError('Choose all, commons or archive')
+        provider_key={'commons':'wikimedia_commons','archive':'internet_archive'}.get(provider)
+        # Reconsider metadata-only exclusions after rules change; preserve actual visual rejections.
+        for r in self.store.rows():
+            if r['stage']=='topic_rejected' and not r['states']['downloaded'] and not r.get('visual_review') and asset_quality.assess(r)['accepted']:
+                r['stage']='discovered';asset_quality.apply(r);self.store.put(r)
         self.requested=target;attempted=0;last_category=None
         while True:
             rows=self.store.rows();counts=self.store.stats()['categories']
-            unfinished=[r for r in rows if r['states']['verified'] and not r['states']['indexed'] and not r.get('duplicate_of') and r.get('local_path') and r['attempts']<3 and r.get('retry_at',0)<=time.time()]
-            pending=[r for r in rows if not r['states']['verified'] and r['stage'] not in ('source_alias','topic_rejected','quarantined') and r['attempts']<3 and r.get('retry_at',0)<=time.time()] if self.store.stats()['retrievable']<target else []
+            unfinished=[r for r in rows if (provider_key is None or r['provider']==provider_key) and r['states']['verified'] and not r['states']['indexed'] and not r.get('duplicate_of') and r.get('local_path') and r['attempts']<3 and r.get('retry_at',0)<=time.time()]
+            pending=[r for r in rows if (provider_key is None or r['provider']==provider_key) and not r['states']['verified'] and r['stage'] not in ('source_alias','topic_rejected','quarantined') and r['attempts']<3 and r.get('retry_at',0)<=time.time()] if self.store.stats()['retrievable']<target else []
             if not unfinished and not pending:break
             checked=[]
             for r in pending:
@@ -157,7 +165,7 @@ class Ingestor:
             stats=self.store.export();self.emit('progress',requested=target,**stats)
             if max_attempts and attempted>=max_attempts:break
             if record.get('stage')=='deferred' and 'budget' in record.get('last_error',''):break
-        stats=self.store.export();stats.update(requested=target,download_target_met=stats['unique']>=target,complete=stats['retrievable']>=target,missing=max(0,target-stats['retrievable']))
+        stats=self.store.export();stats.update(requested=target,provider_scope=provider,download_target_met=stats['unique']>=target,complete=stats['retrievable']>=target,missing=max(0,target-stats['retrievable']))
         import asset_retrieval
         stats['retrieval']=asset_retrieval.build(self.store)
         self.emit('batch_complete',**stats);return stats
