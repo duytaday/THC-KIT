@@ -63,6 +63,13 @@ def freeze(config,out):
     allowed={h for c in config['cases'] if c['partition']=='development' for h in c.get('media_sha256',[])}
     if set(fixed['source_files'].values())-allowed:raise ValueError('Replay source/script/proof must be explicitly allowlisted as development before running')
     control=[Path(__file__).resolve(),Path(ev.__file__).resolve(),Path(replay.__file__).resolve(),Path(config['replay_config'])]
+    if data.get('profile') == 'sprint':
+        import sprint_replay
+        if any(c['partition'] != 'development' for c in config['cases']):
+            raise ValueError('The sprint optimizer accepts only a development manifest')
+        if (not isinstance(config.get('changed_path'),str) or not config['changed_path']):
+            raise ValueError('Declare the single implementation path under comparison')
+        control.append(Path(sprint_replay.__file__).resolve())
     config['files']=list(dict.fromkeys([*config.get('files',[]),*map(str,control)]))
     trial=ev.freeze(config,out)
     trial.update(controller_version=VERSION,config_sha256=digest(config),baseline_snapshot=fixed)
@@ -87,11 +94,25 @@ def start(path,id_,hypothesis,variable):
         config=trial['config'];data=json.loads(Path(config['replay_config']).read_text(encoding='utf8'))
         fixed={arm:replay.input_snapshot(data,Path(config[arm])) for arm in ('baseline','challenger')}
         if fixed['baseline']!=trial['baseline_snapshot']:raise ValueError('Frozen baseline/source changed')
-        record=ev.round_start(trial,hypothesis,variable,'mechanical_trajectory_success_rate')
+        sprint = data.get('profile') == 'sprint'
+        if sprint:
+            old, new = (fixed[a]['implementation'] for a in ('baseline','challenger'))
+            changed = sorted(k for k in old.keys() | new.keys() if old.get(k) != new.get(k))
+            if changed != [config['changed_path']]:
+                raise ValueError('Sprint arms must differ only at the declared implementation path')
+            if fixed['baseline']['runtime'] != fixed['challenger']['runtime']:
+                raise ValueError('Both arms must use the same toolchain')
+        metric = 'mechanical_case_pass_rate' if sprint else 'mechanical_trajectory_success_rate'
+        record=ev.round_start(trial,hypothesis,variable,metric)
+        if sprint:
+            import sprint_replay
+            record.update(profile='sprint', changed_paths=changed, critical_gates=list(sprint_replay.CASES))
         folder=path.parent/('round-'+str(record['number']).zfill(3)+'-'+digest(id_)[:12])
         if folder.exists():raise ValueError('Uncommitted round output exists; preserve and inspect it')
+        # Match Windows path lengths so libass does not fail in only one arm.
+        labels = {'baseline':'control', 'challenger':'variant'} if sprint else {arm:arm for arm in fixed}
         record.update(request,request_sha256=digest(request),stage='AWAITING_REPLAY',expected=fixed,
-                      arms={arm:dict(stage='PENDING',output=str(folder/arm)) for arm in fixed})
+                      arms={arm:dict(stage='PENDING',output=str(folder/labels[arm])) for arm in fixed})
         _save(path,trial);return record
 
 
@@ -102,9 +123,23 @@ def _accept(record,arm):
     if fixed!=record['expected'][arm]:raise ValueError('Replay input/implementation snapshot does not match the planned arm')
     if result.get('completed') is not True or result.get('scope')!='development_mechanical_replay' or result.get('not_unseen') is not True:raise ValueError('A complete development replay is required, not partial output')
     if result.get('real_master_approved') or result.get('real_human_reviews')!=0:raise ValueError('Mechanical runner must not claim real editorial approval')
-    if result.get('tool_versions',{}).get('grader_sha256')!=media.sha(Path(replay.__file__)):raise ValueError('Replay grader differs from the frozen controller grader')
-    for field,keys in (('turns',ev.TURNS),('variants',ev.PROTOCOL['critical_variants'])):
-        if set(result.get(field,{}))!=set(keys) or any(type(v) is not bool for v in result[field].values()):raise ValueError('Replay must record every critical turn and variant')
+    grader = Path(replay.__file__)
+    if record.get('profile') == 'sprint':
+        import sprint_replay
+        grader = Path(sprint_replay.__file__)
+        cases = result.get('cases', {})
+        if set(cases) != set(sprint_replay.CASES) or any(
+            not c.get('checks') or type(c.get('passed')) is not bool
+            or any(type(v) is not bool for v in c['checks'].values())
+            or c['passed'] != all(c['checks'].values()) for c in cases.values()
+        ):
+            raise ValueError('Sprint replay must record every case and its mechanical checks')
+    else:
+        for field,keys in (('turns',ev.TURNS),('variants',ev.PROTOCOL['critical_variants'])):
+            if set(result.get(field,{}))!=set(keys) or any(type(v) is not bool for v in result[field].values()):
+                raise ValueError('Replay must record every critical turn and variant')
+    if result.get('tool_versions',{}).get('grader_sha256')!=media.sha(grader):
+        raise ValueError('Replay grader differs from the frozen controller grader')
     _finite(result.get('wall_seconds'),'Replay wall seconds')
     return result,dict(results_sha256=media.sha(folder/'results.json'),inputs_sha256=media.sha(folder/'frozen-inputs.json'))
 
@@ -121,8 +156,14 @@ def finish(path,id_,cost):
         if 'outcome' in record:
             if record['finish_sha256']!=receipt:raise ValueError('Completed round evidence/cost changed; keep the previous receipt')
             return record
-        scores={arm:ev.summarize([dict(turns=r['turns'],variants=r['variants'],family='development',episodes=[],test_only=True)])['trajectory_success_rate'] for arm,r in results.items()}
-        regression=any(results['baseline'][field][key] and not results['challenger'][field][key] for field in ('turns','variants') for key in results['baseline'][field])
+        if record.get('profile') == 'sprint':
+            marks = {arm:{case:row['passed'] for case,row in r['cases'].items()} for arm,r in results.items()}
+            scores = {arm:sum(cases.values())/len(cases) for arm,cases in marks.items()}
+            regression = any(value and not marks['challenger'][case] for case,value in marks['baseline'].items())
+            record['case_results'] = marks
+        else:
+            scores={arm:ev.summarize([dict(turns=r['turns'],variants=r['variants'],family='development',episodes=[],test_only=True)])['trajectory_success_rate'] for arm,r in results.items()}
+            regression=any(results['baseline'][field][key] and not results['challenger'][field][key] for field in ('turns','variants') for key in results['baseline'][field])
         outcome='regression' if regression or scores['challenger']<scores['baseline'] else 'gain' if scores['challenger']>scores['baseline'] else 'flat'
         record.update(outcome=outcome,critical_regression=regression,scores=scores,measured_cost=cost,
                       cost_unit=trial['config']['cost_unit'],wall_seconds=sum(r['wall_seconds'] for r in results.values()),
@@ -153,6 +194,9 @@ def run(path,id_,cost):
             if state['stage']!='PENDING':
                 try:_accept(record,arm)
                 except (FileNotFoundError,ValueError) as e:raise ValueError('Dispatched replay outcome is incomplete/unknown; inspect its existing process and output, never restart blindly') from e
+                if state['stage']!='COMPLETE':
+                    state['stage']='COMPLETE'
+                    _save(path,trial)
                 continue
             state['stage']='DISPATCHED';record['stage']='REPLAY_DISPATCHED';_save(path,trial)
             output=state['output'];app=trial['config'][arm]

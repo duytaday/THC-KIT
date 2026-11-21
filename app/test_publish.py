@@ -48,6 +48,16 @@ class PostingTests(unittest.TestCase):
         self.assertEqual(self.ws.data['jobs']['host']['revision'],2)
         self.assertEqual(publish.selection(self.ws,'master')['id'],second['id'])
 
+    def test_corrupt_cached_zip_is_rebuilt_from_the_same_selection(self):
+        record = self.save(title='Đọc kết quả')
+        bundle = publish.download(self.ws,'master',record['id'],'posting.zip')
+        verified = bundle.read_bytes()
+        bundle.write_bytes(b'truncated cache')
+        self.assertEqual(publish.download(self.ws,'master',record['id'],'posting.zip'),bundle)
+        self.assertEqual(bundle.read_bytes(),verified)
+        self.assertEqual(media.sha(self.video),record['mp4_sha256'])
+        self.assertEqual(self.ws.data['jobs']['host']['revision'],2)
+
     def test_download_refuses_master_and_thumbnail_tampering(self):
         record = self.save()
         folder = publish.folder_for(self.video, record['id'])

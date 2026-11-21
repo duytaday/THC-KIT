@@ -109,6 +109,23 @@ class RoundRunnerTests(unittest.TestCase):
             self.assertEqual(r,h.run(self.trial,'round-001',0));self.assertEqual(worker.call_count,1)
         with self.assertRaisesRegex(ValueError,'budget exhausted'):self.start('round-002')
 
+    def test_sprint_rejects_an_extra_implementation_change(self):
+        config = copy.deepcopy(self.cfg)
+        config['changed_path'] = 'publish.py'
+        config['challenger'] = str(self.root/'challenger')
+        media.write_json(self.config, {'profile':'sprint'})
+        Path(config['challenger']).mkdir()
+        baseline = dict(source_files={},runtime={'encoder':'fixed'},
+                        implementation={'publish.py':'a','planner.py':'a'})
+        challenger = dict(baseline,implementation={'publish.py':'b','planner.py':'b'})
+        def snapshot(data,app):
+            return baseline if app==self.app else challenger
+        with patch.object(h.replay,'input_snapshot',side_effect=snapshot):
+            folder = self.root/'sprint'
+            h.freeze(config,folder)
+            with self.assertRaisesRegex(ValueError,'declared implementation path'):
+                h.start(folder/'trial.json','round-extra-001','One cache change','cache')
+
     def test_reported_cost_over_budget_never_dispatches(self):
         self.start()
         with patch.object(h.replay,'run') as worker:

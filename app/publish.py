@@ -173,7 +173,9 @@ def download(ws, export_id, package, kind):
         raise ValueError('Unknown posting file.')
     target = folder/kind
     with ws.archive_lock:
-        if not target.exists():
+        receipt = target.with_suffix('.sha256')
+        if (not target.exists() or not receipt.is_file()
+                or media.sha(target) != receipt.read_text(encoding='ascii', errors='replace').strip()):
             tmp = target.with_suffix('.tmp')
             try:
                 with zipfile.ZipFile(tmp, 'w', allowZip64=True) as z:
@@ -190,7 +192,9 @@ def download(ws, export_id, package, kind):
                         if checksum.hexdigest() != record[hash_key]:
                             raise Conflict('Posting asset changed while packaging.')
                     z.write(folder/'manifest.json', 'manifest.json')
+                checksum = media.sha(tmp)
                 tmp.replace(target)
+                receipt.write_text(checksum+'\n', encoding='ascii')
             finally:
                 tmp.unlink(missing_ok=True)
     return target

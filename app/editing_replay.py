@@ -73,6 +73,15 @@ class Editor:
 
 def input_snapshot(config,app):
     app=Path(app)
+    if config.get('profile') == 'sprint':
+        import sprint_replay
+        files = sprint_replay.inputs(config)
+        return dict(protocol=editing_evals.PROTOCOL, config=config,
+                    source_files={str(p.resolve()):media.sha(p) for p in files},
+                    runtime=sprint_replay.runtime(),
+                    implementation={p.relative_to(app).as_posix():media.sha(p)
+                                    for p in app.rglob('*') if p.is_file()
+                                    and '__pycache__' not in p.parts and not p.name.startswith('test_')})
     files=[config['A'],config['A_srt'],config['B'],config['B_srt'],config['proof']]+[c['path'] for c in config.get('captures',[])]
     if config.get('branding'):files.append(config['branding']['path'])
     fixed=dict(protocol=editing_evals.PROTOCOL,config=config,source_files={str(Path(p).resolve()):media.sha(p) for p in files},
@@ -81,6 +90,10 @@ def input_snapshot(config,app):
 
 
 def run(config,out,app):
+    if config.get('profile') == 'sprint':
+        import sprint_replay
+        return sprint_replay.run(config, Path(out).resolve(), Path(app).resolve(),
+                                 input_snapshot(config,app), Editor)
     started=time.monotonic()
     out=Path(out).resolve();out.mkdir(parents=True,exist_ok=False)
     fixed=input_snapshot(config,app)
@@ -190,7 +203,8 @@ def run(config,out,app):
 
 def main():
     p=argparse.ArgumentParser();p.add_argument('--config',type=Path,required=True);p.add_argument('--app',type=Path,default=Path(__file__).parent);p.add_argument('--out',type=Path,required=True);a=p.parse_args()
-    r=run(json.loads(a.config.read_text(encoding='utf-8')),a.out,a.app.resolve());print(json.dumps(dict(turns=r['turns'],variants=r['variants'],summary=r['summary']),ensure_ascii=False,indent=2))
+    r=run(json.loads(a.config.read_text(encoding='utf-8')),a.out,a.app.resolve())
+    print(json.dumps({k:r[k] for k in ('turns','variants','summary','cases') if k in r},ensure_ascii=False,indent=2))
 
 
 if __name__=='__main__':main()
