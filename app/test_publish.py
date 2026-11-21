@@ -71,6 +71,16 @@ class PostingTests(unittest.TestCase):
         with self.assertRaises(Conflict):
             publish.download(self.ws,'master',record['id'],'posting.zip')
 
+    def test_selection_rejects_changed_design_with_same_master_and_asset_hashes(self):
+        record = self.save(caption='Dòng một.\r\nDòng hai.')
+        manifest = publish.folder_for(self.video, record['id'])/'manifest.json'
+        saved = json.loads(manifest.read_text(encoding='utf-8'))
+        self.assertEqual(record['caption'], 'Dòng một.\r\nDòng hai.')
+        saved['source_frame'] += 1
+        media.write_json(manifest, saved)
+        with self.assertRaisesRegex(Conflict, 'posting design changed'):
+            publish.download(self.ws, 'master', record['id'], 'posting.zip')
+
     def test_cover_rejects_stale_request_and_proof_overlap(self):
         record = self.save(title='Đọc kết quả')
         body = dict(export='master',package=record['id'],revision=1,sha256=self.export['sha256'])

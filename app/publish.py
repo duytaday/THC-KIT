@@ -158,7 +158,12 @@ def selection(ws, export_id, package=None):
     for name, key in (('caption.txt','caption_sha256'), ('thumbnail.png','thumbnail_sha256')):
         if media.sha(folder/name) != record[key]:
             raise Conflict('Posting asset changed on disk. Save a fresh selection.')
-    return dict(record, id=package, caption=(folder/'caption.txt').read_text(encoding='utf-8'))
+    caption = (folder/'caption.txt').read_bytes().decode('utf-8')
+    derived = {'thumbnail_sha256', 'caption_sha256', 'cover_sha256'}
+    design = {key: value for key, value in record.items() if key not in derived}
+    if digest([design, caption, 'posting-v2']) != package:
+        raise Conflict('The saved posting design changed. Save a fresh selection.')
+    return dict(record, id=package, caption=caption)
 
 
 def download(ws, export_id, package, kind):

@@ -105,3 +105,27 @@ Bộ regression ứng dụng chạy 446 ca, 433 đạt và 13 skip.
 Controller ghi `gain`, không có critical regression. Master fixture giữ `NEEDS_REVIEW`.
 Không có lượt duyệt nghe/xem thật và không thăng cấp model.
 [Receipt kiểm tra và hash](evidence/sprint-posting-revision-v001.json).
+
+## Kết quả kiểm frame thumbnail
+
+Vòng `posting-design-binding-003` chạy cùng ba fixture development, cùng
+FFmpeg `libx264` và cùng grader. Challenger chỉ thêm kiểm tra mã định danh
+gói từ thiết kế thumbnail và caption đã lưu trong `app/publish.py`. Ca mới
+đổi `source_frame` trong manifest của gói cũ, giữ nguyên revision và hash của
+MP4, caption và thumbnail. Baseline trả HTTP 200. Challenger trả HTTP 409.
+Cả hai arm vẫn từ chối manifest sai revision.
+
+| Arm | Ca đạt | Thời gian máy |
+|---|---:|---:|
+| Baseline | 6/7 | 92.20 giây |
+| Challenger | 7/7 | 77.67 giây |
+
+Cả hai resume batch bằng tiến trình mới và dùng lại export ID cùng SHA-256
+của tập đầu. Tập Save giữ draft và pickup. Đổi thumbnail giữ nguyên MP4 và
+revision. Đổi bìa tạo revision và MP4 mới, giữ bản cũ, PCM và SRT. Hai gói
+cũ và mới đều tải được sau khi đổi bìa. Controller ghi `gain`, critical
+regression bằng `false`, chi phí API 0 USD. Unit tests đạt 434/447,
+skip 13. Đây là kiểm thử cơ học trên fixture tổng hợp. Trạng thái QC
+vẫn là `NEEDS_REVIEW` và quyết định chất lượng model vẫn là `INCONCLUSIVE`.
+
+[Biên bản và hash](evidence/sprint-posting-design-v001.json).

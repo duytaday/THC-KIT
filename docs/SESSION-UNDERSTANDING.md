@@ -238,3 +238,8 @@ compiler equivalence and unchanged stems are separate from actual hearing.
 - [ ] Nêu lý do tập thiếu capture Save giữ draft và yêu cầu quay bổ sung, dù batch có thể hoàn thành.
 
 Đã gửi câu hỏi kiểm tra về manifest. Ghi nhận hiểu biết sau khi có câu trả lời.
+
+## Sprint hill climbing · Thiết kế thumbnail
+
+- [ ] Giải thích vì sao export ID, revision và ba hash tài sản vẫn chưa đủ để xác nhận frame nguồn được khai trong manifest. Đã gửi câu hỏi tình huống.
+- [ ] Dựa vào biên bản hai arm, giải thích điều kiện giữ baseline khi một ca đã đạt bị regression, và vì sao kết quả cơ học không dùng để duyệt chất lượng dựng.

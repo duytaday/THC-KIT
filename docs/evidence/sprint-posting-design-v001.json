@@ -1,0 +1,267 @@
+{
+  "request_id": "posting-design-binding-003",
+  "hypothesis": "Reject a posting design that does not match its saved selection ID",
+  "variable": "Design digest verification",
+  "changed_paths": [
+    "publish.py"
+  ],
+  "outcome": "gain",
+  "critical_regression": false,
+  "scores": {
+    "baseline": 0.8571428571428571,
+    "challenger": 1.0
+  },
+  "wall_seconds": 169.8760000001639,
+  "measured_cost": 0.0,
+  "cost_unit": "external_api_USD",
+  "quality_promotion": false,
+  "release_decision": "INCONCLUSIVE",
+  "scope": "synthetic_development",
+  "baseline_commit": "aaecc107ff56063e860e9af139371a3fc2241932",
+  "shared_source_hashes": [
+    "099e062ec20820f50ca4da0c2b5fa6aeba7e90968d0170157cf9858bf74b83be",
+    "0ec37603853252995e6af63c635fcc2a827065890ca547754f4cc0770634bbae",
+    "40e1eed403b843799bff3c160de559e0befa9296301bd3f376ca80f0d979178e",
+    "6b94f06c7c780e17917a9d1693cf553c3f842c4c22ca07befc2b3c8bd4577d84",
+    "7dcbf9f7f90ef2b35b1e2ba3f8748dd5b00d8a421b9bb6e6766cbe252f4ecd30",
+    "7f4511d5b7a06e50cb6b9b7f3c237ebbe4aadf53139854a255d2cf90801393db",
+    "a5c0a43076fe267b1e63a92e6e94d843602670e3864f9ad4e7c50883fec8cda9",
+    "e2566c6afaa51bc69b0cb55345a96e0452da39e219441cce23167e6fb61fc23a",
+    "e29cf65080de7b59e0865e32dd2519f0a7785977ab89cc74df0c1175894e710e",
+    "eaf7915d1b1b0df506b7ca71ef4aef2bb11a6e2869cb3b6ddf9921fa2f622c1a",
+    "f99d1fffcc38aa0a27788edb2625f2b130a8a1cbb3471f5a32897e62a153f864"
+  ],
+  "trial_sha256": "9e448041a91d355ee1e5afbf76f2bc6e8d526a51dfea8c07ef7917cfad1d7471",
+  "same_toolchain": true,
+  "same_inputs": true,
+  "encoder_requested": "libx264",
+  "ffmpeg_version": "ffmpeg version 8.1.1-full_build-www.gyan.dev Copyright (c) 2000-2026 the FFmpeg developers",
+  "apps": {
+    "app/sprint_replay.py": "0b2c1493ad038caf4bf7ef3bdcb4e0e0038e14116f4ce6d5ad249b65d530aac2",
+    "app/editing_replay.py": "a5e512e775b2d53fc30975efe0ca1d28df15ddfa99bd9eba0c988fbca14547a2",
+    "app/hillclimb.py": "8d350d74e9e036b914784a16e8aee73612a08bb8de1398e4f5b1c5df889bac04",
+    "app/publish.py": "fd5ea7e39142ad06c207b61104bd2b8978726d81d51b419dd9a20197ad598e2f",
+    "app/test_publish.py": "ca6d6f5799725caa5536ee567d2041dcfe0cd0bb9c2e9431c69dc5c0650bd25a"
+  },
+  "staged_git_blobs": {
+    "app/sprint_replay.py": "243b35e4c9af163659e665d998b44bd46d77da44728bb173dbb800ae39632f76",
+    "app/editing_replay.py": "5f36d9a6f631fc4253c0945167e54b195f2c6e8a0544f05c20fde3698472e934",
+    "app/hillclimb.py": "45bb045c2add6a50fb9c27cd3748b5282f7f26d25239d9a25bce29131ddfe06c",
+    "app/publish.py": "f8e54452bb9c8f4f1f2651060383b162c44f950aa75ddd264b24aae11ad4d3fa",
+    "app/test_publish.py": "b9aaf435ba2a581e2ba896a150ad9a1d95ab467304345912ae5dd3acb5e72e5f"
+  },
+  "arms": {
+    "baseline": {
+      "results_sha256": "67fe075e01e02bcd4db59d5e14a738fe1ec352d59f5465ffded68a18da9f9d5c",
+      "inputs_sha256": "1f8b9040b111f738ebb47f1056a00dd6c29f59ca08bfb35cda142fa8800a1fcb",
+      "wall_seconds": 92.2039999999106,
+      "cases": {
+        "batch_resume": {
+          "passed": true,
+          "checks": {
+            "stopped_after_one": true,
+            "same_export": true,
+            "same_bytes": true,
+            "reused_without_encode": true,
+            "completed_three": true
+          }
+        },
+        "assigned_proof": {
+          "passed": true,
+          "checks": {
+            "export_source": true,
+            "subtitle_source": true,
+            "complete_cases_no_pickup": true,
+            "rendered_preview_variants": true
+          }
+        },
+        "missing_demo": {
+          "passed": true,
+          "checks": {
+            "kept_draft": true,
+            "named_save_pickup": true,
+            "no_screen_proof": true,
+            "approval_pending": true
+          }
+        },
+        "thumbnail_revision": {
+          "passed": true,
+          "checks": {
+            "first_zip_valid": true,
+            "second_zip_valid": true,
+            "changed_thumbnail": true,
+            "same_mp4": true,
+            "same_revision": true,
+            "ui_cli_read_same_master": true
+          }
+        },
+        "cached_bundle_integrity": {
+          "passed": true,
+          "checks": {
+            "served_valid_after_corruption": true,
+            "original_master_intact": true
+          }
+        },
+        "cover_revision": {
+          "passed": true,
+          "checks": {
+            "one_new_revision": true,
+            "old_bytes_kept": true,
+            "new_bytes": true,
+            "image_changed": true,
+            "same_audio": true,
+            "same_subtitles": true,
+            "same_duration": true,
+            "review_pending": true
+          }
+        },
+        "posting_revision_binding": {
+          "passed": false,
+          "checks": {
+            "historical_selection": true,
+            "latest_selection": true,
+            "distinct_exports": true,
+            "rejects_wrong_revision": true,
+            "rejects_wrong_thumbnail_frame": false
+          }
+        }
+      },
+      "grader_sha256": "0b2c1493ad038caf4bf7ef3bdcb4e0e0038e14116f4ce6d5ad249b65d530aac2",
+      "wrong_revision_http": 409,
+      "wrong_thumbnail_frame_http": 200,
+      "resumed_export": "fcf9a69776344740a9261c3d48a9abd3",
+      "resumed_master_sha256": "21b29e89d77addc13e48fec99feb162823ba50fd21598aa2518cb25e04196638",
+      "missing_demo_draft": true,
+      "missing_demo_pickups": [
+        "Quay bổ sung cho câu “Click Save changes. The saved confirmation appears here.”: đúng đối tượng save, mục tiêu xuất hiện → thao tác thật → kết quả đủ lâu để đọc."
+      ],
+      "cover_before": {
+        "export": "857f4847b3f847cb982bed1db867f80c",
+        "revision": 1,
+        "mp4_sha256": "9dae6a3d55c44e6c1a95ca93e8a0ded8c718fc736bcfd66b430aa5f05ca1e3b6",
+        "caption_sha256": "b64586863fdd8eada4b6090a84d75d5a9924f0b898c874f8ee1a609003f1f16d",
+        "thumbnail_sha256": "4c88eec488c2e5257f8a90b7f76bb04f784365d62ee9021f09b197c44c320a36"
+      },
+      "cover_after": {
+        "export": "1166b3d2f74342e48b7d14f3940e59a0",
+        "revision": 2,
+        "mp4_sha256": "e5ebb0d75ed7574536bb2abe82e7f7b5d62c232cf5b3b14ed12cac225ebda443",
+        "caption_sha256": "be65c2d56f5f5be87b3cf822fc40410e16c3dd11339734de02187e1b8f410c8d",
+        "thumbnail_sha256": "80178cd903d6e0106ff6a59c795723669193ecb157c1a3493f1b6c982ad96b59"
+      },
+      "real_human_reviews": 0,
+      "real_master_approved": false
+    },
+    "challenger": {
+      "results_sha256": "67ed305dd1193a10dd518e36d30cde9a23ce79e35ff06bc0c4e177ba5893ae35",
+      "inputs_sha256": "da832215a1c8443ab7aed1f48a72fc6df6d934d1ed5dac1818db76777c92b806",
+      "wall_seconds": 77.67200000025332,
+      "cases": {
+        "batch_resume": {
+          "passed": true,
+          "checks": {
+            "stopped_after_one": true,
+            "same_export": true,
+            "same_bytes": true,
+            "reused_without_encode": true,
+            "completed_three": true
+          }
+        },
+        "assigned_proof": {
+          "passed": true,
+          "checks": {
+            "export_source": true,
+            "subtitle_source": true,
+            "complete_cases_no_pickup": true,
+            "rendered_preview_variants": true
+          }
+        },
+        "missing_demo": {
+          "passed": true,
+          "checks": {
+            "kept_draft": true,
+            "named_save_pickup": true,
+            "no_screen_proof": true,
+            "approval_pending": true
+          }
+        },
+        "thumbnail_revision": {
+          "passed": true,
+          "checks": {
+            "first_zip_valid": true,
+            "second_zip_valid": true,
+            "changed_thumbnail": true,
+            "same_mp4": true,
+            "same_revision": true,
+            "ui_cli_read_same_master": true
+          }
+        },
+        "cached_bundle_integrity": {
+          "passed": true,
+          "checks": {
+            "served_valid_after_corruption": true,
+            "original_master_intact": true
+          }
+        },
+        "cover_revision": {
+          "passed": true,
+          "checks": {
+            "one_new_revision": true,
+            "old_bytes_kept": true,
+            "new_bytes": true,
+            "image_changed": true,
+            "same_audio": true,
+            "same_subtitles": true,
+            "same_duration": true,
+            "review_pending": true
+          }
+        },
+        "posting_revision_binding": {
+          "passed": true,
+          "checks": {
+            "historical_selection": true,
+            "latest_selection": true,
+            "distinct_exports": true,
+            "rejects_wrong_revision": true,
+            "rejects_wrong_thumbnail_frame": true
+          }
+        }
+      },
+      "grader_sha256": "0b2c1493ad038caf4bf7ef3bdcb4e0e0038e14116f4ce6d5ad249b65d530aac2",
+      "wrong_revision_http": 409,
+      "wrong_thumbnail_frame_http": 409,
+      "resumed_export": "e4373c9ae2c246f5a7682d2ab844ccdd",
+      "resumed_master_sha256": "21b29e89d77addc13e48fec99feb162823ba50fd21598aa2518cb25e04196638",
+      "missing_demo_draft": true,
+      "missing_demo_pickups": [
+        "Quay bổ sung cho câu “Click Save changes. The saved confirmation appears here.”: đúng đối tượng save, mục tiêu xuất hiện → thao tác thật → kết quả đủ lâu để đọc."
+      ],
+      "cover_before": {
+        "export": "757bd85c05444751879ff754ef758c3c",
+        "revision": 1,
+        "mp4_sha256": "9dae6a3d55c44e6c1a95ca93e8a0ded8c718fc736bcfd66b430aa5f05ca1e3b6",
+        "caption_sha256": "b64586863fdd8eada4b6090a84d75d5a9924f0b898c874f8ee1a609003f1f16d",
+        "thumbnail_sha256": "4c88eec488c2e5257f8a90b7f76bb04f784365d62ee9021f09b197c44c320a36"
+      },
+      "cover_after": {
+        "export": "15e670c47962494faa115052d033a956",
+        "revision": 2,
+        "mp4_sha256": "e5ebb0d75ed7574536bb2abe82e7f7b5d62c232cf5b3b14ed12cac225ebda443",
+        "caption_sha256": "be65c2d56f5f5be87b3cf822fc40410e16c3dd11339734de02187e1b8f410c8d",
+        "thumbnail_sha256": "80178cd903d6e0106ff6a59c795723669193ecb157c1a3493f1b6c982ad96b59"
+      },
+      "real_human_reviews": 0,
+      "real_master_approved": false
+    }
+  },
+  "app_unit_tests": {
+    "total": 447,
+    "passed": 434,
+    "skipped": 13
+  },
+  "retry_unchanged": true,
+  "first_trial": {
+    "status": "incomplete",
+    "reason": "Python 3.12 Path.read_text lacks the newline argument"
+  }
+}

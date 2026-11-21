@@ -237,6 +237,12 @@ def run(config, out, app, snapshot, editor_factory):
             _, mismatch = editor.call('/api/posting/info', dict(export=old['id']), expect=(200,409))
         finally:
             manifest_path.write_bytes(original_manifest)
+        wrong_frame = {**json.loads(original_manifest), 'source_frame':pick['source_frame']+1}
+        try:
+            media.write_json(manifest_path, wrong_frame)
+            _, frame_mismatch = editor.call('/api/posting/info', dict(export=old['id']), expect=(200,409))
+        finally:
+            manifest_path.write_bytes(original_manifest)
         check('posting_revision_binding',
               historical_selection=historical['selection']==pick and verify_bundle(old_zip,pick),
               latest_selection=verify_bundle(new_zip,new_pick)
@@ -244,8 +250,9 @@ def run(config, out, app, snapshot, editor_factory):
                 and new_pick['mp4_sha256']==new['sha256'],
               distinct_exports=pick['revision']==old['revision'] and pick['export']!=new_pick['export']
                 and pick['mp4_sha256']!=new_pick['mp4_sha256'],
-              rejects_wrong_revision=mismatch==409)
-        result['posting_revision_observation'] = dict(old=pick, new=new_pick, wrong_revision_http=mismatch)
+              rejects_wrong_revision=mismatch==409, rejects_wrong_thumbnail_frame=frame_mismatch==409)
+        result['posting_revision_observation'] = dict(
+            old=pick, new=new_pick, wrong_revision_http=mismatch, wrong_thumbnail_frame_http=frame_mismatch)
         result.update(completed=True,wall_seconds=time.monotonic()-began,batch_run=rid,
                       episodes=episodes, cover_before=old, cover_after=new, workspace=str(workspace))
         media.write_json(out/'results.json',result)

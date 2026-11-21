@@ -26,7 +26,8 @@ The controller uses `freeze CONFIG --out TRIAL_DIR`, `start TRIAL_JSON --id ID
 profile replays the eight editing turns. Set `profile: "sprint"` in the replay
 config to check batch resume, bound and missing demos, and revision-bound
 posting packs. Test both old and new packs after a cover revision. Compare
-the manifest's export ID and revision as well as the three file hashes. The
+the manifest's export ID and revision as well as the three file hashes. Check
+that a changed thumbnail source frame cannot keep the original selection ID. The
 [sprint guide](../../../docs/SPRINT-HARNESS.vi.md) contains the fixture contract. The sprint controller checks the declared
 changed path
 against both source trees. It does not infer how many decisions changed inside
