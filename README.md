@@ -7,6 +7,8 @@ zooms, actual result holds and independent rendered-pixel checks. Its reusable
 [recipe templates](examples/demo-focus/) require current-episode source and
 landmark rebinding. Exports still need their own master and listening review.
 
+The optional [Motion library integration](docs/MOTION-LIBRARY-INTEGRATION-2026-11-15.vi.md) includes the pinned [Motion AI skill](.agents/skills/motion/SKILL.md) and [v040 editing handoff](docs/EDIT-V040-WITH-MOTION-LIBRARY.vi.md). Its public MCP configuration is in `.codex/config.toml`; hosted tools are optional, and paid capabilities require a separate account. Local rendering continues through the existing pinned runtime.
+
 ## Start
 
 For developing the kit, use the [full THC-KIT master prompt](docs/THC-KIT-MASTER-PROMPT.vi.md). It preserves all twelve requirement sections and separates the verified source checkpoint from remaining implementation and real-media acceptance.

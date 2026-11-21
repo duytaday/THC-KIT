@@ -1,0 +1,44 @@
+{
+  "package": "motion-ai",
+  "version": "14.2.0",
+  "license_declaration": "MIT",
+  "author": {
+    "name": "Matt Perry",
+    "url": "https://motion.dev"
+  },
+  "upstream_repository": "https://github.com/motiondivision/ai-kit",
+  "installed_content": "content/skills/motion",
+  "modified_upstream_files": true,
+  "paid_source_assets_included": false,
+  "sha256": {
+    "best-practices/base-ui.md": "cf1e79a446965c965a19a07e6c92527c8f661f87e0f16e321d4136fa7f1dd0de",
+    "best-practices/css-or-motion.md": "8afe92ddb1222b2586c34692d34fbcfae34fb45f415e1e5a41c3dcbfa56eccdb",
+    "best-practices/index.md": "078ef744df451d76408e157ef44cbca40a5b54c2160eea5d2661ba79afb045d9",
+    "best-practices/motion.md": "92dee7c7b3d39ed02956102fbc0c9790e4f45a11b80bd5846a8336871b555d8a",
+    "best-practices/react.md": "e09d96029eb64313f6887949805447807d300a36d13138a56b22b3525f2cc7c7",
+    "best-practices/vue.md": "935e462042b5f02d086d680e757f29b5e0d3177781c3aab9cc3838eed88bd292",
+    "codex/index.md": "590c1d3891019a501b77389dde78d9cb259e66bcb87746e5c7d06d8414fccaf6",
+    "css-spring/index.md": "98ae2faa1c68b5d2527e1f6bb3d94a1fb0482d24099ad6f9c5cfcd3ebb430a85",
+    "performance-audit/index.md": "90cd82c9c1e492d529e30bfe457498cd83cf8bfd235ca5b9f0789e425248cbd4",
+    "SKILL.md": "dd5f8b02216bc52b073d02d718100a44d04b76d99465579c8e3e6ae6288057d9",
+    "transition-preview/index.md": "64962b3757518956e56599d31bea8f7bced604b4ab35a14e2e1cf3494aa87ace"
+  },
+  "original_sha256": {
+    "best-practices/base-ui.md": "cf1e79a446965c965a19a07e6c92527c8f661f87e0f16e321d4136fa7f1dd0de",
+    "best-practices/css-or-motion.md": "7b5fa2e184238a0532d2b010629474e99dec36a5a35c442c12f96db5aa25682c",
+    "best-practices/index.md": "78fccd242981414e395988b4965ae390af79edfbdf3d0f36b6cf8650733a0da9",
+    "best-practices/motion.md": "92dee7c7b3d39ed02956102fbc0c9790e4f45a11b80bd5846a8336871b555d8a",
+    "best-practices/react.md": "e09d96029eb64313f6887949805447807d300a36d13138a56b22b3525f2cc7c7",
+    "best-practices/vue.md": "935e462042b5f02d086d680e757f29b5e0d3177781c3aab9cc3838eed88bd292",
+    "codex/index.md": "590c1d3891019a501b77389dde78d9cb259e66bcb87746e5c7d06d8414fccaf6",
+    "css-spring/index.md": "98ae2faa1c68b5d2527e1f6bb3d94a1fb0482d24099ad6f9c5cfcd3ebb430a85",
+    "performance-audit/index.md": "90cd82c9c1e492d529e30bfe457498cd83cf8bfd235ca5b9f0789e425248cbd4",
+    "SKILL.md": "dd5f8b02216bc52b073d02d718100a44d04b76d99465579c8e3e6ae6288057d9",
+    "transition-preview/index.md": "64962b3757518956e56599d31bea8f7bced604b4ab35a14e2e1cf3494aa87ace"
+  },
+  "modified_files": [
+    "best-practices/css-or-motion.md",
+    "best-practices/index.md"
+  ],
+  "modification": "Removed trailing spaces from two Markdown lines only; word content and instructions unchanged."
+}
