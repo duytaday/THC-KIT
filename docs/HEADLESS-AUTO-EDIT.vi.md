@@ -81,3 +81,23 @@ App và CLI dùng cùng OS lock. Khi UI đang mở, CLI gửi thao tác về API
 ## Giới hạn đã công bố
 
 Nghiệm thu ba tập dùng giọng tổng hợp và màn hình test có nhãn, kiểm tra source correspondence, âm thanh A/B/C, checkpoint/resume và phân biệt trạng thái. Chưa chứng minh chất lượng sáng tạo trên ba episode thật hoặc tự hiểu mọi claim. Không có LoRA mới được train/promote; prompt-prefix hash ổn định không phải provider prompt-cache hit. Bản cài đặt đóng gói mới chưa được phát hành.
+
+
+## Sửa một câu từ bản xuất
+
+Trong Outputs, bấm **Sửa một cảnh** để mở recording. Chọn câu trong storyboard,
+mở **Correct caption**, sửa chữ và chọn footage đã gán nếu cần. Một lần Save
+lưu cả hai thay đổi. Dùng **Make updated cut** để xuất qua queue hiện có.
+
+CLI dùng `revise --run RUN --episode EPISODE --revision REV --request-id ID --patch FILE`.
+FILE có dạng:
+
+```json
+{"passage":{"export":"EXPORT_ID","sha256":"MASTER_HASH","beat":"caption-1","cues":[{"index":1,"text":"Bấm nút này."}],"asset":"ASSIGNED_ASSET_ID"}}
+```
+
+Lấy beat/cue từ bản xuất hiện tại trong editor. Bỏ `asset` để giữ hình, hoặc đặt
+chuỗi rỗng để về presenter. Bỏ `cues` để chỉ thay hình. Demo có claim đã gắn
+cần chỉnh trong trình chỉnh demo để xác minh lại nguồn và mốc. Sau Save, CLI
+`resume` dựng revision đã lưu bằng cùng queue. MP4 mới và QC nằm trong thư mục
+export của workspace, được trả về qua `status`. Bản cũ vẫn có trong history.

@@ -73,7 +73,10 @@ class HeadlessTests(unittest.TestCase):
         first=dict(episode_id='01',job='j1',export_id='unchanged',master_sha256='first-hash')
         second=dict(episode_id='02',job='j2',export_id='old-second',fingerprint='old')
         class WS:
-            def __init__(self):self.data={'jobs':{'j2':job},'auto_runs':{'run':{'id':'run','request':{},'episodes':[first,second]}}}
+            def __init__(self):
+                from threading import RLock
+                self.lock = RLock()
+                self.data={'jobs':{'j2':job},'auto_runs':{'run':{'id':'run','request':{},'episodes':[first,second]}}}
             def save(self):pass
             def update(self,ids,settings,revisions):job['settings'].update(settings);job['revision']+=1
         return WS(),first,job

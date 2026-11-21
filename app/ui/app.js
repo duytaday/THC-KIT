@@ -1138,6 +1138,7 @@ document.addEventListener('input',e=>{if(e.target.dataset.observedFace!==undefin
   layout.before(root, advanced); advanced.append(layout);
   document.querySelector('#work .sectionhead h1').textContent='Your cut';
   document.querySelector('#work .sectionhead p').textContent='Bring your recording. Make a first cut, then make it yours.';
+  const cutForPassage=id=>Boolean(latestFor(id)&&state.jobs[id]?.passage_revision===state.jobs[id]?.revision);
   const originalDraw=draw; let signature='', chosenBeat=-1, captionDraft=null, shotDraft=null; const roomProjects=new Map(), nicheDrafts=new Map();
   draw=function(){originalDraw(); renderRoom();};
   const format=t=>time(Math.max(0,Number(t)||0));
@@ -1216,14 +1217,19 @@ document.addEventListener('input',e=>{if(e.target.dataset.observedFace!==undefin
     if(b.dataset.roomAssign){document.querySelector(`[data-describe-footage="${b.dataset.roomAssign}"]`)?.click();return;}
     if(b.hasAttribute('data-room-original')){playsource(id);return;}
     if(b.dataset.roomReview){review(b.dataset.roomReview);return;}
-    if(b.hasAttribute('data-room-start')){b.disabled=true;try{await save();const result=await firstCut([id],el('roomNiche').value);versionKey='';await refresh();if(result.setup_required)dialog('Captions need setup',`<p>Your recording is safe. To make captions from this recording, set up local captions once, or attach a prepared script.</p><p>${esc(result.speech_setup.download)}</p><button type="button" id="setupLocalCaptions" class="primary">Set up local captions</button><button type="button" id="attachCreatorScript" class="soft">Use a prepared TXT / SRT</button>`);else notify('First cut queued for '+sourceName(id)+'.');}finally{b.disabled=false;}return;}
+    if(b.hasAttribute('data-room-start')){b.disabled=true;try{if(cutForPassage(id)){
+        await req('/api/queue',{ids:[id],request_id:crypto.randomUUID()});
+        versionKey='';await refresh();notify('Updated cut queued for '+sourceName(id)+'.');return;
+      }await save();const result=await firstCut([id],el('roomNiche').value);versionKey='';await refresh();if(result.setup_required)dialog('Captions need setup',`<p>Your recording is safe. To make captions from this recording, set up local captions once, or attach a prepared script.</p><p>${esc(result.speech_setup.download)}</p><button type="button" id="setupLocalCaptions" class="primary">Set up local captions</button><button type="button" id="attachCreatorScript" class="soft">Use a prepared TXT / SRT</button>`);else notify('First cut queued for '+sourceName(id)+'.');}finally{b.disabled=false;}return;}
     if(b.dataset.roomBeat!==undefined){const i=Number(b.dataset.roomBeat), beat=selectedBeat(j,i),cut=latestFor(id),project=cut&&roomProjects.get(cut.id),t=beat.segments[0].edit_start,player=el('roomVideo');selectBeat(i);player.currentTime=Math.max(0,t-1);player.play().catch(()=>{});return;}
     if(b.dataset.roomCorrect!==undefined){
       const beat=selectedBeat(j,Number(b.dataset.roomCorrect)), view=roomProjects.get(latestFor(id).id), parsed=beat.cues.length?{cues:beat.cues.map(c=>({...c,i:c.index}))}:null;
       if(!parsed)throw Error('Use advanced editing for untimed or boundary-crossing captions.');
       captionDraft={id,revision:j.revision,script:j.settings.script,beat:beat.id,export:view.export,sha256:view.sha256};
       const fields=parsed.cues.map((c,n)=>`<label for="roomCue-${n}">Caption · source ${format(c.start)}–${format(c.end)}</label><textarea id="roomCue-${n}" data-room-cue="${c.i}" rows="2">${esc(c.text)}</textarea>`).join('');
-      dialog('Correct caption',`<p>Spoken phrase: “${esc(beat.quote)}”</p><p>Edit only the captions in this passage. Their timing stays the same. Save, then make a new cut to check the result.</p>${fields}<button type="button" class="primary" data-room-save-caption="${id}">Save caption correction</button>`);return;
+      const choices=refs().filter(a=>a.source_role==='broll'&&(a.owner_jobs||[]).includes(id))
+        .map(a=>`<option value="${esc(a.id)}">${esc(a.name)}</option>`).join('');
+      dialog('Edit this passage',`<p>Spoken phrase: “${esc(beat.quote)}”</p><p>Edit only the captions in this passage. Their timing stays the same. Save, then make a new cut to check the result.</p>${fields}<label for="roomCaptionShot">Picture for this passage</label><select id="roomCaptionShot"><option value="keep">Keep current picture</option><option value="">Presenter only</option>${choices}</select><button type="button" class="primary" data-room-save-caption="${id}">Save passage</button>`);return;
     }
     if(b.dataset.roomShot!==undefined){
       const beat=selectedBeat(j,Number(b.dataset.roomShot)),available=refs().filter(a=>a.source_role==='broll'&&(a.owner_jobs||[]).includes(id));
@@ -1238,7 +1244,8 @@ document.addEventListener('input',e=>{if(e.target.dataset.observedFace!==undefin
   document.addEventListener('click',guard(async e=>{const moment=e.target.closest('[data-room-moment]');if(moment){const id=selectedIds()[0],j=state.jobs[id],issue=j.creator.uncertain[Number(moment.dataset.roomMoment)],index=j.creator.beats.findIndex(b=>b.source_end>issue.source_range[0]&&b.source_start<issue.source_range[1]);el('modal').close();if(index>=0){chosenBeat=index;renderRoom(true);const v=el('roomVideo'),t=editTime(issue.source_range[0],j.creator.keep);if(t!==null){v.currentTime=Math.max(0,t-1);v.play().catch(()=>{});}notify('Choose a passage action below the selected phrase.');}return;}const b=e.target.closest('[data-room-save-caption]');if(!b)return;const id=b.dataset.roomSaveCaption;b.disabled=true;try{
       if(!captionDraft||captionDraft.id!==id||state.jobs[id].revision!==captionDraft.revision||state.jobs[id].settings.script!==captionDraft.script)throw Error('This recording changed while the editor was open. Reopen the caption and try again.');
       const cues=all('[data-room-cue]').map(field=>({index:Number(field.dataset.roomCue),text:field.value}));
-      await req('/api/creator/caption',{id,revision:captionDraft.revision,export:captionDraft.export,sha256:captionDraft.sha256,beat:captionDraft.beat,cues});captionDraft=null;el('modal').close();versionKey='';await refresh();notify('Caption correction saved. Make an updated cut to review it.');
+      const asset=el('roomCaptionShot').value;
+      await req('/api/creator/passage',{id,revision:captionDraft.revision,export:captionDraft.export,sha256:captionDraft.sha256,beat:captionDraft.beat,cues,...(asset==='keep'?{}:{asset})});captionDraft=null;el('modal').close();versionKey='';await refresh();notify('Caption correction saved. Make an updated cut to review it.');
     }finally{b.disabled=false;}}));
   document.addEventListener('click',guard(async e=>{
     const b=e.target.closest('[data-room-save-shot]');if(!b)return;const id=b.dataset.roomSaveShot;

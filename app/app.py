@@ -380,9 +380,11 @@ class Handler(BaseHTTPRequestHandler):
             elif p in ('/api/style-board/save','/api/scene-plan/create'):
                 import scene_plan
                 return self.result((scene_plan.save_observation if p.endswith('/save') else scene_plan.create)(ws,b))
-            elif p in ('/api/creator/caption','/api/creator/shot'):
+            elif p in ('/api/creator/caption','/api/creator/shot','/api/creator/passage'):
                 import creator_editor
-                return self.result((creator_editor.caption if p.endswith('/caption') else creator_editor.shot)(ws,b))
+                handlers = {'caption': creator_editor.caption, 'shot': creator_editor.shot,
+                            'passage': creator_editor.revise}
+                return self.result(handlers[p.rsplit('/', 1)[1]](ws, b))
             elif p == '/api/creator/first-cut':
                 return self.result(ws.first_cut(b['ids'],b.get('niche'),b.get('story_format'),b['request_id'],b['revisions']))
             elif p == '/api/creator/setup':

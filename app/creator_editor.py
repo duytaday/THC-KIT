@@ -10,7 +10,7 @@ import uuid
 from pathlib import Path
 
 from engine import media
-from revisions import Conflict
+from revisions import Conflict, digest
 
 STAMP = r'(\d{1,3}):(\d{2}):(\d{2})[,.](\d{1,3})'
 RANGE = re.compile(r'^' + STAMP + r'\s*-->\s*' + STAMP + r'(?:[^\r\n]*)\r?$', re.M)
@@ -96,7 +96,7 @@ def _selection(ws, body):
     return job, view, beat
 
 
-def caption(ws, body):
+def caption(ws, body, *, prepare=False):
     with ws.lock:
         job, view, beat = _selection(ws, body)
         allowed = {c['index'] for c in beat['cues']}; edits = body.get('cues')
@@ -114,11 +114,11 @@ def caption(ws, body):
             if any(not line.strip() for line in text.strip().splitlines()): raise ValueError('Keep text on each caption line.')
             seen.add(index); replacements.append((*cues[index]['span'], text.strip()))
         for start,end,text in sorted(replacements, reverse=True): script = script[:start]+text+script[end:]
-        ws.update([job['id']], {'script':script}, {job['id']:body['revision']})
-        return dict(revision=job['revision'], status='Draft', review_required=True)
+        changes = {'script': script}
+        return changes if prepare else save_passage(ws, body, changes)
 
 
-def shot(ws, body):
+def shot(ws, body, *, prepare=False):
     with ws.lock:
         job, view, beat = _selection(ws, body)
         ranges = [(s['source_start'],s['source_end']) for s in beat['segments']]
@@ -135,7 +135,11 @@ def shot(ws, body):
         original = job['settings']['inserts']; result = copy.deepcopy(original)
         overlapping = [q for q in original if any(q['at']<b and q['at']+q['duration']>a for a,b in ranges)]
         if chosen and overlapping and all(q['asset']==chosen for q in overlapping) and all(any(q['at']<=a and q['at']+q['duration']>=b for q in overlapping) for a,b in ranges):
-            return dict(revision=job['revision'], status=job['status'], changed=False)
+            return {} if prepare else dict(revision=job['revision'], status=job['status'], changed=False)
+        if any(q.get('demonstrates') or q.get('visual_claim') for q in overlapping):
+            raise ValueError('Rebind this real demonstration and its proof markers in the demo editor.')
+        if any(p['start'] < b and p['end'] > a for p in view['plan'].get('proof', []) for a,b in ranges) and job.get('series_selection'):
+            raise ValueError('Use the selected series scene editor to replace its bound footage.')
         if any(q.get('cue','').strip() for q in overlapping):
             raise ValueError('Resolve the spoken-anchor cutaway in advanced editing before splitting it.')
         for left,right in ranges:
@@ -162,5 +166,46 @@ def shot(ws, body):
             for left,right in ranges:
                 result.append(dict(id=uuid.uuid4().hex,asset=chosen,at=left,offset=left-beat['source_start'],duration=right-left,cue=''))
         result.sort(key=lambda q:q['at'])
-        ws.update([job['id']], {'inserts':result}, {job['id']:body['revision']})
-        return dict(revision=job['revision'],status=job['status'],changed=result!=original,review_required=True)
+        changes = {'inserts': result}
+        return changes if prepare else save_passage(ws, body, changes)
+
+
+def revise(ws, body):
+    """Apply both controls to one saved passage in one revision."""
+    with ws.lock:
+        if not {'cues', 'asset'}.intersection(body):
+            raise ValueError('Provide caption corrections or a shot choice.')
+        changes = caption(ws, body, prepare=True) if 'cues' in body else {}
+        if 'asset' in body:
+            changes.update(shot(ws, body, prepare=True))
+        return save_passage(ws, body, changes)
+
+
+def save_passage(ws, body, changes):
+    job = ws.data['jobs'][body['id']]
+    before = job['settings']['script']
+    changed = any(job['settings'][key] != value for key, value in changes.items())
+    if not changed:
+        return dict(revision=job['revision'], status=job['status'], changed=False)
+    previous = copy.deepcopy(ws.data)
+    was_deferred = getattr(ws, '_save_deferred', False)
+    ws._save_deferred = True
+    try:
+        ws.update([job['id']], changes, {job['id']: body['revision']})
+        selection = job.get('series_selection')
+        if selection and selection['source_script_sha256'] == digest(before) and 'script' in changes:
+            # Caption text changed. Source ranges and selected A/B/C assets stay bound.
+            selection['source_script_sha256'] = digest(changes['script'])
+        job['passage_revision'] = job['revision']
+        run = ws.data.get('auto_runs', {}).get(job.get('auto_run'))
+        if run:
+            entry = next(e for e in run['episodes'] if e.get('job') == job['id'])
+            entry.update(passage_revision=job['revision'], status='DRAFT',
+                         next_action='Render the updated cut from Outputs or resume this run.')
+        ws._save_deferred = was_deferred
+        ws.save()
+    except BaseException:
+        ws.data = previous
+        ws._save_deferred = was_deferred
+        raise
+    return dict(revision=job['revision'], status=job['status'], changed=True, review_required=True)

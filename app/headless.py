@@ -291,6 +291,27 @@ def result(ws,run):
     return dict(run_id=run['id'],status=run['status'],workspace=str(ws.root),episodes=copy.deepcopy(run['episodes']),
                 progress_log=str(ws.root/'auto-runs'/run['id']/'progress.jsonl'),model='rules + local scoped preference retrieval',human_approvals_created=0)
 
+def publish_passage(ws, job, export):
+    run = ws.data.get('auto_runs', {}).get(job.get('auto_run'))
+    if not run:
+        return
+    entry = next((e for e in run['episodes'] if e.get('job') == job['id']), None)
+    if not entry or entry.get('passage_revision') != export['revision']:
+        return
+    if entry.get('export_id') == export['id']:
+        return
+    if entry.get('export_id'):
+        entry['history'].append({key: entry[key] for key in
+                                 ('output_path', 'master_sha256', 'revision', 'export_id', 'fingerprint')
+                                 if key in entry})
+    entry.update(elapsed_seconds=export.get('technical', {}).get('performance', {}).get('elapsed_seconds'),
+                 revision=export['revision'], export_id=export['id'],
+                 master_sha256=export['sha256'], output_path=str(Path(export['folder'])/'edit.mp4'),
+                 qc_path=str(Path(export['folder'])/'qc.json'), qc_status=export['verdict'],
+                 status='QC_FAILED' if export['verdict'] in ('BLOCKED', 'REVISE') else 'NEEDS_REVIEW',
+                 next_action='Watch and listen to this exact export at 1×.')
+
+
 def execute(ws,run,stop_after=None):
     fresh=plan(run['request'],ws);config=fresh['config'];style,version=import_style(ws,config);completed=0
     run['status']='RUNNING';ws.save()
@@ -299,6 +320,25 @@ def execute(ws,run,stop_after=None):
         entry=by_id.setdefault(row['id'],dict(episode_id=row['id'],status='PENDING',history=[]))
         if entry not in run['episodes']:run['episodes'].append(entry)
         try:
+            if entry.get('passage_revision') is not None:
+                job = ws.data['jobs'][entry['job']]
+                if entry['passage_revision'] != job['revision']:
+                    raise Conflict('The edited passage revision changed. Review the current project before rendering.')
+                if entry.get('revision') != job['revision']:
+                    with ws.lock:
+                        if job['revision'] != entry['passage_revision'] or job['status'] in ('Queued', 'Rendering'):
+                            raise Conflict('The passage revision is already changing or rendering.')
+                        ws.queue([job['id']], start=False)
+                    ws.run(job['id'])
+                    if entry.get('revision') != job['revision']:
+                        raise ValueError(job.get('stage', 'Passage render failed'))
+                    progress(ws, run, dict(episode=row['id'], event='PASSAGE_EXPORTED', export_id=entry['export_id']))
+                    completed += 1
+                if stop_after and completed >= stop_after:
+                    run['status'] = 'INTERRUPTED'
+                    ws.save()
+                    return result(ws, run)
+                continue
             prepared=prepare_episode(ws,row,config,fresh['components'])
             if prepared['blockers']:
                 entry.update(status='NEEDS_INPUT',issues=prepared['blockers'],next_action='Resolve mapping/source issues; other episodes continue');ws.save();continue
@@ -358,18 +398,35 @@ def resume(ws,run_id,stop_after=None):return execute(ws,ws.data['auto_runs'][run
 def status(root,run_id):
     data=load(Path(root)/'workspace.json');run=data.get('auto_runs',{})[run_id];return dict(run_id=run_id,status=run['status'],episodes=run['episodes'],workspace=str(Path(root).resolve()))
 
-def revise(ws,b):
+def revise(ws, b):
+    with ws.lock:
+        return _revise(ws, b)
+
+
+def _revise(ws,b):
     run=ws.data['auto_runs'][b['run']];entry=next(e for e in run['episodes'] if e['episode_id']==b['episode']);job=ws.data['jobs'][entry['job']]
     patch=copy.deepcopy(b['patch']);request=digest([run['id'],entry['episode_id'],b.get('request_id') or patch]);old=ws.data.setdefault('auto_revision_requests',{}).get(request)
     if old and old.get('patch_sha256')!=digest(patch):raise Conflict('Revision request ID reused with a different patch')
     if old:return {**copy.deepcopy(old),'replayed':True}
     if b.get('revision') is not None and b['revision']!=job['revision']:raise Conflict('Episode revision changed')
+    if set(patch) == {'passage'}:
+        import creator_editor
+        body = patch['passage']
+        if not isinstance(body, dict) or type(b.get('revision')) is not int or set(body) - {'export','sha256','beat','cues','asset'}:
+            raise ValueError('Provide --revision and a passage bound to the saved export.')
+        changed = creator_editor.revise(ws, {**body, 'id':job['id'], 'revision':b['revision']})
+        answer = dict(run_id=run['id'], episode_id=entry['episode_id'], **changed,
+                      patch_sha256=digest(patch), preset_changed=False)
+        ws.data['auto_revision_requests'][request] = answer
+        ws.save()
+        return answer
     if 'round' in patch or 'choice' in patch:
         if set(patch)!={'round','choice'}:raise ValueError('Change a scene choice separately from mix settings')
         r=lib.migrate(ws)['rounds'][patch['round']]
         if r['job']!=job['id']:raise ValueError('Scene belongs to another episode')
         studio.select(ws,dict(round=r['id'],choice=patch['choice'],scope='scene',reviewer='CLI episode directive',reviewer_kind='agent',consent_train=False,note='Explicit terminal choice; not a human watch/listen attestation'))
         rounds=job.get('series_selection',{}).get('rounds',[r['id']]);studio.apply_choices(ws,dict(rounds=rounds,revision=job['revision']));entry.pop('fingerprint',None)
+        if 'passage_revision' in entry:entry.update(passage_revision=job['revision'],status='DRAFT')
         answer=dict(run_id=run['id'],episode_id=entry['episode_id'],revision=job['revision'],status='DRAFT',preset_changed=False,next_action='resume this run to render and QC a new master')
         answer['patch_sha256']=digest(b['patch']);ws.data['auto_revision_requests'][request]=answer;ws.save();return answer
     if 'when_quote' in patch:
@@ -387,6 +444,7 @@ def revise(ws,b):
         key=mapped.get(k,k);value='built_in' if k=='music_mode' and v in ('auto','my_track') else v
         if key in config['locked_fields'] and value!=config['params'][key]:raise ValueError('Episode setting changes locked preset '+key+'; use a scoped music cue or explicitly fork the preset')
     ws.update([job['id']],patch,{job['id']:job['revision']});job.setdefault('auto_manual_settings',{}).update(copy.deepcopy(patch));entry.pop('fingerprint',None);entry['manual_settings']=copy.deepcopy(patch);ws.save()
+    if 'passage_revision' in entry:entry.update(passage_revision=job['revision'],status='DRAFT')
     # Other completed episodes keep their exact export IDs and hashes.
     answer=dict(run_id=run['id'],episode_id=entry['episode_id'],revision=ws.data['jobs'][job['id']]['revision'],status='DRAFT',next_action='resume this run to export a new version',preset_changed=False)
     answer['patch_sha256']=digest(b['patch']);ws.data['auto_revision_requests'][request]=answer;ws.save();return answer

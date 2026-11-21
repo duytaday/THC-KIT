@@ -94,6 +94,25 @@ class EditorTests(unittest.TestCase):
         self.assertEqual(self.ws.data['jobs']['host']['settings']['script'],before.replace('Bấm vào đây.','Bấm vào đây nhé.'))
         self.assertEqual(self.ws.data['jobs']['host']['revision'],1)
 
+    def test_combined_edit_rejects_invalid_asset_then_saves_one_revision(self):
+        job = self.ws.data['jobs']['host']
+        job['auto_run'] = 'batch'
+        episode = dict(job='host', episode_id='one', revision=0, history=[])
+        neighbor = dict(job='other', episode_id='two', revision=8)
+        self.ws.data['auto_runs'] = {'batch': {'episodes':[episode, neighbor]}}
+        body = self.body(asset='missing', cues=[dict(index=1,text='Bấm nút này.')])
+        before = copy.deepcopy(self.ws.data)
+        with self.assertRaises(ValueError):
+            editor.revise(self.ws, body)
+        self.assertEqual(self.ws.data, before)
+        result = editor.revise(self.ws, dict(body, asset='new'))
+        self.assertEqual(result['revision'], 1)
+        self.assertEqual(episode['passage_revision'], 1)
+        self.assertEqual(neighbor['revision'], 8)
+        self.assertEqual(self.ws.export('master')['sha256'], self.digest)
+        self.assertEqual(editor.caption_cues(job['settings']['script'])[1]['text'], 'Bấm nút này.')
+        self.assertEqual(job['settings']['inserts'][1]['asset'], 'new')
+
     def test_caption_cannot_edit_adjacent_cue_or_inject_timing(self):
         for edits in ([dict(index=0,text='Sai phạm vi')],[dict(index=1,text='00:00 --> 00:01')],[dict(index=1,text='a\nb\nc')],[dict(index=1,text='a'),dict(index=1,text='b')]):
             with self.subTest(edits=edits):

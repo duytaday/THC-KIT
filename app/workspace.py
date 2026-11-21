@@ -583,6 +583,9 @@ class Workspace:
                     }
                 )
                 j.update(status='Failed' if kit_report['status']=='BLOCKED' else 'Needs revision' if kit_report['status']=='REVISE' else "For review", stage='QC needs attention: '+kit_report.get('error','Confirmed defect') if kit_report['status'] in ('BLOCKED','REVISE') else 'Technical checks passed · editorial review needed', latest=eid)
+                if j.get('auto_run'):
+                    import headless
+                    headless.publish_passage(self, j, self.data['exports'][-1])
                 j['planner_receipt']=notes['planner']
                 if notes['planner'].get('fallback'):j['stage']='Planner fallback: '+notes['planner']['fallback']+' · editorial review needed'
                 self.save()
