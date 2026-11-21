@@ -20,6 +20,7 @@ MIME = {
     ".png": "image/png",
     ".svg": "image/svg+xml",
     ".srt": "application/x-subrip",
+    ".txt": "text/plain; charset=utf-8",
     ".json": "application/json",
     ".woff2": "font/woff2",
     ".zip": "application/zip",
@@ -217,6 +218,12 @@ class Handler(BaseHTTPRequestHandler):
                                     if not source.exists() and name=='qc.json':source=Path(entry['folder'])/'edit-review.json'
                                     if source.exists():archive.write(source,sub+name)
                         return self.file(dest, "Cutroom-latest-edits.zip")
+            if p.startswith('/posting/'):
+                _, _, export_id, package, kind = p.split('/')
+                import publish
+                file = publish.download(ws, export_id, package, kind)
+                label = f'Cutroom-{export_id[:8]}-{kind}' if kind == 'posting.zip' or u.query else None
+                return self.file(file, label)
             if p.startswith("/exports/"):
                 _, _, eid, kind = p.split("/")
                 entry = ws.export(eid)
@@ -238,7 +245,7 @@ class Handler(BaseHTTPRequestHandler):
                 return self.file(f, label)
             if p == "/":
                 p = "/index.html"
-            if p not in ("/index.html", "/app.js", "/style.css", "/icon.svg", "/dm-sans.woff2", "/series.html", "/series.js", "/series.css", "/series-proof.js", "/library.html", "/library.js", "/stock-library.js", "/outputs-batch.js"):
+            if p not in ("/index.html", "/app.js", "/style.css", "/icon.svg", "/dm-sans.woff2", "/series.html", "/series.js", "/series.css", "/series-proof.js", "/library.html", "/library.js", "/stock-library.js", "/outputs-batch.js", "/posting-ui.js"):
                 return self.result({"error": "Not found"}, 404)
             f = UI / p[1:]
             self.send_bytes(200, f.read_bytes(), MIME[f.suffix])
@@ -316,6 +323,20 @@ class Handler(BaseHTTPRequestHandler):
                 raise ValueError("Request is too large.")
             b = json.loads(self.rfile.read(n) or "{}")
             self._turn_request=b
+            if p in ('/api/posting/info', '/api/posting/save', '/api/posting/cover'):
+                import publish
+                if p.endswith('/info'):
+                    return self.result(dict(info=publish.info(ws,b['export']),
+                                            selection=publish.selection(ws,b['export'])))
+                if p.endswith('/save'):
+                    return self.result(publish.save(ws,b))
+                with ws.lock:
+                    result = publish.set_cover(ws,b)
+                    job = ws.data['jobs'][result['job']]
+                    import creator_editor
+                    creator_editor.mark_export_revision(ws, job)
+                    ws.save()
+                    return self.result({**result, **ws.queue([job['id']])})
             if p == '/api/stock/use':
                 import asset_library
                 return self.result(asset_library.use(ws,b))

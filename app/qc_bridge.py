@@ -39,6 +39,11 @@ def prepare_export(folder,host,settings,plan):
     # Runtime changes invalidate cached frames just like changed source code.
     dependencies.update(Path(p).resolve() for name in ('ffmpeg','ffprobe') if (p:=shutil.which(name)))
     if plan.get('branding'):dependencies.add(Path(plan['branding']['file']))
+    if plan.get('cover'):
+        dependencies.add(Path(plan['cover']['file']))
+        timeline = json.loads((folder/'timeline.json').read_text(encoding='utf-8'))
+        timeline['cover'] = dict(plan['cover'], output_start=0, output_end=plan['cover']['frames']/30)
+        write(folder/'timeline.json',timeline)
     for e in events_for(plan,clock):
         if not e['sound'].get('muted') and e['sound'].get('id'):dependencies.add(sound_asset(e['sound'])[0])
     if plan.get('music',{}).get('mode','off')!='off':dependencies.add(Path(plan['music'].get('path') or Path(__file__).parent/'music'/(plan['music'].get('track','calm')+'.wav')))

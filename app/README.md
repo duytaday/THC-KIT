@@ -123,3 +123,15 @@ under a second copy of narration/captions. Keep one authoritative caption/audio
 route when using a complete styled cut. Native scene specs are the tested UI
 path for compositing graphics directly onto its original episode buses. Run
 master QC after any assembly.
+
+### Bộ đăng bài theo revision
+
+Trong **Outputs**, mở **Bộ đăng bài** trên bản xuất muốn đăng. Chọn hoặc sửa
+caption, chọn giây, bố cục và crop thumbnail rồi bấm **Lưu và xem thumbnail**.
+ZIP gồm MP4, caption TXT UTF-8, thumbnail PNG và manifest có hash/khung hình nguồn.
+Có thể tải TXT và PNG riêng. Mỗi lần lưu giữ bộ tải nhất quán với MP4 đã chọn.
+
+Nếu muốn đưa thiết kế chữ vào đầu video, xem **Xem thiết kế bìa trong video**
+rồi bấm **Đổi bìa trong video và xuất bản mới**. Bìa chiếm 12 frame đầu trên
+timeline hiện có. Hàng đợi tạo revision mới, kiểm tra kỹ thuật và chờ xem/nghe
+bản mới. Cảnh demo hoặc cue hình ảnh trong khoảng bìa sẽ chặn thao tác.

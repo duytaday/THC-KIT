@@ -28,7 +28,7 @@ DEFAULT = dict(
     planner_mode='built_in',
     niche='',story_format='auto',
     brand_logo='',brand_from=0.,brand_to=0.,
-    opening_mode='current',
+    opening_mode='current', posting_cover=None,
 )
 
 
@@ -212,7 +212,7 @@ class Workspace:
                 settings=copy.deepcopy(DEFAULT)
                 if parent:
                     for k in DEFAULT:
-                        if k not in ('script','inserts','events'):settings[k]=copy.deepcopy(parent['settings'].get(k,DEFAULT[k]))
+                        if k not in ('script','inserts','events','posting_cover'):settings[k]=copy.deepcopy(parent['settings'].get(k,DEFAULT[k]))
                 self.data["jobs"][asset_id] = {
                     "id": asset_id,
                     "settings": settings,
@@ -234,6 +234,13 @@ class Workspace:
         if not isinstance(opts.get('niche',''),str) or len(opts.get('niche',''))>500:raise ValueError('Describe the niche in up to500characters')
         if opts.get('story_format','auto') not in ('auto',*creator.FORMATS):raise ValueError('Choose an editorial recipe')
         if opts.get('opening_mode','current') not in ('current','host_first','proof_first'):raise ValueError('Choose an available opening')
+        cover = opts.get('posting_cover')
+        if cover is not None:
+            if (not isinstance(cover, dict) or set(cover) != {'export', 'id'}
+                    or not all(isinstance(value, str) for value in cover.values())
+                    or not any(e['id'] == cover['export'] and e['job'] == j['id']
+                               for e in self.data['exports'])):
+                raise ValueError('The cover must come from an export of this recording.')
         if opts.get('brand_logo'):
             logo=self.data['assets'].get(opts['brand_logo'])
             if not logo or logo['kind']!='graphic':raise ValueError('Choose an imported logo image')
@@ -509,6 +516,9 @@ class Workspace:
             fonts = temp / "fonts"
             fonts.mkdir()
             shutil.copy2(HERE / "fonts/DejaVuSans-Bold.ttf", fonts)
+            if settings.get('posting_cover'):
+                import publish
+                publish.apply(self, settings, plan)
             import qc_bridge
             qc_bridge.prepare_export(temp,host,settings,plan)
             qc_bridge.preflight(temp)

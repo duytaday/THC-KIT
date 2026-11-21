@@ -196,12 +196,7 @@ def save_passage(ws, body, changes):
         if selection and selection['source_script_sha256'] == digest(before) and 'script' in changes:
             # Caption text changed. Source ranges and selected A/B/C assets stay bound.
             selection['source_script_sha256'] = digest(changes['script'])
-        job['passage_revision'] = job['revision']
-        run = ws.data.get('auto_runs', {}).get(job.get('auto_run'))
-        if run:
-            entry = next(e for e in run['episodes'] if e.get('job') == job['id'])
-            entry.update(passage_revision=job['revision'], status='DRAFT',
-                         next_action='Render the updated cut from Outputs or resume this run.')
+        mark_export_revision(ws, job)
         ws._save_deferred = was_deferred
         ws.save()
     except BaseException:
@@ -209,3 +204,12 @@ def save_passage(ws, body, changes):
         ws._save_deferred = was_deferred
         raise
     return dict(revision=job['revision'], status=job['status'], changed=True, review_required=True)
+
+
+def mark_export_revision(ws, job):
+    job['passage_revision'] = job['revision']
+    run = ws.data.get('auto_runs', {}).get(job.get('auto_run'))
+    if run:
+        entry = next(e for e in run['episodes'] if e.get('job') == job['id'])
+        entry.update(passage_revision=job['revision'], status='DRAFT',
+                     next_action='Render the updated cut from Outputs or resume this run.')

@@ -239,6 +239,15 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
         graph.append(layouts.presenter_filter(f'hostpip{i}',decision,f'pip{i}'))
         graph.append(f"[{picture}][pip{i}]overlay=x={x}:y={y}:eof_action=pass:enable='gte(t,{start})*lt(t,{end})'[pipmix{i}]")
         picture=f'pipmix{i}'
+    cover = plan.get('cover')
+    if cover:
+        if cover['frames'] != 12 or sha(cover['file']) != cover['sha256']:
+            raise ValueError('Cover changed. Select the original posting asset again.')
+        index = args.count('-i')
+        args.extend(['-loop','1','-framerate','30','-i',cover['file']])
+        graph.append(f"[{index}:v]scale={WIDTH}:{HEIGHT},setsar=1[coverpic]")
+        graph.append(f"[{picture}][coverpic]overlay=shortest=1:enable='lt(t,0.4)'[covered]")
+        picture = "covered"
     audio = "speech"
     graph.append(f"[{picture}]ass=captions.ass:fontsdir=fonts[captioned]")
     brand=plan.get('branding')
