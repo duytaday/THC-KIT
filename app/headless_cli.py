@@ -4,7 +4,7 @@ from pathlib import Path
 import headless
 from workspace_session import Session,BusyWorkspace,remote
 
-COMMANDS=('auto-edit','status','resume','revise','library')
+COMMANDS=('auto-edit','status','resume','revise','library','retakes')
 
 def workspace(value):
     if value:return Path(value).expanduser().resolve()
@@ -21,6 +21,7 @@ def run(argv=None):
             p.add_argument('--inputs',required=True);p.add_argument('--scripts');p.add_argument('--components');p.add_argument('--manifest');style=p.add_mutually_exclusive_group(required=True);style.add_argument('--preset');style.add_argument('--template');p.add_argument('--out',required=True);p.add_argument('--plan-only',action='store_true');p.add_argument('--allow-transcribe',action='store_true');p.add_argument('--stop-after',type=int);p.add_argument('--model',default='rules');p.add_argument('--no-remember',action='store_true')
         if name in ('status','resume','revise'):p.add_argument('--run',required=True)
         if name=='resume':p.add_argument('--stop-after',type=int)
+        if name=='retakes':p.add_argument('--request',required=True,type=Path)
         if name=='revise':p.add_argument('--episode',required=True);p.add_argument('--patch',required=True);p.add_argument('--revision',type=int);p.add_argument('--request-id')
     a=parser.parse_args(argv);root=workspace(a.workspace);request=vars(a).copy();request['workspace']=str(root)
     for key in ('inputs','scripts','components','manifest','out'):
@@ -28,6 +29,9 @@ def run(argv=None):
     for key in ('preset','template'):
         if request.get(key) and Path(request[key]).is_file():request[key]=str(Path(request[key]).resolve())
     if a.action=='revise':request['patch']=headless.load(Path(a.patch).resolve())
+    if a.action=='retakes':
+        request['retake']=headless.load(a.request.resolve())
+        del request['request']
     try:
         with contextlib.redirect_stdout(sys.stderr):
             if a.action=='status':result=headless.status(root,a.run)
@@ -37,12 +41,13 @@ def run(argv=None):
                         if a.action=='auto-edit':result=headless.auto_edit(ws,request)
                         elif a.action=='resume':result=headless.resume(ws,a.run,a.stop_after)
                         elif a.action=='revise':result=headless.revise(ws,request)
+                        elif a.action=='retakes':result=__import__('retakes').dispatch(ws,request['retake'])
                         else:
                             import library_service
                             result=library_service.snapshot(ws)
                 except BusyWorkspace:result=remote(root,a.action,request)
         if a.action=='auto-edit' and not a.plan_only and not a.no_remember:headless.write(Path.cwd()/'.thc-workspace.json',{'workspace':str(root)})
-        if a.json:print(json.dumps(result,ensure_ascii=False,indent=2))
+        if a.json or a.action=='retakes':print(json.dumps(result,ensure_ascii=False,indent=2))
         else:
             print('Run:',result.get('run_id','—'),'·',result.get('status','OK'))
             for e in result.get('episodes',[]):print(e.get('episode_id',e.get('id')),e.get('status','PLANNED'),e.get('revision','—'),e.get('output_path','—'),e.get('next_action',''),sep=' | ')

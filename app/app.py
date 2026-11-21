@@ -218,6 +218,10 @@ class Handler(BaseHTTPRequestHandler):
                                     if not source.exists() and name=='qc.json':source=Path(entry['folder'])/'edit-review.json'
                                     if source.exists():archive.write(source,sub+name)
                         return self.file(dest, "Cutroom-latest-edits.zip")
+            if p.startswith('/retakes/'):
+                _, _, export, key, name = p.split('/')
+                import retakes
+                return self.file(retakes.preview_file(ws,export,key,name))
             if p.startswith('/posting/'):
                 _, _, export_id, package, kind = p.split('/')
                 import publish
@@ -245,7 +249,7 @@ class Handler(BaseHTTPRequestHandler):
                 return self.file(f, label)
             if p == "/":
                 p = "/index.html"
-            if p not in ("/index.html", "/app.js", "/style.css", "/icon.svg", "/dm-sans.woff2", "/series.html", "/series.js", "/series.css", "/series-proof.js", "/library.html", "/library.js", "/stock-library.js", "/outputs-batch.js", "/posting-ui.js"):
+            if p not in ("/index.html", "/app.js", "/style.css", "/icon.svg", "/dm-sans.woff2", "/series.html", "/series.js", "/series.css", "/series-proof.js", "/library.html", "/library.js", "/stock-library.js", "/outputs-batch.js", "/posting-ui.js", "/retakes-ui.js"):
                 return self.result({"error": "Not found"}, 404)
             f = UI / p[1:]
             self.send_bytes(200, f.read_bytes(), MIME[f.suffix])
@@ -323,6 +327,9 @@ class Handler(BaseHTTPRequestHandler):
                 raise ValueError("Request is too large.")
             b = json.loads(self.rfile.read(n) or "{}")
             self._turn_request=b
+            if p == '/api/retakes':
+                import retakes
+                return self.result(retakes.dispatch(ws,b))
             if p in ('/api/posting/info', '/api/posting/save', '/api/posting/cover'):
                 import publish
                 if p.endswith('/info'):
@@ -350,6 +357,7 @@ class Handler(BaseHTTPRequestHandler):
                 if action=='resume':return self.result(headless.resume(ws,request['run'],request.get('stop_after')))
                 if action=='revise':return self.result(headless.revise(ws,request))
                 if action=='library':return self.result(__import__('library_service').snapshot(ws))
+                if action=='retakes':return self.result(__import__('retakes').dispatch(ws,request['retake']))
                 raise ValueError('Unsupported headless API action')
             if p.startswith('/api/series/'):
                 import series_studio,series_library

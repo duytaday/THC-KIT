@@ -9,7 +9,7 @@ def main():
     if len(sys.argv)>1 and sys.argv[1]=='assets':
         import asset_cli
         return asset_cli.run(sys.argv[2:])
-    if len(sys.argv)>1 and sys.argv[1] in ('auto-edit','status','resume','revise','library'):
+    if len(sys.argv)>1 and sys.argv[1] in ('auto-edit','status','resume','revise','library','retakes'):
         import headless_cli
         return headless_cli.run(sys.argv[1:])
     p=argparse.ArgumentParser(description=__doc__);sub=p.add_subparsers(dest='action',required=True)
