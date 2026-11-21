@@ -15,7 +15,7 @@ from engine import media
 
 
 CASES = ('batch_resume', 'assigned_proof', 'missing_demo', 'thumbnail_revision',
-         'cover_revision', 'cached_bundle_integrity')
+         'cover_revision', 'cached_bundle_integrity', 'posting_revision_binding')
 
 
 def inputs(config):
@@ -66,10 +66,13 @@ def verify_bundle(blob, selection):
     try:
         with zipfile.ZipFile(io.BytesIO(blob)) as bundle:
             manifest = json.loads(bundle.read('manifest.json'))
-            return all(manifest[key] == selection[key] and
+            return (manifest['export'] == selection['export']
+                    and type(manifest['revision']) is int
+                    and manifest['revision'] == selection['revision']
+                    and all(manifest[key] == selection[key] and
                        hashlib.sha256(bundle.read(name)).hexdigest() == selection[key]
                        for name,key in (('edit.mp4','mp4_sha256'), ('caption.txt','caption_sha256'),
-                                        ('thumbnail.png','thumbnail_sha256')))
+                                        ('thumbnail.png','thumbnail_sha256'))))
     except (OSError, ValueError, KeyError, zipfile.BadZipFile):
         return False
 
@@ -96,6 +99,8 @@ def run(config, out, app, snapshot, editor_factory):
         (out/(tag+'.stdout.json')).write_text(child.stdout, encoding='utf-8')
         with (out/'commands.jsonl').open('a',encoding='utf-8') as log:
             log.write(json.dumps(dict(tag=tag,argv=argv,exit_code=child.returncode))+'\n')
+        if not child.stdout.strip():
+            raise RuntimeError(f'{tag} emitted no JSON (exit {child.returncode}); see {tag}.stderr.log')
         if child.returncode not in (0,1):
             raise RuntimeError(f'{tag} failed: {child.stdout[-1000:]}')
         return json.loads(child.stdout)
@@ -218,6 +223,29 @@ def run(config, out, app, snapshot, editor_factory):
               same_audio=audio(old_file)==audio(new_file),
               same_subtitles=media.sha(old_file.with_name('captions.srt'))==media.sha(new_file.with_name('captions.srt')),
               same_duration=new['duration']==old['duration'], review_pending=new['verdict']=='NEEDS_REVIEW')
+        historical, _ = editor.call('/api/posting/info', dict(export=old['id']))
+        old_zip = zip_bytes(plain, pick)
+        new_pick, _ = editor.call('/api/posting/save', dict(
+            common, export=new['id'], sha256=new['sha256'], at=1,
+            caption='Bản có bìa mới.'))
+        new_zip = zip_bytes(dict(export_id=new['id']), new_pick)
+        manifest_path = old_file.parent/'posting'/pick['id']/'manifest.json'
+        original_manifest = manifest_path.read_bytes()
+        wrong_revision = {**json.loads(original_manifest), 'revision':new['revision']}
+        try:
+            media.write_json(manifest_path, wrong_revision)
+            _, mismatch = editor.call('/api/posting/info', dict(export=old['id']), expect=(200,409))
+        finally:
+            manifest_path.write_bytes(original_manifest)
+        check('posting_revision_binding',
+              historical_selection=historical['selection']==pick and verify_bundle(old_zip,pick),
+              latest_selection=verify_bundle(new_zip,new_pick)
+                and new_pick['revision']==new['revision']
+                and new_pick['mp4_sha256']==new['sha256'],
+              distinct_exports=pick['revision']==old['revision'] and pick['export']!=new_pick['export']
+                and pick['mp4_sha256']!=new_pick['mp4_sha256'],
+              rejects_wrong_revision=mismatch==409)
+        result['posting_revision_observation'] = dict(old=pick, new=new_pick, wrong_revision_http=mismatch)
         result.update(completed=True,wall_seconds=time.monotonic()-began,batch_run=rid,
                       episodes=episodes, cover_before=old, cover_after=new, workspace=str(workspace))
         media.write_json(out/'results.json',result)

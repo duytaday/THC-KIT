@@ -153,6 +153,8 @@ def selection(ws, export_id, package=None):
     record = json.loads((folder/'manifest.json').read_text(encoding='utf-8'))
     if record['export'] != export_id or record['mp4_sha256'] != entry['sha256']:
         raise Conflict('The posting selection belongs to another MP4.')
+    if type(record.get('revision')) is not int or record['revision'] != entry['revision']:
+        raise Conflict('The posting selection belongs to another revision.')
     for name, key in (('caption.txt','caption_sha256'), ('thumbnail.png','thumbnail_sha256')):
         if media.sha(folder/name) != record[key]:
             raise Conflict('Posting asset changed on disk. Save a fresh selection.')

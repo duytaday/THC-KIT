@@ -15,7 +15,9 @@ cách ly quyền truy cập của hệ điều hành.
 | Thumbnail | Qua API mà Outputs dùng, lưu hai thiết kế và tải hai ZIP. So từng member với manifest, đối chiếu MP4 và revision. |
 | Bìa trong video | Xuất bìa mới qua queue. Decode MP4, so revision, hash, frame đầu, audio, SRT và QC. |
 | Cache ZIP | Làm hỏng đúng file ZIP trong workspace thí nghiệm rồi tải lại. Kiểm hash các member và hash master. |
+| Liên kết revision | Tải gói cũ và gói mới sau khi đổi bìa. So export ID, revision và ba hash. Thử manifest ghi nhầm revision trong fixture và yêu cầu HTTP 409, sau đó khôi phục manifest. |
 
+Giữ cả thư mục `talking-head-qc` bên cạnh `app` ở mỗi checkout để CLI nạp được các hook QC.
 Hai tree phải giống nhau trừ đúng `changed_path` trong thư mục `app`. Kiểm
 diff trong file để đảm bảo chỉ đổi một quyết định. Thay grader cần freeze
 campaign mới. Hòa hoặc critical regression giữ baseline. Kết quả cơ học không
@@ -78,3 +80,28 @@ Public CLI dừng có kiểm soát sau tập đầu rồi tiếp tục bằng ti
 Các lượt trước được giữ riêng. v002 phát hiện grader đọc nhầm plan đã lược đường dẫn. v003 phát hiện đường dẫn libass của challenger dài hơn giới hạn Windows quan sát được. v004 dùng đường dẫn D ngắn và tên thư mục arm dài bằng nhau, đồng thời kiểm đủ A/B/C ở cả hai arm.
 
 Hồi quy app 441 ca, 428 đạt, 13 skip. Cả hai checkout thử dùng fixture tổng hợp. Giữ `NEEDS_REVIEW` cho master và giữ nguyên model đang dùng.
+
+## Kết quả kiểm revision ngày 21/11/2026
+
+Vòng `posting-revision-binding-001` so baseline `8f9ce9d` với challenger chỉ đổi `app/publish.py`.
+Dùng cùng ba episode tổng hợp, cùng FFmpeg với `libx264` và cùng grader.
+
+| Ca | Baseline | Challenger |
+|---|---|---|
+| `batch_resume` | PASS | PASS |
+| `assigned_proof` | PASS | PASS |
+| `missing_demo` | PASS | PASS |
+| `thumbnail_revision` | PASS | PASS |
+| `cached_bundle_integrity` | PASS | PASS |
+| `cover_revision` | PASS | PASS |
+| `posting_revision_binding` | FAIL | PASS |
+
+Baseline 80.95 giây. Challenger 78.12 giây. Chi phí API 0 USD.
+Cả hai tải được bộ cũ và mới sau khi đổi bìa. Với manifest thử nghiệm ghi sai revision,
+baseline trả HTTP 200 và challenger trả HTTP 409. Bộ sau khi đổi thumbnail giữ nguyên hash MP4.
+Bìa trong video tạo revision mới, giữ PCM, SRT và thời lượng. Tập thiếu demo Save giữ draft và pickup.
+Bộ regression ứng dụng chạy 446 ca, 433 đạt và 13 skip.
+
+Controller ghi `gain`, không có critical regression. Master fixture giữ `NEEDS_REVIEW`.
+Không có lượt duyệt nghe/xem thật và không thăng cấp model.
+[Receipt kiểm tra và hash](evidence/sprint-posting-revision-v001.json).

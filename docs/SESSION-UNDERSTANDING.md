@@ -229,3 +229,12 @@ compiler equivalence and unchanged stems are separate from actual hearing.
 - [x] User identified script/timestamps/style/candidate pool, asset source/timeline clocks, crop/layout/cues, feedback and episode/family/revision traceability as supervision.
 - [x] User specified independent episode evaluation and keeping derivatives/source families together, with sealed final excluded from training/RAG/optimization.
 - [x] User explicitly retained B1 after anchor regression, distinguished technical train/load from customer acceptance, and required expected/actual trace through source/output clocks, rerunning failed cases, independent development episodes, decoded render/caption/SFX review, measurable benefit and versioned promotion/rollback. Final stays sealed. Demonstrated in the 18/11 follow-up answer.
+
+## Sprint hill climbing ngày 21/11/2026
+
+- [x] Đã xác nhận trước đây rằng cải thiện trên bộ dev cần so mù tập mới, cùng nguồn và mức nghe, với QC, câu trả lời người xem và thời gian sửa thật.
+- [ ] Giải thích vì sao một ZIP có ba file đúng hash vẫn có thể gắn sai revision, và vì sao API đối chiếu revision với export đã chọn.
+- [ ] Mô tả khác biệt giữa đổi thumbnail cho cùng MP4, đổi bìa bên trong video và resume batch. Nêu bằng chứng dùng để biết lần nào sinh encode mới.
+- [ ] Nêu lý do tập thiếu capture Save giữ draft và yêu cầu quay bổ sung, dù batch có thể hoàn thành.
+
+Đã gửi câu hỏi kiểm tra về manifest. Ghi nhận hiểu biết sau khi có câu trả lời.

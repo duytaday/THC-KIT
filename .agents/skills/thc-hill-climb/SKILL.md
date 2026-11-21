@@ -24,9 +24,11 @@ The controller uses `freeze CONFIG --out TRIAL_DIR`, `start TRIAL_JSON --id ID
 --hypothesis TEXT --variable TEXT`, `run TRIAL_JSON --id ID --cost N`, then
 `status TRIAL_JSON`. Read command help before using the flags. The default
 profile replays the eight editing turns. Set `profile: "sprint"` in the replay
-config to run batch resume, bound and missing demo, thumbnail, cover and cached
-bundle checks. Use the [sprint guide](../../../docs/SPRINT-HARNESS.vi.md) for
-the fixture contract. The sprint controller checks the declared changed path
+config to check batch resume, bound and missing demos, and revision-bound
+posting packs. Test both old and new packs after a cover revision. Compare
+the manifest's export ID and revision as well as the three file hashes. The
+[sprint guide](../../../docs/SPRINT-HARNESS.vi.md) contains the fixture contract. The sprint controller checks the declared
+changed path
 against both source trees. It does not infer how many decisions changed inside
 that file, so review the actual diff before starting.
 

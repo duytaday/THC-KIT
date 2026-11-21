@@ -21,6 +21,10 @@ separate reference-training intake. See [the app guide](app/README.md) and
 `python app/app.py --data .\output\cutroom-workspace` from this D checkout (Python3.11+).
 The built-in path requires no model checkpoint or paid agent credentials.
 
+Use the [THC hill climbing skill](.agents/skills/thc-hill-climb/SKILL.md) to
+compare one change on matched development cases. The [sprint harness guide](docs/SPRINT-HARNESS.vi.md)
+covers batch resume, missing demo footage and revision-bound posting packs.
+
 The [multi-turn editing workflow](docs/EDITING-EVALS.vi.md) adds persisted public
 requests/tool history, retry-safe feedback, selected style locks, export-clock
 hook review and explicit master-bound approval. See the

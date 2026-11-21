@@ -1,5 +1,10 @@
 # Evals, prompt audit, hillclimb và harness — 13/11/2026
 
+Cập nhật 21/11/2026. [Sprint harness](SPRINT-HARNESS.vi.md) chạy baseline và
+challenger bằng CLI batch và API Outputs thật. [Skill hill climbing](../.agents/skills/thc-hill-climb/SKILL.md)
+hướng dẫn đóng băng input, cô lập một biến và lưu bằng chứng theo ca. Phần dưới
+ghi lại audit ngày 13/11.
+
 Update13/11: đã thêm persisted one-round runner gọi harness thật, stable IDs,
 receipt/hash checks và budget stop. 271 tests và một paired development replay
 đạt; mechanical score flat1,0→1,0. Chưa có autonomous candidate proposer hoặc
